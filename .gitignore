@@ -1,0 +1,26 @@
+# 1. File biên dịch & bộ nhớ đệm Gradle
+*.iml
+.gradle
+/build
+/*/build
+.externalNativeBuild
+.cxx
+/captures
+
+# 2. Cấu hình đường dẫn máy cá nhân & IDE Android Studio (Tránh xung đột khi 5 người cùng code)
+/local.properties
+local.properties
+.idea/
+.DS_Store
+
+# 3. Bảo mật API Key (Google Maps, Cloudinary) & Chữ ký APK
+secrets.properties
+apikeys.properties
+*.env
+*.jks
+*.keystore
+
+# 4. Dự phòng nếu đặt chung thư mục Backend Spring Boot
+target/
+*.log
+application-local.properties

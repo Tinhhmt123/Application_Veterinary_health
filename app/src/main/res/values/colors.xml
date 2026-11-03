@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="emerald_50">#ECFDF5</color>
+    <color name="emerald_100">#D1FAE5</color>
+    <color name="emerald_500">#10B981</color>
+    <color name="emerald_600">#059669</color>
+    <color name="emerald_700">#047857</color>
+    <color name="indigo_600">#4F46E5</color>
+    <color name="indigo_800">#3730A3</color>
+    <color name="amber_500">#F59E0B</color>
+    <color name="red_600">#DC2626</color>
+    <color name="slate_50">#F8FAFC</color>
+    <color name="slate_100">#F1F5F9</color>
+    <color name="slate_500">#64748B</color>
+    <color name="slate_800">#1E293B</color>
+    <color name="slate_900">#0F172A</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#059669</color>
+    <color name="purple_700">#047857</color>
+    <color name="teal_200">#10B981</color>
+    <color name="teal_700">#047857</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
