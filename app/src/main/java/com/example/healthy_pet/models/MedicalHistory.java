@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * Thực thể 7: MedicalHistories (Bệnh án khám chữa bệnh)
+ * Thực thể 7: MedicalHistories (Bệnh án khám chữa bệnh & Thanh toán viện phí)
  * Phụ trách chính: Thành viên 5 (NV 4 & NV 7)
  */
 public class MedicalHistory implements Serializable {
@@ -36,10 +36,18 @@ public class MedicalHistory implements Serializable {
     @SerializedName("prescription_image_url")
     private String prescriptionImageUrl;
 
+    @SerializedName("payment_status")
+    private String paymentStatus; // "UNPAID" hoặc "PAID"
+
+    @SerializedName("payment_method")
+    private String paymentMethod; // "VIETQR" hoặc "CASH"
+
     public MedicalHistory() {
     }
 
-    public MedicalHistory(Long id, Long petId, Long appointmentId, String visitDate, String symptoms, String diagnosis, String prescription, BigDecimal cost, String prescriptionImageUrl) {
+    public MedicalHistory(Long id, Long petId, Long appointmentId, String visitDate, String symptoms,
+                          String diagnosis, String prescription, BigDecimal cost,
+                          String prescriptionImageUrl, String paymentStatus, String paymentMethod) {
         this.id = id;
         this.petId = petId;
         this.appointmentId = appointmentId;
@@ -49,6 +57,8 @@ public class MedicalHistory implements Serializable {
         this.prescription = prescription;
         this.cost = cost;
         this.prescriptionImageUrl = prescriptionImageUrl;
+        this.paymentStatus = paymentStatus;
+        this.paymentMethod = paymentMethod;
     }
 
     public Long getId() { return id; }
@@ -77,4 +87,10 @@ public class MedicalHistory implements Serializable {
 
     public String getPrescriptionImageUrl() { return prescriptionImageUrl; }
     public void setPrescriptionImageUrl(String prescriptionImageUrl) { this.prescriptionImageUrl = prescriptionImageUrl; }
+
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

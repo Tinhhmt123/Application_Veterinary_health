@@ -16,7 +16,7 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 /**
- * [Thành viên 5] API Đặt lịch hẹn (NV 5b), Admin Duyệt lịch & Kê đơn (NV 7), Bệnh án & Chi phí DECIMAL (NV 4)
+ * [Thành viên 5] API Đặt lịch hẹn (NV 5b), Admin Duyệt lịch & Kê đơn (NV 7), Bệnh án & Thanh toán DECIMAL (NV 4)
  */
 public interface AppointmentMedicalApi {
 
@@ -52,4 +52,11 @@ public interface AppointmentMedicalApi {
     // User: Tra cứu lịch sử bệnh án & Thống kê chi phí DECIMAL(18, 0)
     @GET("medical-histories")
     Call<List<MedicalHistory>> getMedicalHistoriesByPet(@Query("petId") Long petId);
+
+    // User: Thanh toán viện phí (Phương án 1 - Strategy Pattern: "VIETQR" hoặc "CASH")
+    @PUT("medical-histories/{id}/pay")
+    Call<MedicalHistory> payMedicalHistory(
+            @Path("id") Long medicalHistoryId,
+            @Query("paymentMethod") String paymentMethod
+    );
 }

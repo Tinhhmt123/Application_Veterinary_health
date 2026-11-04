@@ -1,10 +1,12 @@
 package com.example.healthy_pet;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -36,8 +38,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         sessionManager = new SessionManager(this);
+        AppCompatDelegate.setDefaultNightMode(
+                sessionManager.isDarkMode()
+                        ? AppCompatDelegate.MODE_NIGHT_YES
+                        : AppCompatDelegate.MODE_NIGHT_NO
+        );
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         drawerLayout = findViewById(R.id.drawerLayout);
@@ -63,29 +70,120 @@ public class MainActivity extends AppCompatActivity {
             updateRoleChrome();
         });
 
-        // 4. Sự kiện chọn 5 mục trên Bottom Navigation của USER
-        findViewById(R.id.navUserAlert).setOnClickListener(v ->
-                loadScreen(new VaccineAlertFragment(), "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm"));
-        findViewById(R.id.navUserPet).setOnClickListener(v ->
-                loadScreen(new PetWeightFragment(), "NV 2: Hồ sơ thú cưng & Cân nặng"));
-        findViewById(R.id.navUserBookingCenter).setOnClickListener(v ->
-                loadScreen(new ClinicBookingFragment(), "NV 5: Đặt lịch Khám/Spa & Bản đồ"));
-        findViewById(R.id.navUserMedical).setOnClickListener(v ->
-                loadScreen(new MedicalHistoryFragment(), "NV 4: Bệnh án & Chi phí DECIMAL"));
-        findViewById(R.id.navUserAccount).setOnClickListener(v ->
-                loadScreen(new AccountFragment(), "NV 1: Quản lý tài khoản cá nhân"));
+        // 4. Sự kiện chọn 5 mục trên Bottom Navigation của USER (kèm hiệu ứng nhấn & đổi màu tab)
+        findViewById(R.id.navUserAlert).setOnClickListener(v -> {
+            highlightUserTab(R.id.navUserAlert);
+            loadScreen(new VaccineAlertFragment(), "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm");
+        });
+        findViewById(R.id.navUserPet).setOnClickListener(v -> {
+            highlightUserTab(R.id.navUserPet);
+            loadScreen(new PetWeightFragment(), "NV 2: Hồ sơ thú cưng & Cân nặng");
+        });
+        findViewById(R.id.navUserBookingCenter).setOnClickListener(v -> {
+            highlightUserTab(R.id.navUserBookingCenter);
+            loadScreen(new ClinicBookingFragment(), "NV 5: Đặt lịch Khám/Spa & Bản đồ");
+        });
+        findViewById(R.id.navUserMedical).setOnClickListener(v -> {
+            highlightUserTab(R.id.navUserMedical);
+            loadScreen(new MedicalHistoryFragment(), "NV 4: Bệnh án & Chi phí DECIMAL");
+        });
+        findViewById(R.id.navUserAccount).setOnClickListener(v -> {
+            highlightUserTab(R.id.navUserAccount);
+            loadScreen(new AccountFragment(), "NV 1: Quản lý tài khoản cá nhân");
+        });
 
-        // 5. Sự kiện chọn 3 mục trên Bottom Navigation của ADMIN
-        findViewById(R.id.navAdminUserPet).setOnClickListener(v ->
-                loadScreen(AdminDashboardFragment.newInstance(6), "NV 6: Quản lý Users & Pets toàn hệ thống"));
-        findViewById(R.id.navAdminAppointment).setOnClickListener(v ->
-                loadScreen(AdminDashboardFragment.newInstance(7), "NV 7: Duyệt lịch hẹn & Kê đơn bệnh án"));
-        findViewById(R.id.navAdminClinic).setOnClickListener(v ->
-                loadScreen(AdminDashboardFragment.newInstance(8), "NV 8: Quản lý Chi nhánh Phòng khám"));
+        // 5. Sự kiện chọn 3 mục trên Bottom Navigation của ADMIN (kèm hiệu ứng nhấn & đổi màu tab)
+        findViewById(R.id.navAdminUserPet).setOnClickListener(v -> {
+            highlightAdminTab(R.id.navAdminUserPet);
+            loadScreen(AdminDashboardFragment.newInstance(6), "NV 6: Quản lý Users & Pets toàn hệ thống");
+        });
+        findViewById(R.id.navAdminAppointment).setOnClickListener(v -> {
+            highlightAdminTab(R.id.navAdminAppointment);
+            loadScreen(AdminDashboardFragment.newInstance(7), "NV 7: Duyệt lịch hẹn & Kê đơn bệnh án");
+        });
+        findViewById(R.id.navAdminClinic).setOnClickListener(v -> {
+            highlightAdminTab(R.id.navAdminClinic);
+            loadScreen(AdminDashboardFragment.newInstance(8), "NV 8: Quản lý Chi nhánh Phòng khám");
+        });
 
         // Mặc định mở màn hình Cảnh báo & Sổ tiêm (NV 3) khi khởi động
+        highlightUserTab(R.id.navUserAlert);
         if (savedInstanceState == null) {
             loadScreen(new VaccineAlertFragment(), "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm");
+        }
+    }
+
+    private void highlightUserTab(int activeTabId) {
+        int[] tabIds = {
+                R.id.navUserAlert,
+                R.id.navUserPet,
+                R.id.navUserBookingCenter,
+                R.id.navUserMedical,
+                R.id.navUserAccount
+        };
+        int[] labelIds = {
+                R.id.tvNavUserAlert,
+                R.id.tvNavUserPet,
+                R.id.tvNavUserBooking,
+                R.id.tvNavUserMedical,
+                R.id.tvNavUserAccount
+        };
+
+        int activeColor = ContextCompat.getColor(this, R.color.emerald_500);
+        int inactiveColor = ContextCompat.getColor(this, R.color.slate_500);
+
+        for (int i = 0; i < tabIds.length; i++) {
+            View tabView = findViewById(tabIds[i]);
+            TextView tvLabel = findViewById(labelIds[i]);
+            boolean isSelected = (tabIds[i] == activeTabId);
+
+            if (tvLabel != null) {
+                tvLabel.setTextColor(isSelected ? activeColor : inactiveColor);
+                tvLabel.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
+            }
+            if (tabView != null) {
+                tabView.animate()
+                        .scaleX(isSelected ? 1.08f : 1.0f)
+                        .scaleY(isSelected ? 1.08f : 1.0f)
+                        .alpha(isSelected || tabIds[i] == R.id.navUserBookingCenter ? 1.0f : 0.65f)
+                        .setDuration(160)
+                        .start();
+            }
+        }
+    }
+
+    private void highlightAdminTab(int activeTabId) {
+        int[] tabIds = {
+                R.id.navAdminUserPet,
+                R.id.navAdminAppointment,
+                R.id.navAdminClinic
+        };
+        int[] labelIds = {
+                R.id.tvNavAdminUserPet,
+                R.id.tvNavAdminAppointment,
+                R.id.tvNavAdminClinic
+        };
+
+        int activeColor = ContextCompat.getColor(this, R.color.emerald_500);
+        int inactiveColor = ContextCompat.getColor(this, R.color.slate_500);
+
+        for (int i = 0; i < tabIds.length; i++) {
+            View tabView = findViewById(tabIds[i]);
+            TextView tvLabel = findViewById(labelIds[i]);
+            boolean isSelected = (tabIds[i] == activeTabId);
+
+            if (tvLabel != null) {
+                tvLabel.setTextColor(isSelected ? activeColor : inactiveColor);
+                tvLabel.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
+            }
+            if (tabView != null) {
+                tabView.animate()
+                        .scaleX(isSelected ? 1.08f : 1.0f)
+                        .scaleY(isSelected ? 1.08f : 1.0f)
+                        .alpha(isSelected ? 1.0f : 0.65f)
+                        .setDuration(160)
+                        .start();
+            }
         }
     }
 
@@ -95,9 +193,11 @@ public class MainActivity extends AppCompatActivity {
         TextView tvAiAnswerBox = findViewById(R.id.tvAiAnswerBox);
 
         switchDarkMode.setChecked(sessionManager.isDarkMode());
-        switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) ->
-                sessionManager.setDarkMode(isChecked)
-        );
+        switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked != sessionManager.isDarkMode()) {
+                sessionManager.setDarkMode(isChecked);
+            }
+        });
 
         switchAlert7Days.setChecked(sessionManager.isAlert7DaysEnabled());
         switchAlert7Days.setOnCheckedChangeListener((buttonView, isChecked) ->
@@ -120,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
             tvToolbarTitle.setText("Healthy Pet Admin (Menu ≡)");
             bottomNavUser.setVisibility(View.GONE);
             bottomNavAdmin.setVisibility(View.VISIBLE);
+            highlightAdminTab(R.id.navAdminUserPet);
             loadScreen(AdminDashboardFragment.newInstance(6), "NV 6: Quản lý Users & Pets toàn hệ thống");
         } else {
             topAppBar.setBackgroundColor(ContextCompat.getColor(this, R.color.emerald_600));
@@ -127,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
             tvToolbarTitle.setText("Healthy Pet (Menu ≡)");
             bottomNavAdmin.setVisibility(View.GONE);
             bottomNavUser.setVisibility(View.VISIBLE);
+            highlightUserTab(R.id.navUserAlert);
             loadScreen(new VaccineAlertFragment(), "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm");
         }
     }
