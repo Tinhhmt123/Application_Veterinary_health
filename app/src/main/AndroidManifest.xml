@@ -37,6 +37,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- KHAI BÁO MỚI: Màn hình Quản lý Chi nhánh dành cho Admin (NV 8) -->
+        <activity
+            android:name=".ui.admin.AdminClinicActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

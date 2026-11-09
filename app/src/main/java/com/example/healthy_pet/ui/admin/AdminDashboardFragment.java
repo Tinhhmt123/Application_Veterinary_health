@@ -1,5 +1,6 @@
 package com.example.healthy_pet.ui.admin;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,9 +69,15 @@ public class AdminDashboardFragment extends Fragment {
             btn.setText("📍 Thêm Chi nhánh & Đồng bộ Tọa độ Maps");
         }
 
-        btn.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Đang thực thi thao tác Quản trị viên (NV " + flow + ")", Toast.LENGTH_SHORT).show()
-        );
+        btn.setOnClickListener(v -> {
+            if (flow == 8) {
+                // Mở màn hình quản lý chi nhánh AdminClinicActivity (NV 8 của Thành viên 4)
+                Intent intent = new Intent(requireContext(), AdminClinicActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(getContext(), "Đang thực thi thao tác Quản trị viên (NV " + flow + ")", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return view;
     }
