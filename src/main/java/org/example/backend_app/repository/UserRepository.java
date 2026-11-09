@@ -14,11 +14,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailIgnoreCase(String email);
+
     boolean existsByEmail(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
 
     @Query("SELECT u FROM User u WHERE :kw IS NULL OR :kw = '' " +
            "OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :kw, '%')) " +
            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :kw, '%')) " +
-           "OR u.phoneNumber LIKE CONCAT('%', :kw, '%')")
+           "OR u.phoneNumber LIKE CONCAT('%', :kw, '%') " +
+           "ORDER BY u.id DESC")
     List<User> searchByKeyword(@Param("kw") String keyword);
+
+    List<User> findByIsActiveOrderByIdDesc(Boolean isActive);
 }

@@ -2,6 +2,9 @@ package org.example.backend_app.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
@@ -16,18 +19,26 @@ public class User {
     @JsonProperty("id")
     private Long id;
 
+    @NotBlank(message = "Họ và tên không được để trống")
+    @Size(max = 100, message = "Họ và tên tối đa 100 ký tự")
     @Column(name = "full_name", nullable = false, length = 100)
     @JsonProperty("full_name")
     private String fullName;
 
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Định dạng Email không hợp lệ")
+    @Size(max = 150, message = "Email tối đa 150 ký tự")
     @Column(name = "email", nullable = false, unique = true, length = 150)
     @JsonProperty("email")
     private String email;
 
+    @NotBlank(message = "Mật khẩu không được để trống")
+    @Size(min = 6, max = 255, message = "Mật khẩu phải từ 6 ký tự trở lên")
     @Column(name = "password", nullable = false, length = 255)
     @JsonProperty(value = "password", access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    @Size(max = 20, message = "Số điện thoại tối đa 20 ký tự")
     @Column(name = "phone_number", length = 20)
     @JsonProperty("phone_number")
     private String phoneNumber;
@@ -49,6 +60,16 @@ public class User {
     private LocalDateTime createdAt;
 
     public User() {
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.role == null || this.role.isBlank()) {
+            this.role = "USER";
+        }
+        if (this.isActive == null) {
+            this.isActive = true;
+        }
     }
 
     public Long getId() { return id; }
