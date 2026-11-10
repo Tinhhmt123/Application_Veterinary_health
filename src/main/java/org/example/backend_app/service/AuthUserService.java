@@ -25,14 +25,16 @@ public class AuthUserService {
     }
 
     public User login(User loginRequest) {
-        if (loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
+        if (loginRequest == null
+                || loginRequest.getEmail() == null || loginRequest.getEmail().isBlank()
+                || loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập đầy đủ Email và Mật khẩu!");
         }
-        User user = userRepository.findByEmail(loginRequest.getEmail().trim())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không chính xác!"));
+        User user = userRepository.findByEmailIgnoreCase(loginRequest.getEmail().trim())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email không tồn tại trong hệ thống!"));
 
         if (!user.getPassword().equals(loginRequest.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không chính xác!");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Mật khẩu không chính xác!");
         }
         if (Boolean.FALSE.equals(user.getIsActive())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản của bạn đã bị khóa bởi Quản trị viên!");
@@ -42,21 +44,36 @@ public class AuthUserService {
 
     @Transactional
     public User register(User registerRequest) {
+        if (registerRequest == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu đăng ký không hợp lệ!");
+        }
+        if (registerRequest.getFullName() == null || registerRequest.getFullName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Họ và tên không được để trống!");
+        }
         if (registerRequest.getEmail() == null || registerRequest.getEmail().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email không được để trống!");
         }
-        if (userRepository.existsByEmail(registerRequest.getEmail().trim())) {
+        if (registerRequest.getPassword() == null || registerRequest.getPassword().length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu phải có từ 6 ký tự trở lên!");
+        }
+        String normalizedEmail = registerRequest.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email này đã được đăng ký!");
         }
 
         User newUser = new User();
-        newUser.setFullName(registerRequest.getFullName());
-        newUser.setEmail(registerRequest.getEmail().trim());
+        newUser.setFullName(registerRequest.getFullName().trim());
+        newUser.setEmail(normalizedEmail);
         newUser.setPassword(registerRequest.getPassword());
-        newUser.setPhoneNumber(registerRequest.getPhoneNumber());
+        newUser.setPhoneNumber(registerRequest.getPhoneNumber() != null ? registerRequest.getPhoneNumber().trim() : null);
         newUser.setRole("USER");
         newUser.setIsActive(true);
         return userRepository.save(newUser);
+    }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng #" + userId));
     }
 
     @Transactional

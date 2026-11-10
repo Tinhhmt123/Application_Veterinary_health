@@ -1,5 +1,6 @@
 package org.example.backend_app.controller;
 
+import jakarta.validation.Valid;
 import org.example.backend_app.entity.User;
 import org.example.backend_app.service.AuthUserService;
 import org.springframework.http.MediaType;
@@ -29,8 +30,13 @@ public class AuthUserController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<User> register(@RequestBody User registerRequest) {
+    public ResponseEntity<User> register(@Valid @RequestBody User registerRequest) {
         return ResponseEntity.ok(authUserService.register(registerRequest));
+    }
+
+    @GetMapping("/users/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable("id") Long userId) {
+        return ResponseEntity.ok(authUserService.getUserById(userId));
     }
 
     @PutMapping(value = "/users/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
