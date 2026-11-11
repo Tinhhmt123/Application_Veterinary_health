@@ -51,9 +51,10 @@ public class AuthUserController {
 
     @GetMapping("/admin/users")
     public ResponseEntity<List<User>> searchUsers(
-            @RequestParam(value = "keyword", required = false) String keyword
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "is_active", required = false) Boolean isActive
     ) {
-        return ResponseEntity.ok(authUserService.searchUsers(keyword));
+        return ResponseEntity.ok(authUserService.searchUsers(keyword, isActive));
     }
 
     @PutMapping("/admin/users/{id}/toggle-active")

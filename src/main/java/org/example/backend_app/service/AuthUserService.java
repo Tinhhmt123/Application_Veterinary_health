@@ -85,23 +85,45 @@ public class AuthUserService {
             user.setFullName(fullName.trim());
         }
         if (phoneNumber != null && !phoneNumber.isBlank()) {
-            user.setPhoneNumber(phoneNumber.trim());
+            String cleanedPhone = phoneNumber.trim();
+            if (cleanedPhone.length() > 20) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số điện thoại tối đa 20 ký tự!");
+            }
+            user.setPhoneNumber(cleanedPhone);
         }
         if (avatarFile != null && !avatarFile.isEmpty()) {
-            String uploadedUrl = cloudinaryService.uploadImage(avatarFile, "avatars");
-            user.setAvatarUrl(uploadedUrl);
+            try {
+                String uploadedUrl = cloudinaryService.uploadImage(avatarFile, "avatars");
+                user.setAvatarUrl(uploadedUrl);
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+            }
         }
         return userRepository.save(user);
     }
 
     public List<User> searchUsers(String keyword) {
-        return userRepository.searchByKeyword(keyword);
+        return searchUsers(keyword, null);
+    }
+
+    public List<User> searchUsers(String keyword, Boolean isActive) {
+        List<User> results = userRepository.searchByKeyword(keyword != null ? keyword.trim() : null);
+        if (isActive == null) {
+            return results;
+        }
+        return results.stream()
+                .filter(u -> isActive.equals(u.getIsActive()))
+                .toList();
     }
 
     @Transactional
     public User toggleUserActive(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng #" + userId));
+
+        if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể khóa tài khoản Quản trị viên (ADMIN)!");
+        }
 
         boolean current = Boolean.TRUE.equals(user.getIsActive());
         user.setIsActive(!current);

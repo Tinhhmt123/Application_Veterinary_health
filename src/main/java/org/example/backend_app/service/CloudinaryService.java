@@ -32,6 +32,8 @@ public class CloudinaryService {
 
     private static final Pattern SECURE_URL_PATTERN = Pattern.compile("\"secure_url\"\\s*:\\s*\"([^\"]+)\"");
 
+    private static final long MAX_FILE_SIZE_BYTES = 10L * 1024 * 1024; // 10 MB
+
     @Value("${cloudinary.cloud-name:}")
     private String cloudName;
 
@@ -45,6 +47,7 @@ public class CloudinaryService {
         if (file == null || file.isEmpty()) {
             return null;
         }
+        validateImageFile(file);
 
         // Nếu đã điền đủ cấu hình Cloudinary -> Upload trực tiếp lên đám mây Cloudinary
         if (cloudName != null && !cloudName.isBlank()
@@ -53,12 +56,25 @@ public class CloudinaryService {
             try {
                 return uploadToCloudinaryCloud(file, folder);
             } catch (Exception ex) {
-                throw new RuntimeException("Lỗi upload ảnh lên Cloudinary: " + ex.getMessage(), ex);
+                // Nếu mất kết nối mạng tới Cloudinary, tự động lưu dự phòng vào /uploads/
+                return saveLocally(file, folder);
             }
         }
 
         // Chế độ dự phòng Offline/Local khi chưa nhập Cloudinary Key
         return saveLocally(file, folder);
+    }
+
+    private void validateImageFile(MultipartFile file) {
+        if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+            throw new IllegalArgumentException("Kích thước file ảnh vượt quá giới hạn 10MB!");
+        }
+        String contentType = file.getContentType();
+        if (contentType != null && !contentType.isBlank()
+                && !contentType.toLowerCase().startsWith("image/")
+                && !contentType.equalsIgnoreCase("application/octet-stream")) {
+            throw new IllegalArgumentException("Định dạng file không hợp lệ (chỉ chấp nhận file ảnh)!");
+        }
     }
 
     private String uploadToCloudinaryCloud(MultipartFile file, String folder) throws Exception {
