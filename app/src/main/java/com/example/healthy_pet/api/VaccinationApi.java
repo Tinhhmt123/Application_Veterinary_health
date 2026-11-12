@@ -15,27 +15,39 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Query;
 
-/**
- * [Thành viên 3]
- * API Sổ tiêm chủng và Cảnh báo y tế 7 ngày.
- */
 public interface VaccinationApi {
 
-    // 1. Lấy danh sách mũi tiêm quá hạn
-    // hoặc sắp đến hạn trong 7 ngày của người dùng.
+    /**
+     * Lấy danh sách cảnh báo tiêm chủng của người dùng.
+     * Bao gồm các mũi tiêm quá hạn và sắp đến hạn trong 7 ngày.
+     *
+     * GET /api/vaccinations/alerts?userId=1
+     */
     @GET("vaccinations/alerts")
     Call<List<VaccinationRecord>> getHealthAlerts(
             @Query("userId") Long userId
     );
 
-    // 2. Lấy lịch sử tiêm chủng theo thú cưng.
+
+    /**
+     * Lấy lịch sử tiêm chủng của một thú cưng.
+     *
+     * GET /api/vaccinations?petId=1&userId=1
+     */
     @GET("vaccinations")
     Call<List<VaccinationRecord>> getVaccinationsByPet(
             @Query("petId") Long petId,
             @Query("userId") Long userId
     );
 
-    // 3. Thêm mũi tiêm mới và upload ảnh tem vaccine.
+
+    /**
+     * Thêm hồ sơ tiêm chủng mới.
+     * Hỗ trợ gửi ảnh dấu mộc phòng khám.
+     *
+     * POST /api/vaccinations
+     * Content-Type: multipart/form-data
+     */
     @Multipart
     @POST("vaccinations")
     Call<VaccinationRecord> createVaccination(

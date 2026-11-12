@@ -125,9 +125,11 @@ public class SessionManager {
 
     // 10. Đăng xuất
     public void logout() {
-
         prefs.edit()
-                .clear()
+                .remove(KEY_USER_ID)
+                .remove(KEY_FULL_NAME)
+                .remove(KEY_EMAIL)
+                .remove(KEY_ROLE)
                 .apply();
     }
 }
