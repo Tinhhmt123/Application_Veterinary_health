@@ -1,26 +1,39 @@
-# 1. File biên dịch & bộ nhớ đệm Gradle
-*.iml
-.gradle
-/build
-/*/build
-.externalNativeBuild
-.cxx
-/captures
-
-# 2. Cấu hình đường dẫn máy cá nhân & IDE Android Studio (Tránh xung đột khi 5 người cùng code)
-/local.properties
-local.properties
-.idea/
-.DS_Store
-
-# 3. Bảo mật API Key (Google Maps, Cloudinary) & Chữ ký APK
-secrets.properties
-apikeys.properties
-*.env
-*.jks
-*.keystore
-
-# 4. Dự phòng nếu đặt chung thư mục Backend Spring Boot
+HELP.md
 target/
-*.log
-application-local.properties
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Environment Variables & Local Uploads (Bảo mật API Secret & DB Password) ###
+.env
+*.env
+!.env.example
+uploads/
