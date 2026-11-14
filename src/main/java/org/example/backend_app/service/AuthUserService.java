@@ -93,7 +93,8 @@ public class AuthUserService {
         }
         if (avatarFile != null && !avatarFile.isEmpty()) {
             try {
-                String uploadedUrl = cloudinaryService.uploadImage(avatarFile, "avatars");
+                String customImageName = user.getFullName() + "_" + user.getId();
+                String uploadedUrl = cloudinaryService.uploadImage(avatarFile, "avatars", customImageName);
                 user.setAvatarUrl(uploadedUrl);
             } catch (IllegalArgumentException ex) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
