@@ -17,32 +17,76 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import com.bumptech.glide.Glide;
-import com.example.healthy_pet.R;
+import com.example.healthy_pet.adapters.MedicalHistoryAdapter;
+import com.example.healthy_pet.api.AppointmentMedicalApi;
+import com.example.healthy_pet.api.RetrofitClient;
+import com.example.healthy_pet.databinding.FragmentMedicalHistoryBinding;
 import com.example.healthy_pet.models.MedicalHistory;
 import com.example.healthy_pet.utils.CurrencyUtils;
+import com.example.healthy_pet.utils.SessionManager;
 import com.example.healthy_pet.utils.payment.CashPaymentStrategy;
 import com.example.healthy_pet.utils.payment.PaymentContext;
 import com.example.healthy_pet.utils.payment.PaymentStrategy;
 import com.example.healthy_pet.utils.payment.VietQrPaymentStrategy;
-import com.google.android.material.button.MaterialButton;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
- * [Thành viên 5] Nghiệp vụ 4: Quản lý Bệnh án, Thanh toán Viện phí (Strategy Pattern) & Thống kê DECIMAL(18, 0)
+ * [Thành viên 5 / Người 5] Nghiệp vụ 4: Xem Bệnh án, Thống kê DECIMAL(18, 0)
+ * & Thanh toán Viện phí áp dụng Strategy Pattern (VietQR & Tiền mặt - Không MoMo).
+ * Phụ trách: Thành viên 5.
  */
-public class MedicalHistoryFragment extends Fragment {
+public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAdapter.OnPayClickListener {
 
+    private FragmentMedicalHistoryBinding binding;
+    private MedicalHistoryAdapter adapter;
     private final PaymentContext paymentContext = new PaymentContext();
-    private MedicalHistory sampleHistory;
+    private final List<MedicalHistory> medicalHistories = new ArrayList<>();
+    private AppointmentMedicalApi appointmentApi;
+    private SessionManager sessionManager;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        sessionManager = new SessionManager(requireContext());
+        appointmentApi = RetrofitClient.getAppointmentMedicalApi();
+        initSampleHistories();
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_module_card, container, false);
+        binding = FragmentMedicalHistoryBinding.inflate(inflater, container, false);
 
-        sampleHistory = new MedicalHistory(
-                101L, 1L, 501L, "2026-10-18",
+        binding.rvMedicalHistories.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new MedicalHistoryAdapter(medicalHistories, this);
+        binding.rvMedicalHistories.setAdapter(adapter);
+
+        binding.btnRefresh.setOnClickListener(v -> loadMedicalHistoriesAndStats());
+
+        loadMedicalHistoriesAndStats();
+
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+
+    private void initSampleHistories() {
+        if (!medicalHistories.isEmpty()) return;
+
+        MedicalHistory h1 = new MedicalHistory(
+                101L, 503L, 101L, "2026-10-18",
                 "Ngứa tai, lắc đầu liên tục",
                 "Viêm ống tai ngoài do nấm Otodectes",
                 "Thuốc nhỏ tai Oridermyl 10g (2 lần/ngày)",
@@ -51,31 +95,104 @@ public class MedicalHistoryFragment extends Fragment {
                 "UNPAID",
                 ""
         );
+        h1.setPetName("LuLu (Poodle)");
 
-        String sampleTotal = CurrencyUtils.formatVND(sampleHistory.getCost());
-
-        ((TextView) view.findViewById(R.id.tvModuleBadge)).setText("NGHIỆP VỤ 4 • STRATEGY PATTERN");
-        TextView tvTitle = view.findViewById(R.id.tvModuleTitle);
-        tvTitle.setText("📋 Bệnh án & Thanh toán (" + sampleTotal + " - UNPAID)");
-
-        ((TextView) view.findViewById(R.id.tvModuleDescription)).setText(
-                "• Tra cứu lịch sử khám chữa bệnh, đơn thuốc và xem ảnh chụp toa thuốc trên Cloudinary.\n" +
-                "• Thanh toán viện phí thực tế (DECIMAL 18,0) áp dụng Strategy Pattern (VietQrPaymentStrategy & CashPaymentStrategy)."
+        MedicalHistory h2 = new MedicalHistory(
+                102L, 502L, 102L, "2026-10-12",
+                "Biếng ăn, nôn dịch vàng, sốt nhẹ",
+                "Viêm đường tiêu hóa do vi khuẩn",
+                "Thuốc Smecta 3g + Men vi sinh Bio-Flora + Điện giải",
+                new BigDecimal("450000"),
+                "https://res.cloudinary.com/demo/image/upload/prescription_102.jpg",
+                "PAID",
+                "VIETQR"
         );
-        ((TextView) view.findViewById(R.id.tvModuleTechInfo)).setText(
-                "Thực thể: MedicalHistories (payment_status, payment_method)\n" +
-                "Strategy Pattern: PaymentStrategy -> VietQrPaymentStrategy | CashPaymentStrategy\n" +
-                "API: PUT /api/medical-histories/{id}/pay"
+        h2.setPetName("Miu Miu (Mèo Anh)");
+
+        MedicalHistory h3 = new MedicalHistory(
+                103L, 501L, 103L, "2026-10-05",
+                "Tiêm ngừa định kỳ & kiểm tra da",
+                "Thú cưng hoàn toàn khỏe mạnh",
+                "Vắc xin Rabies 1ml + Vitamin tổng hợp",
+                new BigDecimal("450000"),
+                "https://res.cloudinary.com/demo/image/upload/prescription_103.jpg",
+                "PAID",
+                "CASH"
         );
+        h3.setPetName("Kiki (Corgi)");
 
-        MaterialButton btn = view.findViewById(R.id.btnModuleAction);
-        btn.setText("💳 Thanh toán Viện phí (" + sampleTotal + ")");
-        btn.setOnClickListener(v -> showPaymentStrategyDialog(tvTitle, btn));
-
-        return view;
+        medicalHistories.add(h1);
+        medicalHistories.add(h2);
+        medicalHistories.add(h3);
     }
 
-    private void showPaymentStrategyDialog(TextView tvTitle, MaterialButton btnAction) {
+    private void loadMedicalHistoriesAndStats() {
+        Long userId = sessionManager.getUserId();
+
+        // 1. Fetch histories from API
+        appointmentApi.getMedicalHistoriesByUser(userId).enqueue(new Callback<List<MedicalHistory>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<MedicalHistory>> call, @NonNull Response<List<MedicalHistory>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    medicalHistories.clear();
+                    medicalHistories.addAll(response.body());
+                }
+                updateUiState();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<MedicalHistory>> call, @NonNull Throwable t) {
+                updateUiState();
+            }
+        });
+
+        // 2. Fetch total cost stat from API
+        appointmentApi.getTotalMedicalCost(userId).enqueue(new Callback<Map<String, BigDecimal>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, BigDecimal>> call, @NonNull Response<Map<String, BigDecimal>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().containsKey("totalCost")) {
+                    BigDecimal apiTotal = response.body().get("totalCost");
+                    if (binding != null && apiTotal != null) {
+                        binding.tvTotalStats.setText("📋 Bệnh án & Tổng viện phí (" + CurrencyUtils.formatVND(apiTotal) + ")");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Map<String, BigDecimal>> call, @NonNull Throwable t) {}
+        });
+    }
+
+    private void updateUiState() {
+        if (binding == null) return;
+
+        BigDecimal localSum = BigDecimal.ZERO;
+        for (MedicalHistory item : medicalHistories) {
+            if (item.getCost() != null) {
+                localSum = localSum.add(item.getCost());
+            }
+        }
+        binding.tvTotalStats.setText("📋 Bệnh án & Tổng viện phí (" + CurrencyUtils.formatVND(localSum) + ")");
+
+        if (medicalHistories.isEmpty()) {
+            binding.tvEmptyState.setVisibility(View.VISIBLE);
+            binding.rvMedicalHistories.setVisibility(View.GONE);
+        } else {
+            binding.tvEmptyState.setVisibility(View.GONE);
+            binding.rvMedicalHistories.setVisibility(View.VISIBLE);
+            adapter.updateData(medicalHistories);
+        }
+    }
+
+    @Override
+    public void onPay(MedicalHistory history) {
+        showPaymentStrategyDialog(history);
+    }
+
+    /**
+     * Mở Dialog Chọn phương thức thanh toán áp dụng Strategy Pattern (VietQR & Tiền mặt - Không MoMo)
+     */
+    private void showPaymentStrategyDialog(MedicalHistory history) {
         PaymentStrategy[] strategies = new PaymentStrategy[]{
                 new VietQrPaymentStrategy(),
                 new CashPaymentStrategy()
@@ -86,19 +203,19 @@ public class MedicalHistoryFragment extends Fragment {
         };
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("💳 Chọn phương thức thanh toán")
+                .setTitle("💳 Phương thức thanh toán (Strategy Pattern)")
                 .setItems(titles, (dialog, which) -> {
                     paymentContext.setStrategy(strategies[which]);
-                    showPaymentPreviewAndConfirmDialog(tvTitle, btnAction);
+                    showPaymentPreviewAndConfirmDialog(history);
                 })
                 .setNegativeButton("Đóng", null)
                 .show();
     }
 
-    private void showPaymentPreviewAndConfirmDialog(TextView tvTitle, MaterialButton btnAction) {
+    private void showPaymentPreviewAndConfirmDialog(MedicalHistory history) {
         PaymentStrategy currentStrategy = paymentContext.getStrategy();
-        String previewInfo = paymentContext.getPreviewInfo(sampleHistory);
-        String amountFormatted = CurrencyUtils.formatVND(sampleHistory.getCost());
+        String previewInfo = paymentContext.getPreviewInfo(history);
+        String amountFormatted = CurrencyUtils.formatVND(history.getCost());
 
         int pad = (int) (18 * getResources().getDisplayMetrics().density);
         LinearLayout container = new LinearLayout(requireContext());
@@ -109,7 +226,7 @@ public class MedicalHistoryFragment extends Fragment {
         if ("VIETQR".equals(currentStrategy.getMethodCode())) {
             TextView tvGuide = new TextView(requireContext());
             tvGuide.setText("Quét mã VietQR bên dưới bằng ứng dụng Ngân hàng:\n• Số tiền: "
-                    + amountFormatted + "\n• Nội dung CK: HPET" + sampleHistory.getId());
+                    + amountFormatted + "\n• Nội dung CK: HPET" + history.getId());
             tvGuide.setTextSize(14f);
             tvGuide.setPadding(0, 0, 0, pad / 2);
             container.addView(tvGuide);
@@ -124,7 +241,6 @@ public class MedicalHistoryFragment extends Fragment {
             int qrPad = (int) (8 * getResources().getDisplayMetrics().density);
             ivQr.setPadding(qrPad, qrPad, qrPad, qrPad);
 
-            // Tạo sẵn Bitmap QR sắc nét làm placeholder ngay lập tức và tải ảnh thật từ img.vietqr.io bằng Glide
             Bitmap fallbackQr = createFallbackQrBitmap(400);
             ivQr.setImageBitmap(fallbackQr);
             Glide.with(this)
@@ -143,8 +259,8 @@ public class MedicalHistoryFragment extends Fragment {
             container.addView(tvBankInfo);
         } else {
             TextView tvCashGuide = new TextView(requireContext());
-            tvCashGuide.setText("💵 " + previewInfo + "\n\n• Mã hóa đơn: #HPET" + sampleHistory.getId()
-                    + "\n• Tổng thu: " + amountFormatted);
+            tvCashGuide.setText("💵 " + previewInfo + "\n\n• Mã hóa đơn: #HPET" + history.getId()
+                    + "\n• Số tiền cần nộp: " + amountFormatted);
             tvCashGuide.setTextSize(14f);
             container.addView(tvCashGuide);
         }
@@ -153,17 +269,25 @@ public class MedicalHistoryFragment extends Fragment {
                 .setTitle(currentStrategy.getDisplayName())
                 .setView(container)
                 .setPositiveButton("✓ Xác nhận đã thanh toán", (d, w) -> {
-                    String resultMsg = paymentContext.processPayment(requireContext(), sampleHistory);
-                    tvTitle.setText("📋 Bệnh án & Thanh toán (ĐÃ TT - " + sampleHistory.getPaymentMethod() + ")");
-                    btnAction.setText("✅ Đã thanh toán (" + sampleHistory.getPaymentMethod() + ")");
+                    String resultMsg = paymentContext.processPayment(requireContext(), history);
+                    updateUiState();
                     Toast.makeText(getContext(), resultMsg, Toast.LENGTH_LONG).show();
+
+                    // Gọi API Retrofit cập nhật trạng thái thanh toán lên cơ sở dữ liệu
+                    appointmentApi.payMedicalHistory(history.getId(), history.getPaymentMethod()).enqueue(new Callback<MedicalHistory>() {
+                        @Override
+                        public void onResponse(@NonNull Call<MedicalHistory> call, @NonNull Response<MedicalHistory> response) {}
+
+                        @Override
+                        public void onFailure(@NonNull Call<MedicalHistory> call, @NonNull Throwable t) {}
+                    });
                 })
                 .setNegativeButton("Quay lại", null)
                 .show();
     }
 
     /**
-     * Vẽ mã QR Bitmap dự phòng sắc nét để hiển thị ngay lập tức cả khi đang tải hoặc không có mạng.
+     * Vẽ mã QR Bitmap dự phòng bằng Canvas API khi offline.
      */
     private Bitmap createFallbackQrBitmap(int sizePx) {
         int grid = 21;

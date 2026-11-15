@@ -16,20 +16,27 @@ public class CashPaymentStrategy implements PaymentStrategy {
 
     @Override
     public String getDisplayName() {
-        return "Tiền mặt tại quầy thu ngân (CASH)";
+        return "Tiền mặt trực tiếp tại quầy thu ngân (CASH)";
     }
 
     @Override
     public String buildPaymentInfoOrQrUrl(MedicalHistory medicalHistory) {
-        return "Vui lòng đọc mã bệnh án #" + medicalHistory.getId()
-                + " và thanh toán " + CurrencyUtils.formatVND(medicalHistory.getCost())
-                + " trực tiếp tại quầy lễ tân phòng khám.";
+        if (medicalHistory == null) {
+            return "Vui lòng thanh toán tiền mặt trực tiếp tại quầy lễ tân.";
+        }
+        return "Vui lòng đọc mã hóa đơn Bệnh án #" + medicalHistory.getId()
+                + " và nộp " + CurrencyUtils.formatVND(medicalHistory.getCost())
+                + " tiền mặt trực tiếp cho thu ngân tại phòng khám.";
     }
 
     @Override
     public String executePayment(Context context, MedicalHistory medicalHistory) {
-        medicalHistory.setPaymentStatus("PAID");
-        medicalHistory.setPaymentMethod(getMethodCode());
-        return "Đã xác nhận thanh toán tiền mặt (" + CurrencyUtils.formatVND(medicalHistory.getCost()) + ") tại quầy!";
+        if (medicalHistory != null) {
+            medicalHistory.setPaymentStatus("PAID");
+            medicalHistory.setPaymentMethod(getMethodCode());
+            return "Đã xác nhận thu thành công " + CurrencyUtils.formatVND(medicalHistory.getCost()) + " tiền mặt tại quầy!";
+        }
+        return "Đã hoàn thành thanh toán tiền mặt!";
     }
 }
+

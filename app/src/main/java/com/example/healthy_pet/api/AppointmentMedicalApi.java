@@ -2,61 +2,57 @@ package com.example.healthy_pet.api;
 
 import com.example.healthy_pet.models.Appointment;
 import com.example.healthy_pet.models.MedicalHistory;
+import java.math.BigDecimal;
 import java.util.List;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
+import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
-import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-/**
- * [Thành viên 5] API Đặt lịch hẹn (NV 5b), Admin Duyệt lịch & Kê đơn (NV 7), Bệnh án & Thanh toán DECIMAL (NV 4)
- */
 public interface AppointmentMedicalApi {
 
-    @GET("appointments")
-    Call<List<Appointment>> getAppointmentsByUser(@Query("userId") Long userId);
-
-    @POST("appointments")
+    // NV 5b: User đặt lịch khám mới
+    @POST("api/appointments")
     Call<Appointment> createAppointment(@Body Appointment appointment);
 
-    // Admin: Danh sách tất cả lịch hẹn & Duyệt trạng thái (CONFIRMED / CANCELLED)
-    @GET("admin/appointments")
-    Call<List<Appointment>> getAllAppointments(@Query("status") String status);
+    // Lấy danh sách lịch khám của User
+    @GET("api/appointments/user/{userId}")
+    Call<List<Appointment>> getUserAppointments(@Path("userId") Long userId);
 
-    @PUT("admin/appointments/{id}/status")
+    // NV 7: Admin lấy tất cả lịch khám để duyệt
+    @GET("api/appointments")
+    Call<List<Appointment>> getAllAppointments();
+
+    // NV 7: Admin duyệt hoặc hủy lịch (status = CONFIRMED / CANCELLED)
+    @PUT("api/appointments/{id}/status")
     Call<Appointment> updateAppointmentStatus(
             @Path("id") Long appointmentId,
-            @Query("status") String newStatus
+            @Query("status") String status
     );
 
-    // Admin: Hoàn thành ca khám (COMPLETED) -> Tạo mới MedicalHistory kèm ảnh toa thuốc Cloudinary
-    @Multipart
-    @POST("admin/appointments/{id}/complete")
+    // NV 7 (Ăn điểm @Transactional): Hoàn thành lịch khám & tự động tạo bệnh án + đơn thuốc
+    @POST("api/appointments/{id}/complete")
     Call<MedicalHistory> completeAppointmentAndPrescribe(
             @Path("id") Long appointmentId,
-            @Part("pet_id") RequestBody petId,
-            @Part("symptoms") RequestBody symptoms,
-            @Part("diagnosis") RequestBody diagnosis,
-            @Part("prescription") RequestBody prescription,
-            @Part("cost") RequestBody costDecimal,
-            @Part MultipartBody.Part prescriptionImage
+            @Body MedicalHistory medicalRequest
     );
 
-    // User: Tra cứu lịch sử bệnh án & Thống kê chi phí DECIMAL(18, 0)
-    @GET("medical-histories")
-    Call<List<MedicalHistory>> getMedicalHistoriesByPet(@Query("petId") Long petId);
+    // NV 4: Xem lịch sử bệnh án theo thú cưng hoặc user
+    @GET("api/medical-histories/user/{userId}")
+    Call<List<MedicalHistory>> getMedicalHistoriesByUser(@Path("userId") Long userId);
 
-    // User: Thanh toán viện phí (Phương án 1 - Strategy Pattern: "VIETQR" hoặc "CASH")
-    @PUT("medical-histories/{id}/pay")
+    // NV 4: Cập nhật thanh toán viện phí (Strategy Pattern: VIETQR / CASH)
+    @PUT("api/medical-histories/{id}/pay")
     Call<MedicalHistory> payMedicalHistory(
             @Path("id") Long medicalHistoryId,
             @Query("paymentMethod") String paymentMethod
     );
+
+    // NV 4: Thống kê tổng chi phí khám chữa bệnh DECIMAL(18,0)
+    @GET("api/medical-histories/user/{userId}/total-cost")
+    Call<Map<String, BigDecimal>> getTotalMedicalCost(@Path("userId") Long userId);
 }

@@ -1,80 +1,67 @@
 package com.example.healthy_pet.models;
 
 import com.google.gson.annotations.SerializedName;
-import java.io.Serializable;
-import java.math.BigDecimal;
 
-/**
- * Thực thể 6: Appointments (Lịch hẹn khám & Spa)
- * Phụ trách chính: Thành viên 5 (NV 5b & NV 7)
- */
-public class Appointment implements Serializable {
+public class Appointment {
     @SerializedName("id")
     private Long id;
 
-    @SerializedName("user_id")
+    @SerializedName("userId")
     private Long userId;
 
-    @SerializedName("pet_id")
+    @SerializedName("petId")
     private Long petId;
 
-    @SerializedName("clinic_id")
+    @SerializedName("petName")
+    private String petName;
+
+    @SerializedName("clinicId")
     private Long clinicId;
 
-    @SerializedName("service_type")
-    private String serviceType;
+    @SerializedName("clinicName")
+    private String clinicName;
 
-    @SerializedName("appointment_time")
-    private String appointmentTime;
+    @SerializedName("appointmentDate")
+    private String appointmentDate; // Định dạng yyyy-MM-dd
 
-    @SerializedName("estimated_cost")
-    private BigDecimal estimatedCost; // DECIMAL(18, 0)
+    @SerializedName("appointmentTime")
+    private String appointmentTime; // Định dạng HH:mm:ss
+
+    @SerializedName("reason")
+    private String reason;
 
     @SerializedName("status")
     private String status; // PENDING, CONFIRMED, COMPLETED, CANCELLED
 
-    @SerializedName("note")
-    private String note;
+    public Appointment() {}
 
-    public Appointment() {
-    }
-
-    public Appointment(Long id, Long userId, Long petId, Long clinicId, String serviceType, String appointmentTime, BigDecimal estimatedCost, String status, String note) {
-        this.id = id;
+    public Appointment(Long userId, Long petId, Long clinicId, String appointmentDate, String appointmentTime, String reason) {
         this.userId = userId;
         this.petId = petId;
         this.clinicId = clinicId;
-        this.serviceType = serviceType;
+        this.appointmentDate = appointmentDate;
         this.appointmentTime = appointmentTime;
-        this.estimatedCost = estimatedCost;
-        this.status = status;
-        this.note = note;
+        this.reason = reason;
     }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
-
     public Long getPetId() { return petId; }
     public void setPetId(Long petId) { this.petId = petId; }
-
+    public String getPetName() { return petName; }
+    public void setPetName(String petName) { this.petName = petName; }
     public Long getClinicId() { return clinicId; }
     public void setClinicId(Long clinicId) { this.clinicId = clinicId; }
-
-    public String getServiceType() { return serviceType; }
-    public void setServiceType(String serviceType) { this.serviceType = serviceType; }
-
+    public String getClinicName() { return clinicName; }
+    public void setClinicName(String clinicName) { this.clinicName = clinicName; }
+    public String getAppointmentDate() { return appointmentDate; }
+    public void setAppointmentDate(String appointmentDate) { this.appointmentDate = appointmentDate; }
     public String getAppointmentTime() { return appointmentTime; }
     public void setAppointmentTime(String appointmentTime) { this.appointmentTime = appointmentTime; }
-
-    public BigDecimal getEstimatedCost() { return estimatedCost; }
-    public void setEstimatedCost(BigDecimal estimatedCost) { this.estimatedCost = estimatedCost; }
-
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
 }

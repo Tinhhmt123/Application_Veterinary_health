@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="3dp"
+    app:strokeColor="#1F64748B"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header: Pet Name, Date & Payment Status Badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvPetNameAndDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🐶 LuLu (Poodle) • 2026-10-18"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvPaymentBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#DCFCE7"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="ĐÃ TT (VIETQR)"
+                android:textColor="#15803D"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Symptoms, Diagnosis, Prescription, Cost -->
+        <TextView
+            android:id="@+id/tvSymptoms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="🤒 Triệu chứng: Ngứa tai, lắc đầu liên tục"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvDiagnosis"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="🩺 Chẩn đoán: Viêm ống tai ngoài do nấm Otodectes"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvPrescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="💊 Đơn thuốc: Thuốc nhỏ tai Oridermyl 10g (2 lần/ngày)"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvCost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="💰 Viện phí DECIMAL(18,0): 350.000 đ"
+            android:textColor="@color/emerald_700"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- Prescription Image Cloudinary -->
+        <ImageView
+            android:id="@+id/ivPrescription"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginTop="10dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="Ảnh đơn thuốc" />
+
+        <!-- Payment Action Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="💳 Thanh toán Viện phí (350.000 đ)"
+            android:textAllCaps="false"
+            android:textSize="13sp"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -13,7 +13,7 @@ public class VietQrPaymentStrategy implements PaymentStrategy {
 
     private static final String BANK_ID = "VCB";
     private static final String ACCOUNT_NO = "1031183832";
-    private static final String ACCOUNT_NAME = "NGUYEN TRONG TINH";
+    private static final String ACCOUNT_NAME = "HEALTHY PET";
 
     @Override
     public String getMethodCode() {
@@ -22,13 +22,17 @@ public class VietQrPaymentStrategy implements PaymentStrategy {
 
     @Override
     public String getDisplayName() {
-        return "Chuyển khoản Ngân hàng (VietQR)";
+        return "Chuyển khoản Ngân hàng (Mã VietQR)";
     }
 
     @Override
     public String buildPaymentInfoOrQrUrl(MedicalHistory medicalHistory) {
-        BigDecimal cost = medicalHistory.getCost() != null ? medicalHistory.getCost() : BigDecimal.ZERO;
-        Long id = medicalHistory.getId() != null ? medicalHistory.getId() : 101L;
+        BigDecimal cost = (medicalHistory != null && medicalHistory.getCost() != null)
+                ? medicalHistory.getCost()
+                : BigDecimal.ZERO;
+        Long id = (medicalHistory != null && medicalHistory.getId() != null)
+                ? medicalHistory.getId()
+                : 101L;
         String addInfo = "HPET" + id;
 
         return "https://img.vietqr.io/image/" + BANK_ID + "-" + ACCOUNT_NO
@@ -39,9 +43,13 @@ public class VietQrPaymentStrategy implements PaymentStrategy {
 
     @Override
     public String executePayment(Context context, MedicalHistory medicalHistory) {
-        medicalHistory.setPaymentStatus("PAID");
-        medicalHistory.setPaymentMethod(getMethodCode());
-        return "Đã thanh toán " + CurrencyUtils.formatVND(medicalHistory.getCost())
-                + " qua mã VietQR (Nội dung: HPET" + medicalHistory.getId() + ")";
+        if (medicalHistory != null) {
+            medicalHistory.setPaymentStatus("PAID");
+            medicalHistory.setPaymentMethod(getMethodCode());
+            return "Đã thanh toán " + CurrencyUtils.formatVND(medicalHistory.getCost())
+                    + " thành công qua Mã VietQR (Nội dung CK: HPET" + medicalHistory.getId() + ")";
+        }
+        return "Đã hoàn thành thanh toán VietQR!";
     }
 }
+

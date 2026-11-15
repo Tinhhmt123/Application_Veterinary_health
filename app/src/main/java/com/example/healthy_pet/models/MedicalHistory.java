@@ -5,70 +5,88 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * Thực thể 7: MedicalHistories (Bệnh án khám chữa bệnh & Thanh toán viện phí)
- * Phụ trách chính: Thành viên 5 (NV 4 & NV 7)
+ * Thực thể MedicalHistories (Bệnh án & Chi phí khám chữa bệnh DECIMAL 18, 0)
+ * Phụ trách chính: Người 5 / Thành viên 5 (NV 4 & NV 7)
  */
 public class MedicalHistory implements Serializable {
     @SerializedName("id")
     private Long id;
 
-    @SerializedName("pet_id")
+    @SerializedName("appointmentId")
+    private Long appointmentId;
+
+    @SerializedName("userId")
+    private Long userId;
+
+    @SerializedName("petId")
     private Long petId;
 
-    @SerializedName("appointment_id")
-    private Long appointmentId; // Nullable khi khám trực tiếp tại quầy
+    @SerializedName("petName")
+    private String petName;
 
-    @SerializedName("visit_date")
+    @SerializedName("visitDate")
     private String visitDate;
 
     @SerializedName("symptoms")
-    private String symptoms;
+    private String symptoms; // Triệu chứng bệnh
 
     @SerializedName("diagnosis")
-    private String diagnosis;
+    private String diagnosis; // Chẩn đoán bệnh
 
     @SerializedName("prescription")
-    private String prescription;
+    private String prescription; // Đơn thuốc kê đơn
 
-    @SerializedName("cost")
-    private BigDecimal cost; // DECIMAL(18, 0)
+    @SerializedName("totalCost")
+    private BigDecimal totalCost; // Tương ứng DECIMAL(18,0) trong SQL Server
 
-    @SerializedName("prescription_image_url")
-    private String prescriptionImageUrl;
+    @SerializedName("prescriptionUrl")
+    private String prescriptionUrl; // Link ảnh đơn thuốc trên Cloudinary
 
-    @SerializedName("payment_status")
+    @SerializedName("paymentStatus")
     private String paymentStatus; // "UNPAID" hoặc "PAID"
 
-    @SerializedName("payment_method")
+    @SerializedName("paymentMethod")
     private String paymentMethod; // "VIETQR" hoặc "CASH"
 
-    public MedicalHistory() {
-    }
+    public MedicalHistory() {}
 
-    public MedicalHistory(Long id, Long petId, Long appointmentId, String visitDate, String symptoms,
-                          String diagnosis, String prescription, BigDecimal cost,
-                          String prescriptionImageUrl, String paymentStatus, String paymentMethod) {
+    public MedicalHistory(Long id, Long appointmentId, Long petId, String visitDate,
+                          String symptoms, String diagnosis, String prescription,
+                          BigDecimal totalCost, String prescriptionUrl,
+                          String paymentStatus, String paymentMethod) {
         this.id = id;
-        this.petId = petId;
         this.appointmentId = appointmentId;
+        this.petId = petId;
         this.visitDate = visitDate;
         this.symptoms = symptoms;
         this.diagnosis = diagnosis;
         this.prescription = prescription;
-        this.cost = cost;
-        this.prescriptionImageUrl = prescriptionImageUrl;
+        this.totalCost = totalCost;
+        this.prescriptionUrl = prescriptionUrl;
         this.paymentStatus = paymentStatus;
         this.paymentMethod = paymentMethod;
+    }
+
+    public MedicalHistory(String diagnosis, String prescription, BigDecimal totalCost) {
+        this.diagnosis = diagnosis;
+        this.prescription = prescription;
+        this.totalCost = totalCost;
     }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public Long getAppointmentId() { return appointmentId; }
+    public void setAppointmentId(Long appointmentId) { this.appointmentId = appointmentId; }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
     public Long getPetId() { return petId; }
     public void setPetId(Long petId) { this.petId = petId; }
 
-    public Long getAppointmentId() { return appointmentId; }
-    public void setAppointmentId(Long appointmentId) { this.appointmentId = appointmentId; }
+    public String getPetName() { return petName; }
+    public void setPetName(String petName) { this.petName = petName; }
 
     public String getVisitDate() { return visitDate; }
     public void setVisitDate(String visitDate) { this.visitDate = visitDate; }
@@ -82,11 +100,14 @@ public class MedicalHistory implements Serializable {
     public String getPrescription() { return prescription; }
     public void setPrescription(String prescription) { this.prescription = prescription; }
 
-    public BigDecimal getCost() { return cost; }
-    public void setCost(BigDecimal cost) { this.cost = cost; }
+    public BigDecimal getTotalCost() { return totalCost; }
+    public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
 
-    public String getPrescriptionImageUrl() { return prescriptionImageUrl; }
-    public void setPrescriptionImageUrl(String prescriptionImageUrl) { this.prescriptionImageUrl = prescriptionImageUrl; }
+    public BigDecimal getCost() { return totalCost != null ? totalCost : BigDecimal.ZERO; }
+    public void setCost(BigDecimal cost) { this.totalCost = cost; }
+
+    public String getPrescriptionUrl() { return prescriptionUrl; }
+    public void setPrescriptionUrl(String prescriptionUrl) { this.prescriptionUrl = prescriptionUrl; }
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
