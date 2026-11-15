@@ -24,31 +24,49 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Drawer Header -->
+            <!-- Drawer Header hiển thị Avatar tròn + Họ tên + Email của người đang đăng nhập -->
             <LinearLayout
+                android:id="@+id/layoutDrawerHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/emerald_700"
-                android:orientation="vertical"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:padding="20dp">
 
-                <TextView
-                    android:id="@+id/tvDrawerUserName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🐾 Healthy Pet Menu"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                <ImageView
+                    android:id="@+id/ivDrawerUserAvatar"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:contentDescription="Ảnh đại diện người dùng"
+                    android:scaleType="centerCrop"
+                    android:src="@mipmap/ic_launcher_round" />
 
-                <TextView
-                    android:id="@+id/tvDrawerUserEmail"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Cài đặt • Theme • Trợ lý AI Thú Y"
-                    android:textColor="#D1FAE5"
-                    android:textSize="12sp" />
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvDrawerUserName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Healthy Pet"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDrawerUserEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Cài đặt • Theme • Trợ lý AI"
+                        android:textColor="#D1FAE5"
+                        android:textSize="12sp" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Mục 1: Theme (Sáng / Tối) -->
@@ -152,13 +170,27 @@
                     android:textSize="12sp"
                     app:strokeColor="@color/emerald_500" />
 
+                <!-- Nút Đăng xuất nhanh ngay trên Menu trượt -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDrawerLogout"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="🚪 Đăng xuất tài khoản"
+                    android:textAllCaps="false"
+                    android:textColor="@color/red_600"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="@color/red_600" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCloseDrawer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
                     android:text="Đóng Menu ←"
-                    android:textAllCaps="false" />
+                    android:textAllCaps="false"
+                    app:cornerRadius="10dp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

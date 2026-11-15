@@ -1,16 +1,23 @@
 package com.example.healthy_pet;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import com.example.healthy_pet.ui.Page_Admin;
 import com.example.healthy_pet.ui.Page_User;
 import com.example.healthy_pet.ui.auth.Login_Admin_User;
+import com.example.healthy_pet.utils.ImageMultipartUtils;
 import com.example.healthy_pet.utils.SessionManager;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 /**
@@ -23,8 +30,11 @@ public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private SessionManager sessionManager;
+    private LinearLayout layoutDrawerHeader;
+    private ImageView ivDrawerUserAvatar;
     private TextView tvDrawerUserName;
     private TextView tvDrawerUserEmail;
+    private MaterialButton btnDrawerLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +48,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         drawerLayout = findViewById(R.id.drawerLayout);
+        layoutDrawerHeader = findViewById(R.id.layoutDrawerHeader);
+        ivDrawerUserAvatar = findViewById(R.id.ivDrawerUserAvatar);
         tvDrawerUserName = findViewById(R.id.tvDrawerUserName);
         tvDrawerUserEmail = findViewById(R.id.tvDrawerUserEmail);
+        btnDrawerLogout = findViewById(R.id.btnDrawerLogout);
 
         findViewById(R.id.btnCloseDrawer).setOnClickListener(v -> drawerLayout.closeDrawer(GravityCompat.START));
+
+        btnDrawerLogout.setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            sessionManager.logout();
+            Toast.makeText(this, "Đã đăng xuất tài khoản", Toast.LENGTH_SHORT).show();
+            openLoginPage();
+        });
+
         setupNavigationDrawer();
+        syncDrawerUserHeader();
 
         if (savedInstanceState == null) {
             if (!sessionManager.isLoggedIn()) {
@@ -90,12 +112,44 @@ public class MainActivity extends AppCompatActivity {
 
     public void syncDrawerUserHeader() {
         if (tvDrawerUserName == null || tvDrawerUserEmail == null) return;
+
         if (sessionManager.isLoggedIn()) {
-            tvDrawerUserName.setText("🐾 " + sessionManager.getFullName());
-            tvDrawerUserEmail.setText(sessionManager.getEmail() + " • " + sessionManager.getRole());
+            boolean isAdmin = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
+            tvDrawerUserName.setText(sessionManager.getFullName());
+            tvDrawerUserEmail.setText(sessionManager.getEmail() + (isAdmin ? " • Quản trị viên" : " • Khách hàng"));
+
+            if (layoutDrawerHeader != null) {
+                int headerColor = ContextCompat.getColor(
+                        this,
+                        isAdmin ? R.color.indigo_600 : R.color.emerald_700
+                );
+                layoutDrawerHeader.setBackgroundColor(headerColor);
+            }
+
+            if (ivDrawerUserAvatar != null) {
+                String avatarUrl = sessionManager.getAvatarUrl();
+                if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                    ImageMultipartUtils.loadCircularAvatar(this, avatarUrl, ivDrawerUserAvatar);
+                } else {
+                    ivDrawerUserAvatar.setImageResource(R.mipmap.ic_launcher_round);
+                }
+            }
+
+            if (btnDrawerLogout != null) {
+                btnDrawerLogout.setVisibility(View.VISIBLE);
+            }
         } else {
-            tvDrawerUserName.setText("🐾 Healthy Pet Menu");
-            tvDrawerUserEmail.setText("Cài đặt • Theme • Trợ lý AI Thú Y");
+            tvDrawerUserName.setText("Healthy Pet");
+            tvDrawerUserEmail.setText("Cài đặt • Theme • Trợ lý AI");
+            if (layoutDrawerHeader != null) {
+                layoutDrawerHeader.setBackgroundColor(ContextCompat.getColor(this, R.color.emerald_700));
+            }
+            if (ivDrawerUserAvatar != null) {
+                ivDrawerUserAvatar.setImageResource(R.mipmap.ic_launcher_round);
+            }
+            if (btnDrawerLogout != null) {
+                btnDrawerLogout.setVisibility(View.GONE);
+            }
         }
     }
 

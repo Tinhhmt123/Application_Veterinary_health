@@ -104,7 +104,11 @@ public class Login_Admin_User extends Fragment {
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
                 setLoading(false);
-                Toast.makeText(getContext(), "Không thể kết nối máy chủ: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(
+                        getContext(),
+                        "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng!",
+                        Toast.LENGTH_LONG
+                ).show();
             }
         });
     }
