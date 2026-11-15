@@ -1,7 +1,10 @@
-
 package com.example.healthy_pet.ui.vaccine;
+import android.util.Log;
 
 import android.app.AlertDialog;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -11,12 +14,15 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -29,6 +35,8 @@ import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.models.VaccinationRecord;
 import com.example.healthy_pet.utils.SessionManager;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,17 +45,17 @@ import java.util.List;
 import java.util.Locale;
 
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import android.widget.ImageView;
 
 public class VaccineAlertFragment extends Fragment {
-
-    // =========================
-    // VIEWS
-    // =========================
 
     private Spinner spinnerPets;
 
@@ -63,25 +71,13 @@ public class VaccineAlertFragment extends Fragment {
     private Button btnAddVaccination;
     private ProgressBar progressBar;
 
-    // =========================
-    // API
-    // =========================
-
     private PetWeightApi petWeightApi;
     private VaccinationApi vaccinationApi;
-
-    // =========================
-    // SESSION
-    // =========================
 
     private SessionManager sessionManager;
 
     private Long userId;
     private Long selectedPetId;
-
-    // =========================
-    // DATA
-    // =========================
 
     private final List<Pet> petList = new ArrayList<>();
 
@@ -90,16 +86,74 @@ public class VaccineAlertFragment extends Fragment {
     private Call<List<VaccinationRecord>> alertsCall;
     private Call<VaccinationRecord> createCall;
 
-    private boolean isLoadingPets = false;
     private boolean isCreatingVaccination = false;
 
-    public VaccineAlertFragment() {
-        // Required empty public constructor
+    private ActivityResultLauncher<String> imagePickerLauncher;
+
+    private Uri selectedStampImageUri;
+
+    private ImageView ivStampPreview;
+
+    private void addStampImage(LinearLayout parent, String imageUrl) {
+
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return;
+        }
+
+        ImageView imageView = new ImageView(requireContext());
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        dpToPx(180)
+                );
+
+        params.setMargins(
+                dpToPx(10),
+                dpToPx(8),
+                dpToPx(10),
+                dpToPx(16)
+        );
+
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imageView.setBackgroundColor(Color.WHITE);
+
+        parent.addView(imageView, params);
+
+        String url = imageUrl.trim();
+
+        Glide.with(this)
+                .load(url)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .error(android.R.drawable.ic_delete)
+                .into(imageView);
     }
 
-    // =====================================================
-    // 1. CREATE VIEW
-    // =====================================================
+
+    public VaccineAlertFragment() {
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        selectedStampImageUri = uri;
+
+                        if (ivStampPreview != null) {
+                            ivStampPreview.setImageURI(uri);
+                            ivStampPreview.setVisibility(View.VISIBLE);
+                        }
+
+                        showToast("Đã chọn ảnh dấu mộc.");
+                    }
+                }
+        );
+    }
 
     @Nullable
     @Override
@@ -114,10 +168,6 @@ public class VaccineAlertFragment extends Fragment {
                 false
         );
     }
-
-    // =====================================================
-    // 2. INITIALIZE
-    // =====================================================
 
     @Override
     public void onViewCreated(
@@ -134,6 +184,7 @@ public class VaccineAlertFragment extends Fragment {
         vaccinationApi = RetrofitClient.getVaccinationApi();
 
         userId = sessionManager.getUserId();
+        Log.d("VACCINE_DEBUG", "Current userId = " + userId);
 
         btnAddVaccination.setEnabled(false);
 
@@ -147,7 +198,6 @@ public class VaccineAlertFragment extends Fragment {
             showAddVaccinationDialog();
         });
 
-        // Kiểm tra người dùng đã đăng nhập chưa.
         if (userId == null || userId <= 0) {
 
             showError(
@@ -191,10 +241,6 @@ public class VaccineAlertFragment extends Fragment {
                 view.findViewById(R.id.progressBar);
     }
 
-    // =====================================================
-    // 3. LOAD PETS
-    // =====================================================
-
     private void loadPets() {
 
         if (userId == null || !isAdded()) {
@@ -236,7 +282,6 @@ public class VaccineAlertFragment extends Fragment {
                         selectedPetId = null;
 
                         btnAddVaccination.setEnabled(false);
-
                         spinnerPets.setEnabled(false);
 
                         clearVaccinationData();
@@ -283,10 +328,6 @@ public class VaccineAlertFragment extends Fragment {
         });
     }
 
-    // =====================================================
-    // 4. SETUP PET SPINNER
-    // =====================================================
-
     private void setupPetSpinner() {
 
         if (!isAdded() || petList.isEmpty()) {
@@ -298,7 +339,6 @@ public class VaccineAlertFragment extends Fragment {
         for (Pet pet : petList) {
 
             String name = pet.getName();
-
             String species = pet.getSpecies();
 
             if (name == null || name.trim().isEmpty()) {
@@ -352,7 +392,6 @@ public class VaccineAlertFragment extends Fragment {
                             return;
                         }
 
-                        // Nếu vẫn chọn thú cưng hiện tại thì không tải lại.
                         if (newPetId.equals(selectedPetId)) {
                             return;
                         }
@@ -361,14 +400,11 @@ public class VaccineAlertFragment extends Fragment {
 
                         hideError();
 
-                        // Hủy request của thú cưng cũ.
                         cancelCall(historyCall);
                         cancelCall(alertsCall);
 
-                        // Xóa dữ liệu cũ.
                         clearVaccinationData();
 
-                        // Tải dữ liệu của thú cưng mới.
                         loadVaccinationHistory();
                         loadHealthAlerts();
                     }
@@ -377,6 +413,7 @@ public class VaccineAlertFragment extends Fragment {
                     public void onNothingSelected(
                             AdapterView<?> parent
                     ) {
+
                         selectedPetId = null;
 
                         cancelCall(historyCall);
@@ -389,13 +426,8 @@ public class VaccineAlertFragment extends Fragment {
                 }
         );
 
-        // Chọn thú cưng đầu tiên.
         spinnerPets.setSelection(0);
     }
-
-    // =====================================================
-    // 5. LOAD VACCINATION HISTORY
-    // =====================================================
 
     private void loadVaccinationHistory() {
 
@@ -424,7 +456,6 @@ public class VaccineAlertFragment extends Fragment {
                     return;
                 }
 
-                // Không hiển thị dữ liệu của thú cưng cũ.
                 if (!requestedPetId.equals(selectedPetId)) {
                     return;
                 }
@@ -471,10 +502,6 @@ public class VaccineAlertFragment extends Fragment {
         });
     }
 
-    // =====================================================
-    // 6. DISPLAY VACCINATION HISTORY
-    // =====================================================
-
     private void displayVaccinationHistory(
             List<VaccinationRecord> records
     ) {
@@ -492,7 +519,6 @@ public class VaccineAlertFragment extends Fragment {
             );
 
             tvHistoryEmpty.setVisibility(View.VISIBLE);
-
             return;
         }
 
@@ -500,27 +526,72 @@ public class VaccineAlertFragment extends Fragment {
 
         for (VaccinationRecord record : records) {
 
+            String nextDueDate = record.getNextDueDate();
+
             String information =
                     "💉 Vaccine: " + safeText(record.getVaccineName())
                             + "\n📅 Ngày tiêm: "
                             + safeText(record.getInjectionDate())
                             + "\n⏰ Ngày tiêm tiếp theo: "
-                            + safeText(record.getNextDueDate())
+                            + safeText(nextDueDate)
                             + "\n🏥 Phòng khám: "
-                            + safeText(record.getClinicName());
+                            + safeText(record.getClinicName())
+                            + "\n📌 Trạng thái: "
+                            + getVaccinationStatus(nextDueDate);
 
             addInfoCard(
                     layoutVaccinationHistory,
-                    information
+                    information,
+                    nextDueDate
+            );
+
+            // Hiển thị ảnh dấu mộc đã lưu trên Backend
+            addStampImage(
+                    layoutVaccinationHistory,
+                    record.getStampImageUrl()
             );
         }
     }
 
-    // =====================================================
-    // 7. LOAD HEALTH ALERTS
-    // =====================================================
+    public void refreshHealthAlerts() {
+
+        if (!isAdded()) {
+            return;
+        }
+
+        if (selectedPetId == null) {
+            return;
+        }
+
+        loadHealthAlerts();
+    }
 
     private void loadHealthAlerts() {
+
+        if (sessionManager != null
+                && !sessionManager.isAlert7DaysEnabled()) {
+
+            cancelCall(alertsCall);
+
+            if (layoutAlerts != null) {
+                layoutAlerts.removeAllViews();
+            }
+
+            if (tvUpcomingVaccinations != null) {
+                tvUpcomingVaccinations.setText("0");
+            }
+
+            if (tvAlertEmpty != null) {
+
+                tvAlertEmpty.setText(
+                        "Bạn đã tắt cảnh báo tiêm chủng."
+                );
+
+                tvAlertEmpty.setVisibility(View.VISIBLE);
+            }
+
+            return;
+        }
 
         if (userId == null || selectedPetId == null || !isAdded()) {
             return;
@@ -530,8 +601,6 @@ public class VaccineAlertFragment extends Fragment {
 
         cancelCall(alertsCall);
 
-        // API trả về cảnh báo của tất cả thú cưng thuộc user.
-        // Android sẽ lọc theo thú cưng đang được chọn.
         alertsCall = vaccinationApi.getHealthAlerts(userId);
 
         alertsCall.enqueue(new Callback<List<VaccinationRecord>>() {
@@ -602,10 +671,6 @@ public class VaccineAlertFragment extends Fragment {
         });
     }
 
-    // =====================================================
-    // 8. DISPLAY HEALTH ALERTS
-    // =====================================================
-
     private void displayHealthAlerts(
             List<VaccinationRecord> alerts
     ) {
@@ -623,7 +688,6 @@ public class VaccineAlertFragment extends Fragment {
             );
 
             tvAlertEmpty.setVisibility(View.VISIBLE);
-
             return;
         }
 
@@ -631,23 +695,24 @@ public class VaccineAlertFragment extends Fragment {
 
         for (VaccinationRecord record : alerts) {
 
+            String nextDueDate = record.getNextDueDate();
+
             String information =
                     "⚠️ Vaccine: " + safeText(record.getVaccineName())
                             + "\n📅 Ngày tiêm tiếp theo: "
-                            + safeText(record.getNextDueDate())
+                            + safeText(nextDueDate)
                             + "\n🏥 Phòng khám: "
-                            + safeText(record.getClinicName());
+                            + safeText(record.getClinicName())
+                            + "\n📌 Trạng thái: "
+                            + getVaccinationStatus(nextDueDate);
 
             addInfoCard(
                     layoutAlerts,
-                    information
+                    information,
+                    nextDueDate
             );
         }
     }
-
-    // =====================================================
-    // 9. ADD VACCINATION DIALOG
-    // =====================================================
 
     private void showAddVaccinationDialog() {
 
@@ -655,8 +720,10 @@ public class VaccineAlertFragment extends Fragment {
             return;
         }
 
-        LinearLayout form = new LinearLayout(requireContext());
+        selectedStampImageUri = null;
+        ivStampPreview = null;
 
+        LinearLayout form = new LinearLayout(requireContext());
         form.setOrientation(LinearLayout.VERTICAL);
 
         int padding = dpToPx(20);
@@ -685,6 +752,30 @@ public class VaccineAlertFragment extends Fragment {
         form.addView(edtNextDueDate);
         form.addView(edtClinicName);
 
+        Button btnChooseImage = new Button(requireContext());
+        btnChooseImage.setText("Chọn ảnh dấu mộc");
+
+        form.addView(btnChooseImage);
+
+        ivStampPreview = new ImageView(requireContext());
+        ivStampPreview.setVisibility(View.GONE);
+        ivStampPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+        LinearLayout.LayoutParams imageParams =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        dpToPx(160)
+                );
+
+        imageParams.setMargins(
+                0,
+                dpToPx(10),
+                0,
+                dpToPx(10)
+        );
+
+        form.addView(ivStampPreview, imageParams);
+
         AlertDialog dialog =
                 new AlertDialog.Builder(requireContext())
                         .setTitle("Thêm hồ sơ tiêm chủng")
@@ -692,6 +783,10 @@ public class VaccineAlertFragment extends Fragment {
                         .setNegativeButton("Hủy", null)
                         .setPositiveButton("Lưu", null)
                         .create();
+
+        btnChooseImage.setOnClickListener(v -> {
+            imagePickerLauncher.launch("image/*");
+        });
 
         dialog.setOnShowListener(d -> {
 
@@ -733,6 +828,20 @@ public class VaccineAlertFragment extends Fragment {
                     return;
                 }
 
+                String today = new SimpleDateFormat(
+                        "yyyy-MM-dd",
+                        Locale.US
+                ).format(new Date());
+
+                if (injectionDate.compareTo(today) > 0) {
+
+                    showToast(
+                            "Ngày tiêm không được lớn hơn ngày hiện tại!"
+                    );
+
+                    return;
+                }
+
                 if (nextDueDate.compareTo(injectionDate) <= 0) {
 
                     showToast(
@@ -747,9 +856,14 @@ public class VaccineAlertFragment extends Fragment {
                         injectionDate,
                         nextDueDate,
                         clinicName,
+                        selectedStampImageUri,
                         dialog
                 );
             });
+        });
+
+        dialog.setOnDismissListener(d -> {
+            ivStampPreview = null;
         });
 
         dialog.show();
@@ -760,21 +874,17 @@ public class VaccineAlertFragment extends Fragment {
         EditText editText = new EditText(requireContext());
 
         editText.setHint(hint);
-
         editText.setSingleLine(true);
 
         return editText;
     }
-
-    // =====================================================
-    // 10. CREATE VACCINATION
-    // =====================================================
 
     private void createVaccination(
             String vaccineName,
             String injectionDate,
             String nextDueDate,
             String clinicName,
+            Uri imageUri,
             AlertDialog dialog
     ) {
 
@@ -817,6 +927,28 @@ public class VaccineAlertFragment extends Fragment {
         RequestBody clinicNameBody =
                 createPartFromString(clinicName);
 
+        MultipartBody.Part stampImagePart = null;
+
+        if (imageUri != null) {
+
+            try {
+
+                stampImagePart = createStampImagePart(imageUri);
+
+            } catch (Exception e) {
+
+                isCreatingVaccination = false;
+
+                btnAddVaccination.setEnabled(true);
+
+                showError(
+                        "Không thể đọc ảnh dấu mộc: " + e.getMessage()
+                );
+
+                return;
+            }
+        }
+
         showLoading(true);
 
         final Long requestedPetId = selectedPetId;
@@ -828,7 +960,7 @@ public class VaccineAlertFragment extends Fragment {
                 injectionDateBody,
                 nextDueDateBody,
                 clinicNameBody,
-                null
+                stampImagePart
         );
 
         createCall.enqueue(new Callback<VaccinationRecord>() {
@@ -857,7 +989,6 @@ public class VaccineAlertFragment extends Fragment {
                             "Thêm hồ sơ tiêm chủng thành công!"
                     );
 
-                    // Chỉ tải lại nếu vẫn đang chọn thú cưng đã thêm.
                     if (requestedPetId.equals(selectedPetId)) {
 
                         loadVaccinationHistory();
@@ -871,10 +1002,13 @@ public class VaccineAlertFragment extends Fragment {
                                     + response.code();
 
                     try {
+
                         if (response.errorBody() != null) {
+
                             errorMessage += "\n"
                                     + response.errorBody().string();
                         }
+
                     } catch (Exception ignored) {
                     }
 
@@ -906,9 +1040,92 @@ public class VaccineAlertFragment extends Fragment {
         });
     }
 
-    // =====================================================
-    // 11. HELPER METHODS
-    // =====================================================
+    private MultipartBody.Part createStampImagePart(Uri imageUri)
+            throws Exception {
+
+        if (!isAdded()) {
+            throw new Exception("Fragment không còn hoạt động.");
+        }
+
+        String mimeType =
+                requireContext()
+                        .getContentResolver()
+                        .getType(imageUri);
+
+        if (mimeType == null || !mimeType.startsWith("image/")) {
+            throw new Exception("Tệp được chọn không phải hình ảnh.");
+        }
+
+        byte[] imageBytes;
+
+        try (InputStream inputStream =
+                     requireContext()
+                             .getContentResolver()
+                             .openInputStream(imageUri);
+             ByteArrayOutputStream outputStream =
+                     new ByteArrayOutputStream()) {
+
+            if (inputStream == null) {
+                throw new Exception("Không thể mở ảnh.");
+            }
+
+            byte[] buffer = new byte[4096];
+
+            int length;
+
+            while ((length = inputStream.read(buffer)) != -1) {
+
+                outputStream.write(buffer, 0, length);
+
+                if (outputStream.size() > 10 * 1024 * 1024) {
+                    throw new Exception("Ảnh không được vượt quá 10MB.");
+                }
+            }
+
+            imageBytes = outputStream.toByteArray();
+        }
+
+        if (imageBytes.length == 0) {
+            throw new Exception("Ảnh không có dữ liệu.");
+        }
+
+        RequestBody requestBody =
+                RequestBody.create(
+                        MediaType.parse(mimeType),
+                        imageBytes
+                );
+
+        String fileName =
+                "vaccination_stamp." + extensionForMime(mimeType);
+
+        return MultipartBody.Part.createFormData(
+                "stampImage",
+                fileName,
+                requestBody
+        );
+    }
+
+    private String extensionForMime(String mimeType) {
+
+        if (mimeType == null) {
+            return "jpg";
+        }
+
+        switch (mimeType.toLowerCase(Locale.US)) {
+
+            case "image/png":
+                return "png";
+
+            case "image/webp":
+                return "webp";
+
+            case "image/jpeg":
+                return "jpg";
+
+            default:
+                return "jpg";
+        }
+    }
 
     private RequestBody createPartFromString(String value) {
 
@@ -918,16 +1135,70 @@ public class VaccineAlertFragment extends Fragment {
         );
     }
 
+    private String getVaccinationStatus(String nextDueDate) {
+
+        if (!isValidDate(nextDueDate)) {
+            return "Chưa xác định";
+        }
+
+        try {
+
+            SimpleDateFormat formatter =
+                    new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
+            formatter.setLenient(false);
+
+            Date dueDate = formatter.parse(nextDueDate);
+
+            if (dueDate == null) {
+                return "Chưa xác định";
+            }
+
+            java.util.Calendar todayCalendar =
+                    java.util.Calendar.getInstance();
+
+            todayCalendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+            todayCalendar.set(java.util.Calendar.MINUTE, 0);
+            todayCalendar.set(java.util.Calendar.SECOND, 0);
+            todayCalendar.set(java.util.Calendar.MILLISECOND, 0);
+
+            Date today = todayCalendar.getTime();
+
+            java.util.Calendar limitCalendar =
+                    (java.util.Calendar) todayCalendar.clone();
+
+            limitCalendar.add(java.util.Calendar.DAY_OF_YEAR, 7);
+
+            Date sevenDaysLater = limitCalendar.getTime();
+
+            if (dueDate.before(today)) {
+                return "Đã quá hạn";
+            }
+
+            if (!dueDate.after(sevenDaysLater)) {
+                return "Sắp đến hạn";
+            }
+
+            return "Chưa đến hạn";
+
+        } catch (Exception e) {
+
+            return "Chưa xác định";
+        }
+    }
+
     private void addInfoCard(
             LinearLayout parent,
-            String information
+            String information,
+            String nextDueDate
     ) {
 
         TextView textView = new TextView(requireContext());
 
         textView.setText(information);
-
         textView.setTextSize(14);
+        textView.setTextColor(Color.parseColor("#334155"));
+        textView.setLineSpacing(dpToPx(2), 1.0f);
 
         textView.setPadding(
                 dpToPx(14),
@@ -936,9 +1207,47 @@ public class VaccineAlertFragment extends Fragment {
                 dpToPx(12)
         );
 
-        textView.setBackgroundResource(
-                android.R.drawable.dialog_holo_light_frame
-        );
+        int backgroundColor;
+        int borderColor;
+
+        switch (getVaccinationStatus(nextDueDate)) {
+
+            case "Đã quá hạn":
+
+                backgroundColor = Color.parseColor("#FEE2E2");
+                borderColor = Color.parseColor("#DC2626");
+
+                break;
+
+            case "Sắp đến hạn":
+
+                backgroundColor = Color.parseColor("#FFEDD5");
+                borderColor = Color.parseColor("#EA580C");
+
+                break;
+
+            case "Chưa đến hạn":
+
+                backgroundColor = Color.parseColor("#DCFCE7");
+                borderColor = Color.parseColor("#16A34A");
+
+                break;
+
+            default:
+
+                backgroundColor = Color.parseColor("#F1F5F9");
+                borderColor = Color.parseColor("#94A3B8");
+
+                break;
+        }
+
+        GradientDrawable background = new GradientDrawable();
+
+        background.setColor(backgroundColor);
+        background.setCornerRadius(dpToPx(12));
+        background.setStroke(dpToPx(2), borderColor);
+
+        textView.setBackground(background);
 
         LinearLayout.LayoutParams params =
                 new LinearLayout.LayoutParams(
@@ -946,12 +1255,7 @@ public class VaccineAlertFragment extends Fragment {
                         ViewGroup.LayoutParams.WRAP_CONTENT
                 );
 
-        params.setMargins(
-                0,
-                0,
-                0,
-                dpToPx(10)
-        );
+        params.setMargins(0, 0, 0, dpToPx(12));
 
         parent.addView(textView, params);
     }
@@ -965,11 +1269,11 @@ public class VaccineAlertFragment extends Fragment {
         return value;
     }
 
-    // Kiểm tra ngày yyyy-MM-dd, tương thích Android API 21.
     private boolean isValidDate(String date) {
 
         if (date == null
                 || !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+
             return false;
         }
 
@@ -1028,6 +1332,7 @@ public class VaccineAlertFragment extends Fragment {
     private void showToast(String message) {
 
         if (isAdded()) {
+
             Toast.makeText(
                     requireContext(),
                     message,
@@ -1070,10 +1375,6 @@ public class VaccineAlertFragment extends Fragment {
         }
     }
 
-    // =====================================================
-    // 12. DESTROY VIEW
-    // =====================================================
-
     @Override
     public void onDestroyView() {
 
@@ -1081,6 +1382,8 @@ public class VaccineAlertFragment extends Fragment {
         cancelCall(historyCall);
         cancelCall(alertsCall);
         cancelCall(createCall);
+
+        ivStampPreview = null;
 
         super.onDestroyView();
     }

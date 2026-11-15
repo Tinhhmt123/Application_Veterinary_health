@@ -22,14 +22,15 @@
             android:orientation="horizontal"
             android:paddingHorizontal="14dp">
 
+
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnAppIconMenu"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:clickable="true"
                 android:focusable="true"
                 app:cardBackgroundColor="#33FFFFFF"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/white"
                 app:strokeWidth="1.5dp">
@@ -41,7 +42,9 @@
                     android:gravity="center"
                     android:text="🐾"
                     android:textSize="18sp" />
+
             </com.google.android.material.card.MaterialCardView>
+
 
             <LinearLayout
                 android:id="@+id/layoutTitleClick"
@@ -75,7 +78,10 @@
                 android:id="@+id/btnSwitchRole"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="48dp"
+                android:minHeight="48dp"
+                android:minWidth="48dp"
+                android:paddingHorizontal="8dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:text="USER ⇄ ADMIN"
@@ -419,6 +425,23 @@
                     android:text="🤖 AI Bác Sĩ Thú Y: Chào bạn! Hãy chọn câu hỏi nhanh bên dưới để được tư vấn sơ cứu cho thú cưng."
                     android:textColor="@color/slate_800"
                     android:textSize="13sp" />
+
+                <!-- Nút mở màn hình trò chuyện AI -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenAiChat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="🤖 Trò chuyện với AI Thú Y"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/emerald_600"
+                    app:cornerRadius="12dp"
+                    app:icon="@android:drawable/ic_dialog_email"
+                    app:iconTint="@color/white" />
+
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAiFaq1"

@@ -132,4 +132,8 @@ public class SessionManager {
                 .remove(KEY_ROLE)
                 .apply();
     }
+    // Kiểm tra người dùng đã đăng nhập hợp lệ hay chưa
+    public boolean isLoggedIn() {
+        return getUserId() != null;
+    }
 }
