@@ -4,9 +4,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -17,7 +17,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.text.Normalizer;
-import java.util.Base64;
+import java.time.Duration;
 import java.util.HexFormat;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -32,6 +32,9 @@ public class CloudinaryService {
 
     private static final Pattern SECURE_URL_PATTERN = Pattern.compile("\"secure_url\"\\s*:\\s*\"([^\"]+)\"");
     private static final long MAX_FILE_SIZE_BYTES = 10L * 1024 * 1024; // 10 MB
+    private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
     @Value("${cloudinary.cloud-name:}")
     private String cloudName;
@@ -113,26 +116,17 @@ public class CloudinaryService {
         MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
         String signature = HexFormat.of().formatHex(sha1.digest(toSign.getBytes(StandardCharsets.UTF_8)));
 
-        String mimeType = file.getContentType() != null ? file.getContentType() : "image/jpeg";
-        String dataUri = "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(file.getBytes());
-
-        StringBuilder formBody = new StringBuilder();
-        formBody.append("file=").append(URLEncoder.encode(dataUri, StandardCharsets.UTF_8))
-                .append("&api_key=").append(URLEncoder.encode(apiKey, StandardCharsets.UTF_8))
-                .append("&timestamp=").append(timestamp)
-                .append("&folder=").append(URLEncoder.encode(safeFolder, StandardCharsets.UTF_8));
-        if (safePublicId != null && !safePublicId.isBlank()) {
-            formBody.append("&public_id=").append(URLEncoder.encode(safePublicId, StandardCharsets.UTF_8));
-        }
-        formBody.append("&signature=").append(signature);
+        String boundary = "----HealthyPetBoundary" + UUID.randomUUID().toString().replace("-", "");
+        byte[] multipartBody = buildMultipartBody(boundary, file, safeFolder, safePublicId, timestamp, signature);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.cloudinary.com/v1_1/" + cloudName + "/image/upload"))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(formBody.toString()))
+                .timeout(Duration.ofSeconds(30))
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(multipartBody))
                 .build();
 
-        HttpResponse<String> response = HttpClient.newHttpClient()
+        HttpResponse<String> response = SHARED_HTTP_CLIENT
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() >= 200 && response.statusCode() < 300) {
@@ -142,6 +136,45 @@ public class CloudinaryService {
             }
         }
         throw new IOException("Cloudinary trả về mã lỗi " + response.statusCode() + ": " + response.body());
+    }
+
+    private byte[] buildMultipartBody(
+            String boundary,
+            MultipartFile file,
+            String safeFolder,
+            String safePublicId,
+            long timestamp,
+            String signature
+    ) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        appendFormField(out, boundary, "api_key", apiKey);
+        appendFormField(out, boundary, "timestamp", String.valueOf(timestamp));
+        appendFormField(out, boundary, "folder", safeFolder);
+        if (safePublicId != null && !safePublicId.isBlank()) {
+            appendFormField(out, boundary, "public_id", safePublicId);
+        }
+        appendFormField(out, boundary, "signature", signature);
+
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "upload.jpg";
+        String safeFilename = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String mimeType = (file.getContentType() != null && !file.getContentType().isBlank())
+                ? file.getContentType().replaceAll("[\\r\\n]", "")
+                : "image/jpeg";
+
+        out.write(("--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"file\"; filename=\"" + safeFilename + "\"\r\n"
+                + "Content-Type: " + mimeType + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+        out.write(file.getBytes());
+        out.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        return out.toByteArray();
+    }
+
+    private void appendFormField(ByteArrayOutputStream out, String boundary, String name, String value) throws IOException {
+        String safeValue = value != null ? value.replaceAll("[\\r\\n]", "") : "";
+        String part = "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n"
+                + safeValue + "\r\n";
+        out.write(part.getBytes(StandardCharsets.UTF_8));
     }
 
     private String saveLocally(MultipartFile file, String folder, String safePublicId) {
