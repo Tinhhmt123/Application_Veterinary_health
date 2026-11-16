@@ -3,15 +3,19 @@ package com.example.healthy_pet.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.appcompat.app.AppCompatDelegate;
+import com.example.healthy_pet.models.User;
 
 /**
  * Quản lý phiên đăng nhập và cấu hình hệ thống bằng SharedPreferences (NV 1 & Menu trượt).
  */
 public class SessionManager {
     private static final String PREF_NAME = "HealthyPetPrefs";
+    private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_EMAIL = "email";
+    private static final String KEY_PHONE_NUMBER = "phone_number";
+    private static final String KEY_AVATAR_URL = "avatar_url";
     private static final String KEY_ROLE = "role"; // "USER" hoặc "ADMIN"
     private static final String KEY_DARK_MODE = "dark_mode";
     private static final String KEY_ALERT_7_DAYS = "alert_7_days";
@@ -25,6 +29,7 @@ public class SessionManager {
     }
 
     public void saveUserSession(Long userId, String fullName, String email, String role) {
+        editor.putBoolean(KEY_IS_LOGGED_IN, true);
         editor.putLong(KEY_USER_ID, userId != null ? userId : 1L);
         editor.putString(KEY_FULL_NAME, fullName);
         editor.putString(KEY_EMAIL, email);
@@ -32,16 +37,42 @@ public class SessionManager {
         editor.apply();
     }
 
+    public void saveUser(User user) {
+        if (user == null) {
+            return;
+        }
+        editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        editor.putLong(KEY_USER_ID, user.getId() != null ? user.getId() : 1L);
+        editor.putString(KEY_FULL_NAME, user.getFullName() != null ? user.getFullName() : "");
+        editor.putString(KEY_EMAIL, user.getEmail() != null ? user.getEmail() : "");
+        editor.putString(KEY_PHONE_NUMBER, user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
+        editor.putString(KEY_AVATAR_URL, user.getAvatarUrl());
+        editor.putString(KEY_ROLE, user.getRole() != null ? user.getRole() : "USER");
+        editor.apply();
+    }
+
+    public boolean isLoggedIn() {
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
+    }
+
     public Long getUserId() {
         return prefs.getLong(KEY_USER_ID, 1L);
     }
 
     public String getFullName() {
-        return prefs.getString(KEY_FULL_NAME, "Nguyễn Minh Tinh");
+        return prefs.getString(KEY_FULL_NAME, "Nguyễn Văn Tính");
     }
 
     public String getEmail() {
-        return prefs.getString(KEY_EMAIL, "minhtinh@gmail.com");
+        return prefs.getString(KEY_EMAIL, "tinh@gmail.com");
+    }
+
+    public String getPhoneNumber() {
+        return prefs.getString(KEY_PHONE_NUMBER, "");
+    }
+
+    public String getAvatarUrl() {
+        return prefs.getString(KEY_AVATAR_URL, null);
     }
 
     public String getRole() {
@@ -75,7 +106,12 @@ public class SessionManager {
     }
 
     public void logout() {
+        boolean darkMode = isDarkMode();
+        boolean alert7Days = isAlert7DaysEnabled();
         editor.clear();
+        editor.putBoolean(KEY_IS_LOGGED_IN, false);
+        editor.putBoolean(KEY_DARK_MODE, darkMode);
+        editor.putBoolean(KEY_ALERT_7_DAYS, alert7Days);
         editor.apply();
     }
 }
