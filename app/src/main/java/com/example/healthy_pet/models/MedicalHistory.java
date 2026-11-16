@@ -5,54 +5,55 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * Thực thể MedicalHistories (Bệnh án & Chi phí khám chữa bệnh DECIMAL 18, 0)
- * Phụ trách chính: Người 5 / Thành viên 5 (NV 4 & NV 7)
+ * Thực thể 7: MedicalHistories (Bệnh án khám chữa bệnh & Chi phí DECIMAL 18, 0)
+ * Khớp 100% với file Entity_Flow.docx:
+ * id, pet_id, appointment_id, visit_date, symptoms, diagnosis, prescription, cost, prescription_image_url
  */
 public class MedicalHistory implements Serializable {
     @SerializedName("id")
     private Long id;
 
-    @SerializedName("appointmentId")
+    @SerializedName("appointment_id")
     private Long appointmentId;
 
-    @SerializedName("userId")
+    @SerializedName("user_id")
     private Long userId;
 
-    @SerializedName("petId")
+    @SerializedName("pet_id")
     private Long petId;
 
-    @SerializedName("petName")
+    @SerializedName("pet_name")
     private String petName;
 
-    @SerializedName("visitDate")
+    @SerializedName("visit_date")
     private String visitDate;
 
     @SerializedName("symptoms")
     private String symptoms; // Triệu chứng bệnh
 
     @SerializedName("diagnosis")
-    private String diagnosis; // Chẩn đoán bệnh
+    private String diagnosis; // Chẩn đoán của bác sĩ
 
     @SerializedName("prescription")
-    private String prescription; // Đơn thuốc kê đơn
+    private String prescription; // Đơn thuốc
 
-    @SerializedName("totalCost")
-    private BigDecimal totalCost; // Tương ứng DECIMAL(18,0) trong SQL Server
+    @SerializedName("cost")
+    private BigDecimal cost; // Chi phí thực tế DECIMAL(18, 0)
 
-    @SerializedName("prescriptionUrl")
-    private String prescriptionUrl; // Link ảnh đơn thuốc trên Cloudinary
+    @SerializedName("prescription_image_url")
+    private String prescriptionImageUrl; // Ảnh chụp toa thuốc trên Cloudinary
 
-    @SerializedName("paymentStatus")
+    @SerializedName("payment_status")
     private String paymentStatus; // "UNPAID" hoặc "PAID"
 
-    @SerializedName("paymentMethod")
+    @SerializedName("payment_method")
     private String paymentMethod; // "VIETQR" hoặc "CASH"
 
     public MedicalHistory() {}
 
     public MedicalHistory(Long id, Long appointmentId, Long petId, String visitDate,
                           String symptoms, String diagnosis, String prescription,
-                          BigDecimal totalCost, String prescriptionUrl,
+                          BigDecimal cost, String prescriptionImageUrl,
                           String paymentStatus, String paymentMethod) {
         this.id = id;
         this.appointmentId = appointmentId;
@@ -61,16 +62,16 @@ public class MedicalHistory implements Serializable {
         this.symptoms = symptoms;
         this.diagnosis = diagnosis;
         this.prescription = prescription;
-        this.totalCost = totalCost;
-        this.prescriptionUrl = prescriptionUrl;
+        this.cost = cost;
+        this.prescriptionImageUrl = prescriptionImageUrl;
         this.paymentStatus = paymentStatus;
         this.paymentMethod = paymentMethod;
     }
 
-    public MedicalHistory(String diagnosis, String prescription, BigDecimal totalCost) {
+    public MedicalHistory(String diagnosis, String prescription, BigDecimal cost) {
         this.diagnosis = diagnosis;
         this.prescription = prescription;
-        this.totalCost = totalCost;
+        this.cost = cost;
     }
 
     public Long getId() { return id; }
@@ -100,14 +101,19 @@ public class MedicalHistory implements Serializable {
     public String getPrescription() { return prescription; }
     public void setPrescription(String prescription) { this.prescription = prescription; }
 
-    public BigDecimal getTotalCost() { return totalCost; }
-    public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
+    public BigDecimal getCost() { return cost != null ? cost : BigDecimal.ZERO; }
+    public void setCost(BigDecimal cost) { this.cost = cost; }
 
-    public BigDecimal getCost() { return totalCost != null ? totalCost : BigDecimal.ZERO; }
-    public void setCost(BigDecimal cost) { this.totalCost = cost; }
+    // Tương thích code cũ
+    public BigDecimal getTotalCost() { return getCost(); }
+    public void setTotalCost(BigDecimal totalCost) { setCost(totalCost); }
 
-    public String getPrescriptionUrl() { return prescriptionUrl; }
-    public void setPrescriptionUrl(String prescriptionUrl) { this.prescriptionUrl = prescriptionUrl; }
+    public String getPrescriptionImageUrl() { return prescriptionImageUrl; }
+    public void setPrescriptionImageUrl(String prescriptionImageUrl) { this.prescriptionImageUrl = prescriptionImageUrl; }
+
+    // Tương thích code cũ
+    public String getPrescriptionUrl() { return prescriptionImageUrl; }
+    public void setPrescriptionUrl(String url) { this.prescriptionImageUrl = url; }
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }

@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.healthy_pet.databinding.ItemAppointmentBinding;
 import com.example.healthy_pet.models.Appointment;
+import com.example.healthy_pet.utils.CurrencyUtils;
 import java.util.List;
 
 /**
@@ -73,14 +74,20 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
                     : "Thú cưng #" + item.getPetId();
             binding.tvPetName.setText("🐾 Ca #" + item.getId() + " • " + petDisplayName);
 
+            binding.tvServiceType.setText("🏷️ Dịch vụ: " + item.getServiceType());
+
             String clinicDisplayName = item.getClinicName() != null && !item.getClinicName().isEmpty()
                     ? item.getClinicName()
                     : "Chi nhánh #" + item.getClinicId();
             binding.tvClinicName.setText("🏥 Chi nhánh: " + clinicDisplayName);
 
             String timeStr = item.getAppointmentTime() != null ? item.getAppointmentTime() : "";
-            binding.tvDateTime.setText("📅 Thời gian: " + item.getAppointmentDate() + " " + timeStr);
-            binding.tvReason.setText("📝 Lý do: " + item.getReason());
+            binding.tvDateTime.setText("📅 Thời gian: " + timeStr);
+
+            binding.tvEstimatedCost.setText("💰 Dự kiến DECIMAL(18,0): " + CurrencyUtils.formatVND(item.getEstimatedCost()));
+
+            String noteStr = item.getNote() != null ? item.getNote() : "";
+            binding.tvReason.setText("📝 Ghi chú: " + noteStr);
 
             configureStatusBadge(binding.tvStatusBadge, item.getStatus());
 

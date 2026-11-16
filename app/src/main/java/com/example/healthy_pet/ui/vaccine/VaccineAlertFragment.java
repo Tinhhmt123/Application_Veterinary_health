@@ -22,23 +22,16 @@ public class VaccineAlertFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_module_card, container, false);
 
-        ((TextView) view.findViewById(R.id.tvModuleBadge)).setText("NGHIỆP VỤ 3 • THÀNH VIÊN 3");
-        ((TextView) view.findViewById(R.id.tvModuleTitle)).setText("🔔 Cảnh báo Y tế 7 ngày & Sổ Tiêm chủng");
+        ((TextView) view.findViewById(R.id.tvModuleTitle)).setText("🔔 Sổ Tiêm Chủng & Cảnh Báo Lịch Tiêm");
         ((TextView) view.findViewById(R.id.tvModuleDescription)).setText(
-                "• Tự động quét next_due_date và hiển thị thẻ cảnh báo ĐỎ (Quá hạn) / VÀNG (Sắp đến hạn ≤ 7 ngày) ngay màn hình chính.\n" +
-                "• Ghi nhận mũi tiêm vaccine mới và chụp ảnh tem/sổ tiêm giấy lên Cloudinary."
-        );
-        ((TextView) view.findViewById(R.id.tvModuleTechInfo)).setText(
-                "Thực thể: VaccinationRecords\n" +
-                "API: VaccinationApi.java\n" +
-                "• GET  /api/vaccinations/alerts?userId={id}\n" +
-                "• POST /api/vaccinations (@Multipart stamp)"
+                "• Theo dõi sổ tiêm phòng vaccine định kỳ của từng bé thú cưng.\n" +
+                "• Tự động hiển thị thông báo nhắc nhở khi đến lịch tiêm nhắc lại trong 7 ngày tới."
         );
 
         MaterialButton btn = view.findViewById(R.id.btnModuleAction);
-        btn.setText("💉 Ghi nhận Mũi tiêm & Chụp tem Vaccine");
+        btn.setText("💉 Ghi nhận mũi tiêm & Chụp tem vaccine");
         btn.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Đang quét cảnh báo tiêm chủng 7 ngày tới!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(getContext(), "Đang kiểm tra lịch tiêm nhắc lại", Toast.LENGTH_SHORT).show()
         );
 
         return view;

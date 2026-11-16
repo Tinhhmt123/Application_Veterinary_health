@@ -41,12 +41,28 @@
             android:layout_height="48dp"
             android:layout_marginTop="4dp" />
 
-        <!-- 3. DatePicker -->
+        <!-- 3. Select Service Type -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="3. Chọn ngày khám:"
+            android:text="3. Loại dịch vụ (service_type):"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spnServiceType"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp" />
+
+        <!-- 4. DatePicker -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="4. Chọn ngày khám:"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -61,12 +77,12 @@
             android:textAllCaps="false"
             app:cornerRadius="12dp" />
 
-        <!-- 4. TimePicker -->
+        <!-- 5. TimePicker -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="4. Chọn giờ khám:"
+            android:text="5. Chọn giờ khám:"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -81,12 +97,31 @@
             android:textAllCaps="false"
             app:cornerRadius="12dp" />
 
-        <!-- 5. Reason -->
+        <!-- 6. Estimated Cost -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="5. Lý do khám / Dịch vụ yêu cầu:"
+            android:text="6. Chi phí dự kiến DECIMAL(18,0):"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etEstimatedCost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:hint="200000"
+            android:inputType="number"
+            android:textSize="14sp" />
+
+        <!-- 7. Reason / Note -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="7. Ghi chú triệu chứng (note):"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textStyle="bold" />

@@ -24,6 +24,7 @@ import com.example.healthy_pet.api.AppointmentMedicalApi;
 import com.example.healthy_pet.api.RetrofitClient;
 import com.example.healthy_pet.databinding.FragmentMedicalHistoryBinding;
 import com.example.healthy_pet.models.MedicalHistory;
+import com.example.healthy_pet.repository.MedicalHistoryRepository;
 import com.example.healthy_pet.utils.CurrencyUtils;
 import com.example.healthy_pet.utils.SessionManager;
 import com.example.healthy_pet.utils.payment.CashPaymentStrategy;
@@ -39,9 +40,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * [Thành viên 5 / Người 5] Nghiệp vụ 4: Xem Bệnh án, Thống kê DECIMAL(18, 0)
- * & Thanh toán Viện phí áp dụng Strategy Pattern (VietQR & Tiền mặt - Không MoMo).
- * Phụ trách: Thành viên 5.
+ * [Thành viên 5] Nghiệp vụ 4: Xem Bệnh án, Thống kê Chi phí
+ * & Thanh toán Viện phí áp dụng Strategy Pattern (VietQR & Tiền mặt).
+ * Đồng bộ lập tức với MedicalHistoryRepository.
  */
 public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAdapter.OnPayClickListener {
 
@@ -57,7 +58,6 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
         super.onCreate(savedInstanceState);
         sessionManager = new SessionManager(requireContext());
         appointmentApi = RetrofitClient.getAppointmentMedicalApi();
-        initSampleHistories();
     }
 
     @Nullable
@@ -77,83 +77,49 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        loadMedicalHistoriesAndStats();
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
 
-    private void initSampleHistories() {
-        if (!medicalHistories.isEmpty()) return;
-
-        MedicalHistory h1 = new MedicalHistory(
-                101L, 503L, 101L, "2026-10-18",
-                "Ngứa tai, lắc đầu liên tục",
-                "Viêm ống tai ngoài do nấm Otodectes",
-                "Thuốc nhỏ tai Oridermyl 10g (2 lần/ngày)",
-                new BigDecimal("350000"),
-                "https://res.cloudinary.com/demo/image/upload/prescription_101.jpg",
-                "UNPAID",
-                ""
-        );
-        h1.setPetName("LuLu (Poodle)");
-
-        MedicalHistory h2 = new MedicalHistory(
-                102L, 502L, 102L, "2026-10-12",
-                "Biếng ăn, nôn dịch vàng, sốt nhẹ",
-                "Viêm đường tiêu hóa do vi khuẩn",
-                "Thuốc Smecta 3g + Men vi sinh Bio-Flora + Điện giải",
-                new BigDecimal("450000"),
-                "https://res.cloudinary.com/demo/image/upload/prescription_102.jpg",
-                "PAID",
-                "VIETQR"
-        );
-        h2.setPetName("Miu Miu (Mèo Anh)");
-
-        MedicalHistory h3 = new MedicalHistory(
-                103L, 501L, 103L, "2026-10-05",
-                "Tiêm ngừa định kỳ & kiểm tra da",
-                "Thú cưng hoàn toàn khỏe mạnh",
-                "Vắc xin Rabies 1ml + Vitamin tổng hợp",
-                new BigDecimal("450000"),
-                "https://res.cloudinary.com/demo/image/upload/prescription_103.jpg",
-                "PAID",
-                "CASH"
-        );
-        h3.setPetName("Kiki (Corgi)");
-
-        medicalHistories.add(h1);
-        medicalHistories.add(h2);
-        medicalHistories.add(h3);
-    }
-
     private void loadMedicalHistoriesAndStats() {
         Long userId = sessionManager.getUserId();
 
-        // 1. Fetch histories from API
+        // 1. Tải lập tức từ Shared MedicalHistoryRepository
+        medicalHistories.clear();
+        medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
+        updateUiState();
+
+        // 2. Tải từ backend REST API
         appointmentApi.getMedicalHistoriesByUser(userId).enqueue(new Callback<List<MedicalHistory>>() {
             @Override
             public void onResponse(@NonNull Call<List<MedicalHistory>> call, @NonNull Response<List<MedicalHistory>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    MedicalHistoryRepository.getInstance().setHistories(response.body());
                     medicalHistories.clear();
-                    medicalHistories.addAll(response.body());
+                    medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
+                    updateUiState();
                 }
-                updateUiState();
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<MedicalHistory>> call, @NonNull Throwable t) {
-                updateUiState();
-            }
+            public void onFailure(@NonNull Call<List<MedicalHistory>> call, @NonNull Throwable t) {}
         });
 
-        // 2. Fetch total cost stat from API
+        // 3. Tải tổng chi phí từ API
         appointmentApi.getTotalMedicalCost(userId).enqueue(new Callback<Map<String, BigDecimal>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, BigDecimal>> call, @NonNull Response<Map<String, BigDecimal>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().containsKey("totalCost")) {
                     BigDecimal apiTotal = response.body().get("totalCost");
                     if (binding != null && apiTotal != null) {
-                        binding.tvTotalStats.setText("📋 Bệnh án & Tổng viện phí (" + CurrencyUtils.formatVND(apiTotal) + ")");
+                        binding.tvTotalStats.setText(CurrencyUtils.formatVND(apiTotal));
                     }
                 }
             }
@@ -166,13 +132,8 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
     private void updateUiState() {
         if (binding == null) return;
 
-        BigDecimal localSum = BigDecimal.ZERO;
-        for (MedicalHistory item : medicalHistories) {
-            if (item.getCost() != null) {
-                localSum = localSum.add(item.getCost());
-            }
-        }
-        binding.tvTotalStats.setText("📋 Bệnh án & Tổng viện phí (" + CurrencyUtils.formatVND(localSum) + ")");
+        BigDecimal localSum = MedicalHistoryRepository.getInstance().getTotalCostByUser(sessionManager.getUserId());
+        binding.tvTotalStats.setText(CurrencyUtils.formatVND(localSum));
 
         if (medicalHistories.isEmpty()) {
             binding.tvEmptyState.setVisibility(View.VISIBLE);
@@ -190,7 +151,7 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
     }
 
     /**
-     * Mở Dialog Chọn phương thức thanh toán áp dụng Strategy Pattern (VietQR & Tiền mặt - Không MoMo)
+     * Mở Dialog Chọn phương thức thanh toán áp dụng Strategy Pattern (VietQR & Tiền mặt)
      */
     private void showPaymentStrategyDialog(MedicalHistory history) {
         PaymentStrategy[] strategies = new PaymentStrategy[]{
@@ -203,7 +164,7 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
         };
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("💳 Phương thức thanh toán (Strategy Pattern)")
+                .setTitle("💳 Phương thức thanh toán")
                 .setItems(titles, (dialog, which) -> {
                     paymentContext.setStrategy(strategies[which]);
                     showPaymentPreviewAndConfirmDialog(history);
@@ -270,10 +231,10 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
                 .setView(container)
                 .setPositiveButton("✓ Xác nhận đã thanh toán", (d, w) -> {
                     String resultMsg = paymentContext.processPayment(requireContext(), history);
-                    updateUiState();
+                    MedicalHistoryRepository.getInstance().payMedicalHistory(history.getId(), history.getPaymentMethod());
+                    loadMedicalHistoriesAndStats();
                     Toast.makeText(getContext(), resultMsg, Toast.LENGTH_LONG).show();
 
-                    // Gọi API Retrofit cập nhật trạng thái thanh toán lên cơ sở dữ liệu
                     appointmentApi.payMedicalHistory(history.getId(), history.getPaymentMethod()).enqueue(new Callback<MedicalHistory>() {
                         @Override
                         public void onResponse(@NonNull Call<MedicalHistory> call, @NonNull Response<MedicalHistory> response) {}
@@ -286,9 +247,6 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
                 .show();
     }
 
-    /**
-     * Vẽ mã QR Bitmap dự phòng bằng Canvas API khi offline.
-     */
     private Bitmap createFallbackQrBitmap(int sizePx) {
         int grid = 21;
         Bitmap bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);

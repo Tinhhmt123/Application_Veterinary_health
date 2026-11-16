@@ -22,24 +22,16 @@ public class AccountFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_module_card, container, false);
 
-        ((TextView) view.findViewById(R.id.tvModuleBadge)).setText("NGHIỆP VỤ 1 • THÀNH VIÊN 1");
-        ((TextView) view.findViewById(R.id.tvModuleTitle)).setText("👤 Quản lý Tài khoản Cá nhân");
+        ((TextView) view.findViewById(R.id.tvModuleTitle)).setText("👤 Quản Lý Tài Khoản Cá Nhân");
         ((TextView) view.findViewById(R.id.tvModuleDescription)).setText(
-                "• Đăng ký tài khoản mới, đăng nhập qua API và lưu phiên vào SharedPreferences.\n" +
-                "• Cập nhật họ tên, số điện thoại và tải ảnh đại diện mới lên Cloudinary qua Retrofit (@Multipart)."
-        );
-        ((TextView) view.findViewById(R.id.tvModuleTechInfo)).setText(
-                "Thực thể: Users\n" +
-                "API: AuthUserApi.java\n" +
-                "• POST /api/auth/login\n" +
-                "• POST /api/auth/register\n" +
-                "• PUT  /api/users/{id} (@Multipart)"
+                "• Đăng nhập, quản lý thông tin tài khoản cá nhân và lưu phiên làm việc.\n" +
+                "• Cập nhật thông tin họ tên, số điện thoại liên hệ và thay đổi ảnh đại diện cá nhân."
         );
 
         MaterialButton btn = view.findViewById(R.id.btnModuleAction);
-        btn.setText("📷 Cập nhật Hồ sơ & Avatar Cloudinary");
+        btn.setText("📷 Cập nhật thông tin & Ảnh đại diện");
         btn.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Đã lưu phiên vào SharedPreferences!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(getContext(), "Đã cập nhật thông tin cá nhân", Toast.LENGTH_SHORT).show()
         );
 
         return view;

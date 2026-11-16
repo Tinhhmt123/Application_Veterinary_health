@@ -47,12 +47,22 @@
 
         </LinearLayout>
 
-        <!-- Details -->
+        <!-- Service Type & Details -->
+        <TextView
+            android:id="@+id/tvServiceType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="🏷️ Dịch vụ: Khám bệnh"
+            android:textColor="@color/emerald_700"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
         <TextView
             android:id="@+id/tvClinicName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:text="🏥 Chi nhánh: Healthy Pet Q.1"
             android:textColor="?android:attr/textColorSecondary"
             android:textSize="13sp" />
@@ -67,11 +77,20 @@
             android:textSize="13sp" />
 
         <TextView
+            android:id="@+id/tvEstimatedCost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="💰 Chi phí dự kiến DECIMAL(18,0): 200.000 đ"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <TextView
             android:id="@+id/tvReason"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="📝 Lý do: Khám da liễu &amp; tiêm phòng"
+            android:text="📝 Ghi chú: Khám da liễu &amp; tiêm phòng"
             android:textColor="?android:attr/textColorSecondary"
             android:textSize="13sp" />
 

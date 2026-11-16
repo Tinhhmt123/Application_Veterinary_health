@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -23,7 +24,9 @@ import com.example.healthy_pet.databinding.FragmentClinicBookingBinding;
 import com.example.healthy_pet.models.Appointment;
 import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.models.VetClinic;
+import com.example.healthy_pet.repository.AppointmentRepository;
 import com.example.healthy_pet.utils.SessionManager;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -35,7 +38,7 @@ import retrofit2.Response;
 /**
  * [Thành viên 5 (NV 5b) & Thành viên 4 (NV 5a)]
  * Nghiệp vụ 5: User Đặt lịch hẹn Khám/Spa (DatePickerDialog, TimePickerDialog, AppointmentAdapter)
- * Phụ trách: Thành viên 5.
+ * Đồng bộ lập tức dữ liệu qua AppointmentRepository sang Admin duyệt đơn (NV 7).
  */
 public class ClinicBookingFragment extends Fragment implements AppointmentAdapter.OnAppointmentActionListener {
 
@@ -58,7 +61,6 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
         petApi = RetrofitClient.getPetWeightApi();
         clinicApi = RetrofitClient.getClinicMapApi();
 
-        initSampleAppointments();
         fetchPetsAndClinicsFromApi();
     }
 
@@ -79,39 +81,18 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        loadUserAppointments();
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
 
-    private void initSampleAppointments() {
-        if (!userAppointments.isEmpty()) return;
-
-        Appointment apt1 = new Appointment(sessionManager.getUserId(), 101L, 1L, "2026-10-25", "09:30:00", "Khám da liễu & tiêm nhắc lại");
-        apt1.setId(501L);
-        apt1.setPetName("LuLu (Poodle)");
-        apt1.setClinicName("Healthy Pet Chi nhánh 1 - Q.1");
-        apt1.setStatus("PENDING");
-
-        Appointment apt2 = new Appointment(sessionManager.getUserId(), 102L, 2L, "2026-10-20", "14:00:00", "Tắm sấy & cắt tỉa lông");
-        apt2.setId(502L);
-        apt2.setPetName("Miu Miu (Mèo Anh)");
-        apt2.setClinicName("Healthy Pet Chi nhánh 2 - Bình Thạnh");
-        apt2.setStatus("CONFIRMED");
-
-        Appointment apt3 = new Appointment(sessionManager.getUserId(), 101L, 1L, "2026-10-18", "10:00:00", "Khám viêm tai ngoài");
-        apt3.setId(503L);
-        apt3.setPetName("LuLu (Poodle)");
-        apt3.setClinicName("Healthy Pet Chi nhánh 1 - Q.1");
-        apt3.setStatus("COMPLETED");
-
-        userAppointments.add(apt1);
-        userAppointments.add(apt2);
-        userAppointments.add(apt3);
-    }
-
     private void fetchPetsAndClinicsFromApi() {
-        // Lay danh sach pet tu API
         petApi.getPetsByUser(sessionManager.getUserId()).enqueue(new Callback<List<Pet>>() {
             @Override
             public void onResponse(@NonNull Call<List<Pet>> call, @NonNull Response<List<Pet>> response) {
@@ -125,7 +106,6 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
             public void onFailure(@NonNull Call<List<Pet>> call, @NonNull Throwable t) {}
         });
 
-        // Lay danh sach chi nhanh phong kham tu API
         clinicApi.getAllClinics().enqueue(new Callback<List<VetClinic>>() {
             @Override
             public void onResponse(@NonNull Call<List<VetClinic>> call, @NonNull Response<List<VetClinic>> response) {
@@ -141,22 +121,25 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
     }
 
     private void loadUserAppointments() {
+        // 1. Đồng bộ tức thì từ Shared AppointmentRepository
+        userAppointments.clear();
+        userAppointments.addAll(AppointmentRepository.getInstance().getUserAppointments(sessionManager.getUserId()));
+        updateUiState();
+
+        // 2. Đồng bộ từ backend REST API
         appointmentApi.getUserAppointments(sessionManager.getUserId()).enqueue(new Callback<List<Appointment>>() {
             @Override
             public void onResponse(@NonNull Call<List<Appointment>> call, @NonNull Response<List<Appointment>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    AppointmentRepository.getInstance().setAppointments(response.body());
                     userAppointments.clear();
-                    userAppointments.addAll(response.body());
-                    updateUiState();
-                } else {
+                    userAppointments.addAll(AppointmentRepository.getInstance().getUserAppointments(sessionManager.getUserId()));
                     updateUiState();
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<Appointment>> call, @NonNull Throwable t) {
-                updateUiState();
-            }
+            public void onFailure(@NonNull Call<List<Appointment>> call, @NonNull Throwable t) {}
         });
     }
 
@@ -178,7 +161,7 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
     private void showCreateAppointmentDialog() {
         DialogCreateAppointmentBinding dialogBinding = DialogCreateAppointmentBinding.inflate(getLayoutInflater());
 
-        // Setup Spinner Thú cưng
+        // 1. Setup Spinner Thú cưng
         List<String> petNames = new ArrayList<>();
         if (!availablePets.isEmpty()) {
             for (Pet p : availablePets) {
@@ -192,7 +175,7 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
         ArrayAdapter<String> petSpinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, petNames);
         dialogBinding.spnPet.setAdapter(petSpinnerAdapter);
 
-        // Setup Spinner Phòng khám
+        // 2. Setup Spinner Phòng khám
         List<String> clinicNames = new ArrayList<>();
         if (!availableClinics.isEmpty()) {
             for (VetClinic c : availableClinics) {
@@ -206,7 +189,27 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
         ArrayAdapter<String> clinicSpinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, clinicNames);
         dialogBinding.spnClinic.setAdapter(clinicSpinnerAdapter);
 
-        // State cho DatePicker & TimePicker
+        // 3. Setup Spinner Loại dịch vụ (service_type)
+        String[] serviceTypes = {"Khám bệnh", "Tiêm phòng", "Spa & Làm đẹp", "Khám tổng quát"};
+        ArrayAdapter<String> serviceAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, serviceTypes);
+        dialogBinding.spnServiceType.setAdapter(serviceAdapter);
+
+        dialogBinding.spnServiceType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (position) {
+                    case 0: dialogBinding.etEstimatedCost.setText("200000"); break;
+                    case 1: dialogBinding.etEstimatedCost.setText("150000"); break;
+                    case 2: dialogBinding.etEstimatedCost.setText("350000"); break;
+                    case 3: dialogBinding.etEstimatedCost.setText("300000"); break;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // 4. State cho DatePicker & TimePicker
         final String[] selectedDate = {getCurrentDate()};
         final String[] selectedTime = {"09:30:00"};
 
@@ -232,14 +235,18 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
         });
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("📅 Đặt lịch khám mới (NV 5b)")
+                .setTitle("📅 Đặt lịch khám mới")
                 .setView(dialogBinding.getRoot())
                 .setPositiveButton("Xác nhận Đặt lịch", (dialog, which) -> {
                     String reason = dialogBinding.etReason.getText().toString().trim();
                     if (reason.isEmpty()) reason = "Khám sức khỏe tổng quát";
 
+                    String costStr = dialogBinding.etEstimatedCost.getText().toString().trim();
+                    BigDecimal estimatedCost = new BigDecimal(costStr.isEmpty() ? "200000" : costStr);
+
                     int petPos = dialogBinding.spnPet.getSelectedItemPosition();
                     int clinicPos = dialogBinding.spnClinic.getSelectedItemPosition();
+                    String serviceType = serviceTypes[dialogBinding.spnServiceType.getSelectedItemPosition()];
 
                     Long petId = !availablePets.isEmpty() && petPos < availablePets.size()
                             ? availablePets.get(petPos).getId()
@@ -251,12 +258,15 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
                             : (long) (clinicPos + 1);
                     String clinicName = clinicNames.get(clinicPos).split(" - ")[0];
 
+                    String fullAppointmentTime = selectedDate[0] + " " + selectedTime[0];
+
                     Appointment newApt = new Appointment(
                             sessionManager.getUserId(),
                             petId,
                             clinicId,
-                            selectedDate[0],
-                            selectedTime[0],
+                            serviceType,
+                            fullAppointmentTime,
+                            estimatedCost,
                             reason
                     );
                     newApt.setId(System.currentTimeMillis() % 10000);
@@ -264,19 +274,26 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
                     newApt.setClinicName(clinicName);
                     newApt.setStatus("PENDING");
 
-                    userAppointments.add(0, newApt);
-                    updateUiState();
+                    // 1. Thêm lập tức vào Shared Repository cho Admin nhận đơn ngay
+                    AppointmentRepository.getInstance().addAppointment(newApt);
 
-                    // Gọi API Retrofit gửi lịch hẹn về Spring Boot server
+                    // 2. Cập nhật UI User lập tức
+                    loadUserAppointments();
+
+                    // 3. Gửi API Retrofit về Spring Boot server
                     appointmentApi.createAppointment(newApt).enqueue(new Callback<Appointment>() {
                         @Override
                         public void onResponse(@NonNull Call<Appointment> call, @NonNull Response<Appointment> response) {
-                            Toast.makeText(getContext(), "✅ Đã gửi lịch hẹn thành công (Trạng thái: PENDING)", Toast.LENGTH_LONG).show();
+                            if (response.isSuccessful() && response.body() != null) {
+                                AppointmentRepository.getInstance().addAppointment(response.body());
+                                loadUserAppointments();
+                            }
+                            Toast.makeText(getContext(), "✅ Đặt lịch thành công! Đã gửi thông báo sang Admin duyệt.", Toast.LENGTH_LONG).show();
                         }
 
                         @Override
                         public void onFailure(@NonNull Call<Appointment> call, @NonNull Throwable t) {
-                            Toast.makeText(getContext(), "✅ Đặt lịch hẹn thành công (Trạng thái: PENDING)", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "✅ Đặt lịch thành công! Đã gửi sang Admin chờ duyệt.", Toast.LENGTH_LONG).show();
                         }
                     });
                 })
@@ -301,8 +318,9 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
 
     @Override
     public void onCancel(Appointment appointment) {
-        appointment.setStatus("CANCELLED");
-        updateUiState();
+        AppointmentRepository.getInstance().updateStatus(appointment.getId(), "CANCELLED");
+        loadUserAppointments();
+
         appointmentApi.updateAppointmentStatus(appointment.getId(), "CANCELLED").enqueue(new Callback<Appointment>() {
             @Override
             public void onResponse(@NonNull Call<Appointment> call, @NonNull Response<Appointment> response) {
