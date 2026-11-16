@@ -1,40 +1,40 @@
 package com.example.healthy_pet;
 
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-import com.example.healthy_pet.ui.admin.AdminDashboardFragment;
-import com.example.healthy_pet.ui.auth.AccountFragment;
-import com.example.healthy_pet.ui.map.ClinicBookingFragment;
-import com.example.healthy_pet.ui.medical.MedicalHistoryFragment;
-import com.example.healthy_pet.ui.pet.PetWeightFragment;
-import com.example.healthy_pet.ui.vaccine.VaccineAlertFragment;
+import com.example.healthy_pet.ui.Page_Admin;
+import com.example.healthy_pet.ui.Page_User;
+import com.example.healthy_pet.ui.auth.Login_Admin_User;
+import com.example.healthy_pet.utils.ImageMultipartUtils;
 import com.example.healthy_pet.utils.SessionManager;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 /**
- * MainActivity điều phối 8 Luồng Nghiệp Vụ (5 User + 3 Admin)
- * và Thanh Menu Trượt từ trái sang (DrawerLayout Overlay: Theme, Cài đặt, Trợ lý AI).
+ * MainActivity điều phối:
+ * - Nếu chưa đăng nhập -> Mở màn hình Login_Admin_User
+ * - Nếu đăng nhập với role = "USER" -> Mở trang Page_User (page_user.xml)
+ * - Nếu đăng nhập với role = "ADMIN" -> Mở trang Page_Admin (page_admin.xml)
  */
 public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
-    private LinearLayout topAppBar;
-    private LinearLayout bottomNavUser;
-    private LinearLayout bottomNavAdmin;
-    private TextView tvToolbarTitle;
-    private TextView tvToolbarSubtitle;
-    private TextView tvAppIconEmoji;
     private SessionManager sessionManager;
-    private boolean isAdminMode = false;
+    private LinearLayout layoutDrawerHeader;
+    private ImageView ivDrawerUserAvatar;
+    private TextView tvDrawerUserName;
+    private TextView tvDrawerUserEmail;
+    private MaterialButton btnDrawerLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,141 +48,107 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         drawerLayout = findViewById(R.id.drawerLayout);
-        topAppBar = findViewById(R.id.topAppBar);
-        bottomNavUser = findViewById(R.id.bottomNavUser);
-        bottomNavAdmin = findViewById(R.id.bottomNavAdmin);
-        tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
-        tvToolbarSubtitle = findViewById(R.id.tvToolbarSubtitle);
-        tvAppIconEmoji = findViewById(R.id.tvAppIconEmoji);
+        layoutDrawerHeader = findViewById(R.id.layoutDrawerHeader);
+        ivDrawerUserAvatar = findViewById(R.id.ivDrawerUserAvatar);
+        tvDrawerUserName = findViewById(R.id.tvDrawerUserName);
+        tvDrawerUserEmail = findViewById(R.id.tvDrawerUserEmail);
+        btnDrawerLogout = findViewById(R.id.btnDrawerLogout);
 
-        // 1. Bấm biểu tượng App (🐾) để trượt Menu từ trái sang (Overlay, không ảnh hưởng UI bên dưới)
-        View.OnClickListener openDrawerListener = v -> drawerLayout.openDrawer(GravityCompat.START);
-        findViewById(R.id.btnAppIconMenu).setOnClickListener(openDrawerListener);
-        findViewById(R.id.layoutTitleClick).setOnClickListener(openDrawerListener);
         findViewById(R.id.btnCloseDrawer).setOnClickListener(v -> drawerLayout.closeDrawer(GravityCompat.START));
 
-        // 2. Cấu hình bên trong Menu trượt (Theme Sáng/Tối, Cài đặt 7 ngày, Trợ lý AI)
+        btnDrawerLogout.setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            sessionManager.logout();
+            Toast.makeText(this, "Đã đăng xuất tài khoản", Toast.LENGTH_SHORT).show();
+            openLoginPage();
+        });
+
         setupNavigationDrawer();
+        syncDrawerUserHeader();
 
-        // 3. Nút chuyển đổi nhanh giữa Luồng USER (NV 1->5) và Luồng ADMIN (NV 6->8)
-        findViewById(R.id.btnSwitchRole).setOnClickListener(v -> {
-            isAdminMode = !isAdminMode;
-            updateRoleChrome();
-        });
-
-        // 4. Sự kiện chọn 5 mục trên Bottom Navigation của USER (kèm hiệu ứng nhấn & đổi màu tab)
-        findViewById(R.id.navUserAlert).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserAlert);
-            loadScreen(new VaccineAlertFragment(), "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm");
-        });
-        findViewById(R.id.navUserPet).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserPet);
-            loadScreen(new PetWeightFragment(), "NV 2: Hồ sơ thú cưng & Cân nặng");
-        });
-        findViewById(R.id.navUserBookingCenter).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserBookingCenter);
-            loadScreen(new ClinicBookingFragment(), "NV 5: Đặt lịch Khám/Spa & Bản đồ");
-        });
-        findViewById(R.id.navUserMedical).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserMedical);
-            loadScreen(new MedicalHistoryFragment(), "NV 4: Bệnh án & Chi phí DECIMAL");
-        });
-        findViewById(R.id.navUserAccount).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserAccount);
-            loadScreen(new AccountFragment(), "NV 1: Quản lý tài khoản cá nhân");
-        });
-
-        // 5. Sự kiện chọn 3 mục trên Bottom Navigation của ADMIN (kèm hiệu ứng nhấn & đổi màu tab)
-        findViewById(R.id.navAdminUserPet).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminUserPet);
-            loadScreen(AdminDashboardFragment.newInstance(6), "NV 6: Quản lý Users & Pets toàn hệ thống");
-        });
-        findViewById(R.id.navAdminAppointment).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminAppointment);
-            loadScreen(AdminDashboardFragment.newInstance(7), "NV 7: Duyệt lịch hẹn & Kê đơn bệnh án");
-        });
-        findViewById(R.id.navAdminClinic).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminClinic);
-            loadScreen(AdminDashboardFragment.newInstance(8), "NV 8: Quản lý Chi nhánh Phòng khám");
-        });
-
-        // Mặc định mở màn hình Cảnh báo & Sổ tiêm (NV 3) khi khởi động
-        highlightUserTab(R.id.navUserAlert);
         if (savedInstanceState == null) {
-            loadScreen(new VaccineAlertFragment(), "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm");
-        }
-    }
-
-    private void highlightUserTab(int activeTabId) {
-        int[] tabIds = {
-                R.id.navUserAlert,
-                R.id.navUserPet,
-                R.id.navUserBookingCenter,
-                R.id.navUserMedical,
-                R.id.navUserAccount
-        };
-        int[] labelIds = {
-                R.id.tvNavUserAlert,
-                R.id.tvNavUserPet,
-                R.id.tvNavUserBooking,
-                R.id.tvNavUserMedical,
-                R.id.tvNavUserAccount
-        };
-
-        int activeColor = ContextCompat.getColor(this, R.color.emerald_500);
-        int inactiveColor = ContextCompat.getColor(this, R.color.slate_500);
-
-        for (int i = 0; i < tabIds.length; i++) {
-            View tabView = findViewById(tabIds[i]);
-            TextView tvLabel = findViewById(labelIds[i]);
-            boolean isSelected = (tabIds[i] == activeTabId);
-
-            if (tvLabel != null) {
-                tvLabel.setTextColor(isSelected ? activeColor : inactiveColor);
-                tvLabel.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
-            }
-            if (tabView != null) {
-                tabView.animate()
-                        .scaleX(isSelected ? 1.08f : 1.0f)
-                        .scaleY(isSelected ? 1.08f : 1.0f)
-                        .alpha(isSelected || tabIds[i] == R.id.navUserBookingCenter ? 1.0f : 0.65f)
-                        .setDuration(160)
-                        .start();
+            if (!sessionManager.isLoggedIn()) {
+                openLoginPage();
+            } else {
+                openRolePage(sessionManager.getRole());
             }
         }
     }
 
-    private void highlightAdminTab(int activeTabId) {
-        int[] tabIds = {
-                R.id.navAdminUserPet,
-                R.id.navAdminAppointment,
-                R.id.navAdminClinic
-        };
-        int[] labelIds = {
-                R.id.tvNavAdminUserPet,
-                R.id.tvNavAdminAppointment,
-                R.id.tvNavAdminClinic
-        };
+    /**
+     * Kiểm tra quyền của tài khoản để chuyển vào đúng trang page_user hoặc page_admin
+     */
+    public void openRolePage(String role) {
+        syncDrawerUserHeader();
+        Fragment targetPage;
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            targetPage = new Page_Admin();
+        } else {
+            targetPage = new Page_User();
+        }
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, targetPage)
+                .commit();
+    }
 
-        int activeColor = ContextCompat.getColor(this, R.color.emerald_500);
-        int inactiveColor = ContextCompat.getColor(this, R.color.slate_500);
+    /**
+     * Mở trang Đăng nhập (Login_Admin_User) khi chưa đăng nhập hoặc vừa bấm Đăng xuất
+     */
+    public void openLoginPage() {
+        syncDrawerUserHeader();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, new Login_Admin_User())
+                .commit();
+    }
 
-        for (int i = 0; i < tabIds.length; i++) {
-            View tabView = findViewById(tabIds[i]);
-            TextView tvLabel = findViewById(labelIds[i]);
-            boolean isSelected = (tabIds[i] == activeTabId);
+    public void openDrawer() {
+        syncDrawerUserHeader();
+        if (drawerLayout != null) {
+            drawerLayout.openDrawer(GravityCompat.START);
+        }
+    }
 
-            if (tvLabel != null) {
-                tvLabel.setTextColor(isSelected ? activeColor : inactiveColor);
-                tvLabel.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
+    public void syncDrawerUserHeader() {
+        if (tvDrawerUserName == null || tvDrawerUserEmail == null) return;
+
+        if (sessionManager.isLoggedIn()) {
+            boolean isAdmin = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
+            tvDrawerUserName.setText(sessionManager.getFullName());
+            tvDrawerUserEmail.setText(sessionManager.getEmail() + (isAdmin ? " • Quản trị viên" : " • Khách hàng"));
+
+            if (layoutDrawerHeader != null) {
+                int headerColor = ContextCompat.getColor(
+                        this,
+                        isAdmin ? R.color.indigo_600 : R.color.emerald_700
+                );
+                layoutDrawerHeader.setBackgroundColor(headerColor);
             }
-            if (tabView != null) {
-                tabView.animate()
-                        .scaleX(isSelected ? 1.08f : 1.0f)
-                        .scaleY(isSelected ? 1.08f : 1.0f)
-                        .alpha(isSelected ? 1.0f : 0.65f)
-                        .setDuration(160)
-                        .start();
+
+            if (ivDrawerUserAvatar != null) {
+                String avatarUrl = sessionManager.getAvatarUrl();
+                if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                    ImageMultipartUtils.loadCircularAvatar(this, avatarUrl, ivDrawerUserAvatar);
+                } else {
+                    ivDrawerUserAvatar.setImageResource(R.mipmap.ic_launcher_round);
+                }
+            }
+
+            if (btnDrawerLogout != null) {
+                btnDrawerLogout.setVisibility(View.VISIBLE);
+            }
+        } else {
+            tvDrawerUserName.setText("Healthy Pet");
+            tvDrawerUserEmail.setText("Cài đặt • Theme • Trợ lý AI");
+            if (layoutDrawerHeader != null) {
+                layoutDrawerHeader.setBackgroundColor(ContextCompat.getColor(this, R.color.emerald_700));
+            }
+            if (ivDrawerUserAvatar != null) {
+                ivDrawerUserAvatar.setImageResource(R.mipmap.ic_launcher_round);
+            }
+            if (btnDrawerLogout != null) {
+                btnDrawerLogout.setVisibility(View.GONE);
             }
         }
     }
@@ -205,39 +171,11 @@ public class MainActivity extends AppCompatActivity {
         );
 
         findViewById(R.id.btnAiFaq1).setOnClickListener(v ->
-                tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nNôn dịch vàng thường do trào ngược dịch mật hoặc viêm dạ dày. Bạn nên cho bé nhịn ăn 4-6h, uống nước điện giải ít một và bấm nút 'Đặt lịch' ở giữa thanh menu dưới để khám ngay nếu kèm tiêu chảy!")
+                tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nNôn dịch vàng thường do trào ngược dịch mật hoặc viêm dạ dày. Bạn nên cho bé nhịn ăn 4-6h, uống nước điện giải ít một và đặt lịch khám ngay nếu kèm tiêu chảy!")
         );
 
         findViewById(R.id.btnAiFaq2).setOnClickListener(v ->
-                tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nMũi 1 từ 6-8 tuần tuổi, Mũi 2 & 3 cách nhau 3-4 tuần + Tiêm Dại khi đủ 3 tháng. Sau đó tiêm nhắc lại 1 năm/lần (Hệ thống sẽ tự động báo vàng trước 7 ngày ở NV 3).")
+                tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nMũi 1 từ 6-8 tuần tuổi, Mũi 2 & 3 cách nhau 3-4 tuần + Tiêm Dại khi đủ 3 tháng. Sau đó tiêm nhắc lại 1 năm/lần.")
         );
-    }
-
-    private void updateRoleChrome() {
-        if (isAdminMode) {
-            topAppBar.setBackgroundColor(ContextCompat.getColor(this, R.color.indigo_600));
-            tvAppIconEmoji.setText("🛡️");
-            tvToolbarTitle.setText("Healthy Pet Admin (Menu ≡)");
-            bottomNavUser.setVisibility(View.GONE);
-            bottomNavAdmin.setVisibility(View.VISIBLE);
-            highlightAdminTab(R.id.navAdminUserPet);
-            loadScreen(AdminDashboardFragment.newInstance(6), "NV 6: Quản lý Users & Pets toàn hệ thống");
-        } else {
-            topAppBar.setBackgroundColor(ContextCompat.getColor(this, R.color.emerald_600));
-            tvAppIconEmoji.setText("🐾");
-            tvToolbarTitle.setText("Healthy Pet (Menu ≡)");
-            bottomNavAdmin.setVisibility(View.GONE);
-            bottomNavUser.setVisibility(View.VISIBLE);
-            highlightUserTab(R.id.navUserAlert);
-            loadScreen(new VaccineAlertFragment(), "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm");
-        }
-    }
-
-    private void loadScreen(Fragment fragment, String subtitle) {
-        tvToolbarSubtitle.setText(subtitle);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainer, fragment)
-                .commit();
     }
 }

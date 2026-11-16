@@ -24,4 +24,8 @@ apikeys.properties
 target/
 *.log
 application-local.properties
-/.commandcode
+
+
+# 5. Thư mục cấu hình cá nhân của Command Code (Tránh commit lên repo nhóm)
+.commandcode/
+

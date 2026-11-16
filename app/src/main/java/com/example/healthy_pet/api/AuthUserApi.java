@@ -25,6 +25,9 @@ public interface AuthUserApi {
     @POST("auth/register")
     Call<User> register(@Body User registerRequest);
 
+    @GET("users/{id}")
+    Call<User> getUserById(@Path("id") Long userId);
+
     @Multipart
     @PUT("users/{id}")
     Call<User> updateProfile(
@@ -37,6 +40,12 @@ public interface AuthUserApi {
     // Admin: Tìm kiếm và Khóa/Mở khóa tài khoản (is_active)
     @GET("admin/users")
     Call<List<User>> searchUsers(@Query("keyword") String keyword);
+
+    @GET("admin/users")
+    Call<List<User>> searchUsers(
+            @Query("keyword") String keyword,
+            @Query("is_active") Boolean isActive
+    );
 
     @PUT("admin/users/{id}/toggle-active")
     Call<User> toggleUserActive(@Path("id") Long userId);
