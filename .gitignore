@@ -24,3 +24,4 @@ apikeys.properties
 target/
 *.log
 application-local.properties
+/.commandcode
