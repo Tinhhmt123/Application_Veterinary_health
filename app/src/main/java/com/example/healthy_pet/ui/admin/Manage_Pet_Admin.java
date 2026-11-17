@@ -40,6 +40,7 @@ import retrofit2.Response;
 public class Manage_Pet_Admin extends Fragment {
 
     private TextInputEditText etAdminPetKeyword;
+    private TextView tvAdminPetsCount;
     private ProgressBar progressBarAdminPets;
     private TextView tvEmptyAdminPets;
     private SwipeRefreshLayout swipeRefreshAdminPets;
@@ -66,6 +67,7 @@ public class Manage_Pet_Admin extends Fragment {
         View view = inflater.inflate(R.layout.manage_pet_admin, container, false);
 
         etAdminPetKeyword = view.findViewById(R.id.etAdminPetKeyword);
+        tvAdminPetsCount = view.findViewById(R.id.tvAdminPetsCount);
         progressBarAdminPets = view.findViewById(R.id.progressBarAdminPets);
         tvEmptyAdminPets = view.findViewById(R.id.tvEmptyAdminPets);
         swipeRefreshAdminPets = view.findViewById(R.id.swipeRefreshAdminPets);
@@ -184,6 +186,9 @@ public class Manage_Pet_Admin extends Fragment {
                         if (response.isSuccessful() && response.body() != null) {
                             List<Pet> pets = response.body();
                             petAdapter.setPets(pets);
+                            if (tvAdminPetsCount != null) {
+                                tvAdminPetsCount.setText("🐾 Hồ sơ thú cưng hệ thống (" + pets.size() + " bé)");
+                            }
                             tvEmptyAdminPets.setVisibility(pets.isEmpty() ? View.VISIBLE : View.GONE);
                         } else {
                             Toast.makeText(getContext(), "Không thể tải danh sách thú cưng (" + response.code() + ")", Toast.LENGTH_SHORT).show();

@@ -25,151 +25,176 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:orientation="vertical">
+
+                <!-- Dải banner đầu card đổi màu theo vai trò -->
+                <View
+                    android:id="@+id/viewDetailPetBanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@color/emerald_600" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/ivDetailPetAvatar"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:contentDescription="Ảnh thú cưng"
-                        android:scaleType="centerCrop"
-                        android:src="@mipmap/ic_launcher_round" />
+                    android:layout_marginTop="-24dp"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="14dp"
+                    android:paddingBottom="14dp">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
 
-                        <TextView
-                            android:id="@+id/tvDetailPetNameSpecies"
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="70dp"
+                            android:layout_height="70dp"
+                            app:cardBackgroundColor="?attr/colorSurface"
+                            app:cardCornerRadius="35dp"
+                            app:cardElevation="3dp"
+                            app:strokeColor="@color/white"
+                            app:strokeWidth="3dp">
+
+                            <ImageView
+                                android:id="@+id/ivDetailPetAvatar"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:contentDescription="Ảnh thú cưng"
+                                android:scaleType="centerCrop"
+                                android:src="@mipmap/ic_launcher_round" />
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Milu (Chó)"
-                            android:textColor="?android:attr/textColorPrimary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:gravity="end"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/tvDetailPetBreedGender"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Giống: Poodle Tiny • Đực"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="12sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Cân hiện tại"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="11sp" />
 
-                        <TextView
-                            android:id="@+id/tvDetailPetBirthDate"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Ngày sinh: 2024-05-12"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="12sp" />
-
-                        <TextView
-                            android:id="@+id/tvDetailPetOwner"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:text="Chủ: Nguyễn Văn Tính • 0908123456"
-                            android:textColor="@color/indigo_600"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:visibility="gone" />
+                            <TextView
+                                android:id="@+id/tvDetailPetCurrentWeight"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:background="@drawable/bg_pet_weight_badge"
+                                android:paddingHorizontal="12dp"
+                                android:paddingVertical="4dp"
+                                android:text="4.5 kg"
+                                android:textColor="@color/emerald_700"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
                     </LinearLayout>
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvDetailPetNameSpecies"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Cân hiện tại"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="11sp" />
-
-                        <TextView
-                            android:id="@+id/tvDetailPetCurrentWeight"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:background="@drawable/bg_pet_weight_badge"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="3dp"
-                            android:text="4.5 kg"
-                            android:textColor="@color/emerald_700"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="10dp"
-                    android:background="@color/slate_100" />
-
-                <!-- Hàng nút thao tác giống Demo -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDetailPetEdit"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
-                        android:letterSpacing="0"
-                        android:maxLines="1"
-                        android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
-                        android:text="📷 Sửa / Đổi ảnh"
-                        android:textAllCaps="false"
+                        android:layout_marginTop="10dp"
+                        android:text="Milu (Chó)"
                         android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="12sp"
-                        app:cornerRadius="18dp" />
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDetailPetWeight"
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
-                        android:letterSpacing="0"
-                        android:maxLines="1"
-                        android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
-                        android:text="⚖️ + Ghi cân nặng"
-                        android:textAllCaps="false"
+                    <TextView
+                        android:id="@+id/tvDetailPetBreedGender"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Giống: Poodle Tiny • Đực"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvDetailPetBirthDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Ngày sinh: 2024-05-12"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvDetailPetOwner"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_badge_indigo"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="3dp"
+                        android:text="Chủ: Nguyễn Văn Tính • 0908123456"
+                        android:textColor="@color/indigo_600"
                         android:textSize="12sp"
                         android:textStyle="bold"
-                        app:backgroundTint="@color/emerald_600"
-                        app:cornerRadius="18dp" />
-                </LinearLayout>
+                        android:visibility="gone" />
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="@color/slate_100" />
+
+                    <!-- Hàng nút thao tác giống Demo -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDetailPetEdit"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:letterSpacing="0"
+                            android:maxLines="1"
+                            android:minWidth="0dp"
+                            android:paddingHorizontal="8dp"
+                            android:text="📷 Sửa / Đổi ảnh"
+                            android:textAllCaps="false"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="12sp"
+                            app:cornerRadius="19dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDetailPetWeight"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:letterSpacing="0"
+                            android:maxLines="1"
+                            android:minWidth="0dp"
+                            android:paddingHorizontal="8dp"
+                            android:text="⚖️ + Ghi cân nặng"
+                            android:textAllCaps="false"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="@color/emerald_600"
+                            app:cornerRadius="19dp" />
+                    </LinearLayout>
+
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -213,6 +238,21 @@
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
+
+                <!-- Dải tóm tắt biến động cân nặng -->
+                <TextView
+                    android:id="@+id/tvDetailWeightTrend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_pet_weight_badge"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="3dp"
+                    android:text="+0.0 kg so với lần đầu"
+                    android:textColor="@color/emerald_700"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
                 <ProgressBar
                     android:id="@+id/progressBarDetailLogs"

@@ -41,6 +41,7 @@ public class Manage_Pet_User extends Fragment {
     private SessionManager sessionManager;
     private Pet_Adapter_Admin_User petAdapter;
     private Pet_Form_Admin_User petFormAdminUser;
+    private TextView tvUserPetsCount;
     private ProgressBar progressBarUserPets;
     private TextView tvEmptyUserPets;
     private SwipeRefreshLayout swipeRefreshUserPets;
@@ -62,6 +63,7 @@ public class Manage_Pet_User extends Fragment {
         sessionManager = new SessionManager(requireContext());
 
         etUserPetSearch = view.findViewById(R.id.etUserPetSearch);
+        tvUserPetsCount = view.findViewById(R.id.tvUserPetsCount);
         progressBarUserPets = view.findViewById(R.id.progressBarUserPets);
         tvEmptyUserPets = view.findViewById(R.id.tvEmptyUserPets);
         swipeRefreshUserPets = view.findViewById(R.id.swipeRefreshUserPets);
@@ -171,6 +173,9 @@ public class Manage_Pet_User extends Fragment {
         String kw = keyword != null ? keyword.trim().toLowerCase(Locale.ROOT) : "";
         if (kw.isEmpty()) {
             petAdapter.setPets(allUserPets);
+            if (tvUserPetsCount != null) {
+                tvUserPetsCount.setText("🐾 Thú cưng của bạn (" + allUserPets.size() + " bé)");
+            }
             tvEmptyUserPets.setVisibility(allUserPets.isEmpty() ? View.VISIBLE : View.GONE);
             return;
         }
@@ -184,6 +189,9 @@ public class Manage_Pet_User extends Fragment {
             }
         }
         petAdapter.setPets(filtered);
+        if (tvUserPetsCount != null) {
+            tvUserPetsCount.setText("🐾 Thú cưng của bạn (" + filtered.size() + " bé)");
+        }
         tvEmptyUserPets.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
     }
 }

@@ -1,8 +1,10 @@
 package com.example.healthy_pet.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
+import android.transition.TransitionManager;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -18,6 +20,7 @@ import com.example.healthy_pet.R;
 import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.utils.ImageMultipartUtils;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -45,6 +48,7 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
     private final OnPetActionListener listener;
     private final Handler actionHandler = new Handler(Looper.getMainLooper());
 
+    private RecyclerView attachedRecyclerView;
     private Long expandedPetId = null;
     private boolean expandedByTouch = false;
     private Long pendingHoverPetId = null;
@@ -54,6 +58,12 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
     public Pet_Adapter_Admin_User(boolean isAdminMode, OnPetActionListener listener) {
         this.isAdminMode = isAdminMode;
         this.listener = listener;
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        attachedRecyclerView = recyclerView;
     }
 
     public void setPets(List<Pet> pets) {
@@ -73,6 +83,7 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
     @Override
     public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
+        attachedRecyclerView = null;
         cancelPendingHover();
         cancelPendingHold();
     }
@@ -110,6 +121,10 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
                 ? "Ngày sinh: " + pet.getBirthDate().trim()
                 : "Ngày sinh: Chưa cập nhật";
         holder.tvBirthDate.setText(birthText);
+
+        if (holder.cardAvatarRing != null) {
+            holder.cardAvatarRing.setStrokeColor(Color.parseColor(isAdminMode ? "#4D4F46E5" : "#4D10B981"));
+        }
 
         if (isAdminMode) {
             String ownerName = (pet.getOwnerName() != null && !pet.getOwnerName().trim().isEmpty())
@@ -252,6 +267,9 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
     }
 
     private void updateExpandedPet(Long newExpandedPetId, boolean byTouch) {
+        if (attachedRecyclerView != null) {
+            TransitionManager.beginDelayedTransition(attachedRecyclerView);
+        }
         Long oldExpandedPetId = expandedPetId;
         expandedPetId = newExpandedPetId;
         expandedByTouch = newExpandedPetId != null && byTouch;
@@ -286,6 +304,7 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
     }
 
     static class PetViewHolder extends RecyclerView.ViewHolder {
+        final MaterialCardView cardAvatarRing;
         final ImageView ivAvatar;
         final TextView tvName;
         final TextView tvWeightBadge;
@@ -299,6 +318,7 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
 
         PetViewHolder(@NonNull View itemView) {
             super(itemView);
+            cardAvatarRing = itemView.findViewById(R.id.cardItemPetAvatarRing);
             ivAvatar = itemView.findViewById(R.id.ivItemPetAvatar);
             tvName = itemView.findViewById(R.id.tvItemPetName);
             tvWeightBadge = itemView.findViewById(R.id.tvItemPetWeightBadge);

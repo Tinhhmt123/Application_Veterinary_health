@@ -1,6 +1,7 @@
 package com.example.healthy_pet.ui.pet;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -27,6 +28,7 @@ import com.example.healthy_pet.ui.Page_User;
 import com.example.healthy_pet.ui.component.Pet_Form_Admin_User;
 import com.example.healthy_pet.ui.component.Weight_Logs_Admin_User;
 import com.example.healthy_pet.utils.ImageMultipartUtils;
+import com.google.android.material.button.MaterialButton;
 import java.util.List;
 import java.util.Locale;
 import retrofit2.Call;
@@ -45,12 +47,15 @@ public class Pet_Detail_Admin_User extends Fragment {
     private boolean isAdminMode;
     private Pet_Form_Admin_User petFormAdminUser;
 
+    private View viewBanner;
     private ImageView ivAvatar;
     private TextView tvNameSpecies;
     private TextView tvBreedGender;
     private TextView tvBirthDate;
     private TextView tvOwner;
     private TextView tvCurrentWeight;
+    private TextView tvWeightTrend;
+    private MaterialButton btnBooking;
     private ProgressBar progressBarLogs;
     private TextView tvLogsEmpty;
     private LinearLayout layoutTimeline;
@@ -85,15 +90,28 @@ public class Pet_Detail_Admin_User extends Fragment {
             return view;
         }
 
+        viewBanner = view.findViewById(R.id.viewDetailPetBanner);
         ivAvatar = view.findViewById(R.id.ivDetailPetAvatar);
         tvNameSpecies = view.findViewById(R.id.tvDetailPetNameSpecies);
         tvBreedGender = view.findViewById(R.id.tvDetailPetBreedGender);
         tvBirthDate = view.findViewById(R.id.tvDetailPetBirthDate);
         tvOwner = view.findViewById(R.id.tvDetailPetOwner);
         tvCurrentWeight = view.findViewById(R.id.tvDetailPetCurrentWeight);
+        tvWeightTrend = view.findViewById(R.id.tvDetailWeightTrend);
+        btnBooking = view.findViewById(R.id.btnDetailPetBooking);
         progressBarLogs = view.findViewById(R.id.progressBarDetailLogs);
         tvLogsEmpty = view.findViewById(R.id.tvDetailLogsEmpty);
         layoutTimeline = view.findViewById(R.id.layoutDetailWeightTimeline);
+
+        int roleColor = ContextCompat.getColor(
+                requireContext(), isAdminMode ? R.color.indigo_600 : R.color.emerald_600);
+        if (viewBanner != null) {
+            viewBanner.setBackgroundColor(roleColor);
+        }
+        if (btnBooking != null) {
+            btnBooking.setBackgroundTintList(ColorStateList.valueOf(roleColor));
+            btnBooking.setOnClickListener(v -> navigateToBookingPage());
+        }
 
         petFormAdminUser = new Pet_Form_Admin_User(
                 this,
@@ -114,8 +132,6 @@ public class Pet_Detail_Admin_User extends Fragment {
         view.findViewById(R.id.btnDetailPetDelete).setOnClickListener(v ->
                 Pet_Form_Admin_User.confirmAndDeletePet(this, currentPet, this::navigateBackToPetList)
         );
-
-        view.findViewById(R.id.btnDetailPetBooking).setOnClickListener(v -> navigateToBookingPage());
 
         bindPetHeader();
         loadDetailAndLogs();
@@ -203,9 +219,13 @@ public class Pet_Detail_Admin_User extends Fragment {
 
         if (logs == null || logs.isEmpty()) {
             tvLogsEmpty.setVisibility(View.VISIBLE);
+            if (tvWeightTrend != null) {
+                tvWeightTrend.setVisibility(View.GONE);
+            }
             return;
         }
         tvLogsEmpty.setVisibility(View.GONE);
+        updateWeightTrendSummary(context, logs);
 
         float density = context.getResources().getDisplayMetrics().density;
         int pad = Math.round(10 * density);
@@ -268,6 +288,33 @@ public class Pet_Detail_Admin_User extends Fragment {
             row.addView(leftCol);
             row.addView(tvWeight);
             layoutTimeline.addView(row);
+        }
+    }
+
+    private void updateWeightTrendSummary(Context context, List<WeightLog> logs) {
+        if (tvWeightTrend == null || logs == null || logs.isEmpty()) return;
+
+        double latest = logs.get(0).getWeight() != null ? logs.get(0).getWeight() : 0.0;
+        double earliest = logs.get(logs.size() - 1).getWeight() != null ? logs.get(logs.size() - 1).getWeight() : 0.0;
+        double diff = latest - earliest;
+
+        tvWeightTrend.setVisibility(View.VISIBLE);
+        if (logs.size() == 1) {
+            tvWeightTrend.setText(String.format(Locale.US, "⚖️ 1 mốc cân: %.1f kg", latest));
+            tvWeightTrend.setBackgroundResource(R.drawable.bg_badge_slate);
+            tvWeightTrend.setTextColor(ContextCompat.getColor(context, R.color.slate_800));
+        } else if (diff > 0.05) {
+            tvWeightTrend.setText(String.format(Locale.US, "📈 +%.1f kg so với lần đầu • %d mốc cân", diff, logs.size()));
+            tvWeightTrend.setBackgroundResource(R.drawable.bg_pet_weight_badge);
+            tvWeightTrend.setTextColor(ContextCompat.getColor(context, R.color.emerald_700));
+        } else if (diff < -0.05) {
+            tvWeightTrend.setText(String.format(Locale.US, "📉 %.1f kg so với lần đầu • %d mốc cân", diff, logs.size()));
+            tvWeightTrend.setBackgroundResource(R.drawable.bg_badge_red);
+            tvWeightTrend.setTextColor(ContextCompat.getColor(context, R.color.red_600));
+        } else {
+            tvWeightTrend.setText(String.format(Locale.US, "⚖️ Ổn định %.1f kg • %d mốc cân", latest, logs.size()));
+            tvWeightTrend.setBackgroundResource(R.drawable.bg_badge_indigo);
+            tvWeightTrend.setTextColor(ContextCompat.getColor(context, R.color.indigo_600));
         }
     }
 

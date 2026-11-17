@@ -17,13 +17,24 @@
         android:orientation="horizontal"
         android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/ivItemPetAvatar"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:contentDescription="Ảnh thú cưng"
-            android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher_round" />
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardItemPetAvatarRing"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            app:cardBackgroundColor="@color/emerald_50"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#4D10B981"
+            app:strokeWidth="1.5dp">
+
+            <ImageView
+                android:id="@+id/ivItemPetAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Ảnh thú cưng"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round" />
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Cột thông tin thú cưng ở giữa -->
         <LinearLayout

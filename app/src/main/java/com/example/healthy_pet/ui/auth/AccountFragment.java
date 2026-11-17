@@ -1,5 +1,6 @@
 package com.example.healthy_pet.ui.auth;
 
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
@@ -37,6 +39,7 @@ import retrofit2.Response;
  */
 public class AccountFragment extends Fragment {
 
+    private View viewProfileBanner;
     private ImageView ivProfileAvatar;
     private TextView tvProfileEmail;
     private TextView tvProfileRoleBadge;
@@ -75,6 +78,7 @@ public class AccountFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.profile_user, container, false);
 
+        viewProfileBanner = view.findViewById(R.id.viewProfileBanner);
         ivProfileAvatar = view.findViewById(R.id.ivProfileAvatar);
         tvProfileEmail = view.findViewById(R.id.tvProfileEmail);
         tvProfileRoleBadge = view.findViewById(R.id.tvProfileRoleBadge);
@@ -168,11 +172,22 @@ public class AccountFragment extends Fragment {
         tvProfileEmail.setText(sessionManager.getEmail());
         etProfilePhone.setText(sessionManager.getPhoneNumber());
 
-        String role = sessionManager.getRole();
-        if ("ADMIN".equalsIgnoreCase(role)) {
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
+        int primaryColor = ContextCompat.getColor(
+                requireContext(), isAdmin ? R.color.indigo_600 : R.color.emerald_600);
+        if (viewProfileBanner != null) {
+            viewProfileBanner.setBackgroundColor(primaryColor);
+        }
+        btnSaveProfile.setBackgroundTintList(ColorStateList.valueOf(primaryColor));
+
+        if (isAdmin) {
             tvProfileRoleBadge.setText("Quản trị viên");
+            tvProfileRoleBadge.setBackgroundResource(R.drawable.bg_badge_indigo);
+            tvProfileRoleBadge.setTextColor(ContextCompat.getColor(requireContext(), R.color.indigo_600));
         } else {
             tvProfileRoleBadge.setText("Khách hàng");
+            tvProfileRoleBadge.setBackgroundResource(R.drawable.bg_pet_weight_badge);
+            tvProfileRoleBadge.setTextColor(ContextCompat.getColor(requireContext(), R.color.emerald_700));
         }
 
         String avatarUrl = sessionManager.getAvatarUrl();
