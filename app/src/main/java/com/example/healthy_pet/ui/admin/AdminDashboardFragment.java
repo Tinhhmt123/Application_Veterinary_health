@@ -26,8 +26,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * [Luồng ADMIN] Nghiệp vụ 6, 7, 8 dành cho Quản trị viên hệ thống.
- * - Luồng 6 (NV 6a - Thành viên 1): Quản lý danh sách Users (manage_user_admin.xml), tìm kiếm & Khóa/Mở khóa tài khoản.
+ * [Luồng ADMIN] Nghiệp vụ 6a, 7, 8 dành cho Quản trị viên hệ thống.
+ * - Luồng 6 (NV 6a - Thành viên 1): Quản lý danh sách Khách hàng (manage_user_admin.xml), tìm kiếm & Khóa/Mở khóa tài khoản.
+ *   (Chuyên mục Thú cưng NV 6b đã tách riêng sang Manage_Pet_Admin).
  */
 public class AdminDashboardFragment extends Fragment {
 

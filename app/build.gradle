@@ -2,6 +2,36 @@ plugins {
     id 'com.android.application'
 }
 
+def loadDotEnv = { File file ->
+    def values = [:]
+    if (file.exists()) {
+        file.eachLine('UTF-8') { rawLine ->
+            def line = rawLine.trim()
+            if (!line || line.startsWith('#') || !line.contains('=')) {
+                return
+            }
+            def idx = line.indexOf('=')
+            def key = line.substring(0, idx).trim()
+            def value = line.substring(idx + 1).trim()
+            if ((value.startsWith('"') && value.endsWith('"'))
+                    || (value.startsWith("'") && value.endsWith("'"))) {
+                if (value.length() >= 2) {
+                    value = value.substring(1, value.length() - 1)
+                }
+            }
+            values[key] = value
+        }
+    }
+    return values
+}
+
+def envMap = loadDotEnv(rootProject.file('.env'))
+def resolvedBaseUrl = (envMap['BASE_URL'] ?: 'http://10.0.2.2:8080/api/').trim()
+if (!resolvedBaseUrl) {
+    resolvedBaseUrl = 'http://10.0.2.2:8080/api/'
+}
+def escapedBaseUrl = resolvedBaseUrl.replace('\\', '\\\\').replace('"', '\\"')
+
 android {
     compileSdk 33
 
@@ -11,6 +41,8 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "String", "BASE_URL", "\"${escapedBaseUrl}\""
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,6 +61,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    sourceSets {
+        main {
+            res.srcDirs = ['src/main/res', 'src/main/component']
+        }
     }
 }
 

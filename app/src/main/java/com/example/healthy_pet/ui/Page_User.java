@@ -6,16 +6,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import com.example.healthy_pet.MainActivity;
 import com.example.healthy_pet.R;
+import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.ui.auth.AccountFragment;
 import com.example.healthy_pet.ui.map.ClinicBookingFragment;
 import com.example.healthy_pet.ui.medical.MedicalHistoryFragment;
-import com.example.healthy_pet.ui.pet.PetWeightFragment;
+import com.example.healthy_pet.ui.pet.Manage_Pet_User;
+import com.example.healthy_pet.ui.pet.Pet_Detail_Admin_User;
 import com.example.healthy_pet.ui.vaccine.VaccineAlertFragment;
 
 /**
@@ -26,21 +30,47 @@ public class Page_User extends Fragment {
 
     private TextView tvUserHeaderSubtitle;
     private View rootView;
+    private View btnUserOpenDrawer;
+    private View btnUserHeaderBack;
+    private View footerUser;
+    private String currentTabSubtitle = "Cảnh báo y tế & Sổ tiêm chủng";
+    private OnBackPressedCallback detailBackCallback;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.page_user, container, false);
         tvUserHeaderSubtitle = rootView.findViewById(R.id.tvUserHeaderSubtitle);
+        btnUserOpenDrawer = rootView.findViewById(R.id.btnUserOpenDrawer);
+        btnUserHeaderBack = rootView.findViewById(R.id.btnUserHeaderBack);
+        footerUser = rootView.findViewById(R.id.footerUser);
 
-        // 1. Header: Bấm icon 🐾 hoặc tiêu đề để mở Menu trượt bên trái
+        // 1. Header: Bấm icon 🐾 hoặc tiêu đề để mở Menu trượt bên trái; bấm ← khi đang xem trang con
         View.OnClickListener openDrawerListener = v -> {
+            if (getChildFragmentManager().getBackStackEntryCount() > 0) return;
             if (requireActivity() instanceof MainActivity) {
                 ((MainActivity) requireActivity()).openDrawer();
             }
         };
-        rootView.findViewById(R.id.btnUserOpenDrawer).setOnClickListener(openDrawerListener);
+        btnUserOpenDrawer.setOnClickListener(openDrawerListener);
         rootView.findViewById(R.id.layoutUserHeaderTitle).setOnClickListener(openDrawerListener);
+        btnUserHeaderBack.setOnClickListener(v -> {
+            if (getChildFragmentManager().getBackStackEntryCount() > 0) {
+                getChildFragmentManager().popBackStack();
+            }
+        });
+
+        detailBackCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                if (getChildFragmentManager().getBackStackEntryCount() > 0) {
+                    getChildFragmentManager().popBackStack();
+                }
+            }
+        };
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), detailBackCallback);
+
+        getChildFragmentManager().addOnBackStackChangedListener(this::syncHeaderAndFooterForBackStack);
 
         // 2. Footer: Chọn các mục bên dưới để thay đổi Content ở giữa (userContentContainer)
         rootView.findViewById(R.id.navUserAlert).setOnClickListener(v -> {
@@ -50,13 +80,10 @@ public class Page_User extends Fragment {
 
         rootView.findViewById(R.id.navUserPet).setOnClickListener(v -> {
             highlightUserTab(R.id.navUserPet);
-            setCenterContent(new PetWeightFragment(), "Hồ sơ thú cưng & Cân nặng");
+            setCenterContent(new Manage_Pet_User(), "Hồ sơ thú cưng & Cân nặng");
         });
 
-        rootView.findViewById(R.id.navUserBookingCenter).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserBookingCenter);
-            setCenterContent(new ClinicBookingFragment(), "Đặt lịch Khám/Spa & Bản đồ");
-        });
+        rootView.findViewById(R.id.navUserBookingCenter).setOnClickListener(v -> navigateToBooking());
 
         rootView.findViewById(R.id.navUserMedical).setOnClickListener(v -> {
             highlightUserTab(R.id.navUserMedical);
@@ -72,15 +99,66 @@ public class Page_User extends Fragment {
         highlightUserTab(R.id.navUserAlert);
         if (savedInstanceState == null) {
             setCenterContent(new VaccineAlertFragment(), "Cảnh báo y tế & Sổ tiêm chủng");
+        } else {
+            syncHeaderAndFooterForBackStack();
         }
 
         return rootView;
+    }
+
+    public void openPetDetailPage(@NonNull Pet pet) {
+        if (getChildFragmentManager().getBackStackEntryCount() > 0) {
+            getChildFragmentManager().popBackStackImmediate();
+        }
+        String petTitle = pet.getName() != null && !pet.getName().isEmpty()
+                ? "Chi tiết thú cưng: " + pet.getName()
+                : "Chi tiết thú cưng";
+        if (tvUserHeaderSubtitle != null) {
+            tvUserHeaderSubtitle.setText(petTitle);
+        }
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(R.id.userContentContainer, Pet_Detail_Admin_User.newInstance(pet, false))
+                .addToBackStack("pet_detail")
+                .commit();
+    }
+
+    public void navigateToBooking() {
+        if (getChildFragmentManager().getBackStackEntryCount() > 0) {
+            getChildFragmentManager().popBackStackImmediate();
+        }
+        highlightUserTab(R.id.navUserBookingCenter);
+        setCenterContent(new ClinicBookingFragment(), "Đặt lịch Khám/Spa & Bản đồ");
+    }
+
+    private void syncHeaderAndFooterForBackStack() {
+        if (rootView == null) return;
+        boolean inSubPage = getChildFragmentManager().getBackStackEntryCount() > 0;
+        if (detailBackCallback != null) {
+            detailBackCallback.setEnabled(inSubPage);
+        }
+        if (footerUser != null) {
+            footerUser.setVisibility(inSubPage ? View.GONE : View.VISIBLE);
+        }
+        if (btnUserOpenDrawer != null) {
+            btnUserOpenDrawer.setVisibility(inSubPage ? View.GONE : View.VISIBLE);
+        }
+        if (btnUserHeaderBack != null) {
+            btnUserHeaderBack.setVisibility(inSubPage ? View.VISIBLE : View.GONE);
+        }
+        if (!inSubPage && tvUserHeaderSubtitle != null) {
+            tvUserHeaderSubtitle.setText(currentTabSubtitle);
+        }
     }
 
     /**
      * Thay đổi nội dung phần Content nằm ở giữa (userContentContainer)
      */
     private void setCenterContent(Fragment fragment, String subtitle) {
+        if (getChildFragmentManager().getBackStackEntryCount() > 0) {
+            getChildFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
+        currentTabSubtitle = subtitle;
         if (tvUserHeaderSubtitle != null) {
             tvUserHeaderSubtitle.setText(subtitle);
         }
