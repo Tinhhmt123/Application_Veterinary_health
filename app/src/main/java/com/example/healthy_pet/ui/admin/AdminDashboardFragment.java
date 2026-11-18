@@ -1,5 +1,7 @@
 package com.example.healthy_pet.ui.admin;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -11,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,16 +29,21 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * [Luồng ADMIN] Nghiệp vụ 6, 7, 8 dành cho Quản trị viên hệ thống.
- * - Luồng 6 (NV 6a - Thành viên 1): Quản lý danh sách Users (manage_user_admin.xml), tìm kiếm & Khóa/Mở khóa tài khoản.
+ * [Luồng ADMIN] Nghiệp vụ 6a, 7, 8 dành cho Quản trị viên hệ thống.
+ * - Luồng 6 (NV 6a - Thành viên 1): Quản lý danh sách Khách hàng (manage_user_admin.xml), tìm kiếm & Khóa/Mở khóa tài khoản.
+ *   (Chuyên mục Thú cưng NV 6b đã tách riêng sang Manage_Pet_Admin).
  */
 public class AdminDashboardFragment extends Fragment {
 
     private static final String ARG_FLOW = "admin_flow";
 
     private TextInputEditText etSearchUserKeyword;
+    private TextView tvAdminUsersCount;
     private ProgressBar progressBarAdminUsers;
     private TextView tvEmptyAdminUsers;
+    private MaterialButton btnFilterAllUsers;
+    private MaterialButton btnFilterActiveUsers;
+    private MaterialButton btnFilterLockedUsers;
     private UserAdminAdapter userAdminAdapter;
     private Boolean currentActiveFilter = null; // null = Tất cả, true = Đang hoạt động, false = Đã khóa
 
@@ -97,9 +105,10 @@ public class AdminDashboardFragment extends Fragment {
 
         etSearchUserKeyword = view.findViewById(R.id.etSearchUserKeyword);
         MaterialButton btnSearchUser = view.findViewById(R.id.btnSearchUser);
-        MaterialButton btnFilterAllUsers = view.findViewById(R.id.btnFilterAllUsers);
-        MaterialButton btnFilterActiveUsers = view.findViewById(R.id.btnFilterActiveUsers);
-        MaterialButton btnFilterLockedUsers = view.findViewById(R.id.btnFilterLockedUsers);
+        btnFilterAllUsers = view.findViewById(R.id.btnFilterAllUsers);
+        btnFilterActiveUsers = view.findViewById(R.id.btnFilterActiveUsers);
+        btnFilterLockedUsers = view.findViewById(R.id.btnFilterLockedUsers);
+        tvAdminUsersCount = view.findViewById(R.id.tvAdminUsersCount);
         progressBarAdminUsers = view.findViewById(R.id.progressBarAdminUsers);
         tvEmptyAdminUsers = view.findViewById(R.id.tvEmptyAdminUsers);
         RecyclerView rvAdminUsers = view.findViewById(R.id.rvAdminUsers);
@@ -120,23 +129,36 @@ public class AdminDashboardFragment extends Fragment {
         });
 
         // Sự kiện 3 nút lọc trạng thái
-        btnFilterAllUsers.setOnClickListener(v -> {
-            currentActiveFilter = null;
-            loadUsersFromServer();
-        });
-        btnFilterActiveUsers.setOnClickListener(v -> {
-            currentActiveFilter = true;
-            loadUsersFromServer();
-        });
-        btnFilterLockedUsers.setOnClickListener(v -> {
-            currentActiveFilter = false;
-            loadUsersFromServer();
-        });
+        btnFilterAllUsers.setOnClickListener(v -> selectActiveFilter(null, btnFilterAllUsers));
+        btnFilterActiveUsers.setOnClickListener(v -> selectActiveFilter(true, btnFilterActiveUsers));
+        btnFilterLockedUsers.setOnClickListener(v -> selectActiveFilter(false, btnFilterLockedUsers));
 
+        updateFilterButtonStyles(btnFilterAllUsers);
         // Tải danh sách khách hàng ngay khi mở trang
         loadUsersFromServer();
 
         return view;
+    }
+
+    private void selectActiveFilter(@Nullable Boolean activeFilter, MaterialButton activeButton) {
+        currentActiveFilter = activeFilter;
+        updateFilterButtonStyles(activeButton);
+        loadUsersFromServer();
+    }
+
+    private void updateFilterButtonStyles(MaterialButton activeButton) {
+        if (getContext() == null) return;
+        MaterialButton[] buttons = {btnFilterAllUsers, btnFilterActiveUsers, btnFilterLockedUsers};
+        int activeColor = ContextCompat.getColor(requireContext(), R.color.indigo_600);
+        int inactiveColor = ContextCompat.getColor(requireContext(), R.color.slate_500);
+        int activeBg = Color.parseColor("#EEF2FF");
+
+        for (MaterialButton button : buttons) {
+            boolean isActive = (button == activeButton);
+            button.setTextColor(isActive ? activeColor : inactiveColor);
+            button.setStrokeColor(ColorStateList.valueOf(isActive ? activeColor : inactiveColor));
+            button.setBackgroundTintList(ColorStateList.valueOf(isActive ? activeBg : Color.TRANSPARENT));
+        }
     }
 
     private void loadUsersFromServer() {
@@ -159,6 +181,9 @@ public class AdminDashboardFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null) {
                             List<User> users = response.body();
                             userAdminAdapter.setUsers(users);
+                            if (tvAdminUsersCount != null) {
+                                tvAdminUsersCount.setText("👥 Danh sách khách hàng (" + users.size() + ")");
+                            }
                             tvEmptyAdminUsers.setVisibility(users.isEmpty() ? View.VISIBLE : View.GONE);
                         } else {
                             Toast.makeText(getContext(), "Không thể tải danh sách khách hàng (" + response.code() + ")", Toast.LENGTH_SHORT).show();

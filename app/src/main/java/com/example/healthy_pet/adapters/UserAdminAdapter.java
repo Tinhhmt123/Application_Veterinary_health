@@ -78,17 +78,24 @@ public class UserAdminAdapter extends RecyclerView.Adapter<UserAdminAdapter.User
         }
 
         boolean isAdmin = "ADMIN".equalsIgnoreCase(user.getRole());
-        holder.tvItemUserRole.setText(isAdmin ? "ADMIN" : "Khách hàng");
+        if (isAdmin) {
+            holder.tvItemUserRole.setText("ADMIN");
+            holder.tvItemUserRole.setBackgroundResource(R.drawable.bg_badge_indigo);
+            holder.tvItemUserRole.setTextColor(ContextCompat.getColor(context, R.color.indigo_600));
+        } else {
+            holder.tvItemUserRole.setText("Khách hàng");
+            holder.tvItemUserRole.setBackgroundResource(R.drawable.bg_badge_slate);
+            holder.tvItemUserRole.setTextColor(ContextCompat.getColor(context, R.color.slate_800));
+        }
 
         boolean isActive = user.getIsActive() == null || Boolean.TRUE.equals(user.getIsActive());
         int greenColor = ContextCompat.getColor(context, R.color.emerald_600);
-        int greenBg = ContextCompat.getColor(context, R.color.emerald_100);
         int redColor = ContextCompat.getColor(context, R.color.red_600);
 
         if (isActive) {
             holder.tvItemUserStatus.setText("Đang hoạt động");
             holder.tvItemUserStatus.setTextColor(ContextCompat.getColor(context, R.color.emerald_700));
-            holder.tvItemUserStatus.setBackgroundColor(greenBg);
+            holder.tvItemUserStatus.setBackgroundResource(R.drawable.bg_pet_weight_badge);
 
             holder.btnToggleUserLock.setText("🔒 Khóa");
             holder.btnToggleUserLock.setTextColor(redColor);
@@ -96,7 +103,7 @@ public class UserAdminAdapter extends RecyclerView.Adapter<UserAdminAdapter.User
         } else {
             holder.tvItemUserStatus.setText("Đã bị khóa");
             holder.tvItemUserStatus.setTextColor(redColor);
-            holder.tvItemUserStatus.setBackgroundColor(ContextCompat.getColor(context, R.color.slate_100));
+            holder.tvItemUserStatus.setBackgroundResource(R.drawable.bg_badge_red);
 
             holder.btnToggleUserLock.setText("🔓 Mở khóa");
             holder.btnToggleUserLock.setTextColor(greenColor);

@@ -17,6 +17,29 @@
         android:paddingHorizontal="14dp">
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnAdminHeaderBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone"
+            app:cardBackgroundColor="#33FFFFFF"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/white"
+            app:strokeWidth="1.5dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="←"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btnAdminOpenDrawer"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -58,7 +81,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
-                android:text="Quản lý Khách hàng &amp; Hồ sơ Thú cưng"
+                android:text="Quản lý Khách hàng"
                 android:textColor="#E2E8F0"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -71,7 +94,7 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- ==================== 3. FOOTER (THANH MENU BÊN DƯỚI) CỦA ADMIN ==================== -->
+    <!-- ==================== 3. FOOTER (THANH MENU BÊN DƯỚI - 5 MỤC) CỦA ADMIN ==================== -->
     <LinearLayout
         android:id="@+id/footerAdmin"
         android:layout_width="match_parent"
@@ -79,10 +102,11 @@
         android:background="?attr/colorSurface"
         android:elevation="8dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingHorizontal="2dp">
 
         <LinearLayout
-            android:id="@+id/navAdminUserPet"
+            android:id="@+id/navAdminUser"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -90,7 +114,8 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -99,14 +124,44 @@
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/tvNavAdminUserPet"
+                android:id="@+id/tvNavAdminUser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:text="User &amp; Pet"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Khách hàng"
                 android:textColor="@color/emerald_500"
                 android:textSize="11sp"
                 android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navAdminPet"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🐶"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvNavAdminPet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Thú cưng"
+                android:textColor="@color/slate_500"
+                android:textSize="11sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -118,7 +173,8 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -130,8 +186,9 @@
                 android:id="@+id/tvNavAdminAppointment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:text="Duyệt lịch &amp; Đơn"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Lịch &amp; Đơn"
                 android:textColor="@color/slate_500"
                 android:textSize="11sp" />
         </LinearLayout>
@@ -145,7 +202,8 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -157,7 +215,8 @@
                 android:id="@+id/tvNavAdminClinic"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Chi nhánh"
                 android:textColor="@color/slate_500"
                 android:textSize="11sp" />
@@ -172,7 +231,8 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -184,7 +244,8 @@
                 android:id="@+id/tvNavAdminAccount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Tài khoản"
                 android:textColor="@color/slate_500"
                 android:textSize="11sp" />

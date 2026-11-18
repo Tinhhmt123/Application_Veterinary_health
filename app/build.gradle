@@ -2,6 +2,45 @@ plugins {
     id 'com.android.application'
 }
 
+def loadDotEnv = { File file ->
+    def values = [:]
+    if (file.exists()) {
+        file.eachLine('UTF-8') { rawLine ->
+            def line = rawLine.trim()
+            if (!line || line.startsWith('#') || !line.contains('=')) {
+                return
+            }
+            def idx = line.indexOf('=')
+            def key = line.substring(0, idx).trim()
+            def value = line.substring(idx + 1).trim()
+            if ((value.startsWith('"') && value.endsWith('"'))
+                    || (value.startsWith("'") && value.endsWith("'"))) {
+                if (value.length() >= 2) {
+                    value = value.substring(1, value.length() - 1)
+                }
+            }
+            values[key] = value
+        }
+    }
+    return values
+}
+
+def escapeJavaString = { String value ->
+    return (value ?: '').replace('\\', '\\\\').replace('"', '\\"')
+}
+
+def envMap = loadDotEnv(rootProject.file('.env'))
+def resolvedBaseUrl = (envMap['BASE_URL'] ?: 'http://10.0.2.2:8080/api/').trim()
+if (!resolvedBaseUrl) {
+    resolvedBaseUrl = 'http://10.0.2.2:8080/api/'
+}
+def resolvedGoogleAndroidClientId = (envMap['GOOGLE_ANDROID_CLIENT_ID'] ?: '').trim()
+def resolvedGoogleWebClientId = (envMap['GOOGLE_WEB_CLIENT_ID'] ?: '').trim()
+def resolvedGoogleMapsApiKey = (envMap['GOOGLE_MAPS_API_KEY'] ?: 'YOUR_GOOGLE_MAPS_API_KEY').trim()
+if (!resolvedGoogleMapsApiKey) {
+    resolvedGoogleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY'
+}
+
 android {
     compileSdk 33
 
@@ -11,6 +50,11 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "String", "BASE_URL", "\"${escapeJavaString(resolvedBaseUrl)}\""
+        buildConfigField "String", "GOOGLE_ANDROID_CLIENT_ID", "\"${escapeJavaString(resolvedGoogleAndroidClientId)}\""
+        buildConfigField "String", "GOOGLE_WEB_CLIENT_ID", "\"${escapeJavaString(resolvedGoogleWebClientId)}\""
+        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: resolvedGoogleMapsApiKey]
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -30,6 +74,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    sourceSets {
+        main {
+            res.srcDirs = ['src/main/res', 'src/main/component']
+        }
+    }
 }
 
 dependencies {
@@ -48,8 +98,9 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
 
-    // Google Maps SDK (Hiển thị điểm ghim chi nhánh VetClinics)
+    // Google Maps SDK (Hiển thị điểm ghim chi nhánh VetClinics) & Google Sign-In OAuth
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
+    implementation 'com.google.android.gms:play-services-auth:20.5.0'
 
     // Testing
     testImplementation 'junit:junit:4.13.2'

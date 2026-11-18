@@ -17,14 +17,24 @@
         android:orientation="horizontal"
         android:padding="14dp">
 
-        <!-- Ảnh đại diện tròn của khách hàng -->
-        <ImageView
-            android:id="@+id/ivItemUserAvatar"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:contentDescription="Ảnh đại diện khách hàng"
-            android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher_round" />
+        <!-- Ảnh đại diện tròn của khách hàng có viền nhẹ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            app:cardBackgroundColor="@color/slate_100"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#334F46E5"
+            app:strokeWidth="1.5dp">
+
+            <ImageView
+                android:id="@+id/ivItemUserAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Ảnh đại diện khách hàng"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round" />
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Khối thông tin Họ tên, Email, SĐT, Trạng thái -->
         <LinearLayout
@@ -74,9 +84,9 @@
                     android:id="@+id/tvItemUserRole"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@color/slate_100"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="2dp"
+                    android:background="@drawable/bg_badge_slate"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="3dp"
                     android:text="USER"
                     android:textColor="@color/slate_800"
                     android:textSize="11sp"
@@ -86,10 +96,10 @@
                     android:id="@+id/tvItemUserStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:background="@color/emerald_100"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="2dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_pet_weight_badge"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="3dp"
                     android:text="Đang hoạt động"
                     android:textColor="@color/emerald_700"
                     android:textSize="11sp"
@@ -102,16 +112,18 @@
             android:id="@+id/btnToggleUserLock"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
+            android:layout_height="34dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:minWidth="88dp"
-            android:paddingHorizontal="10dp"
+            android:letterSpacing="0"
+            android:maxLines="1"
+            android:minWidth="86dp"
+            android:paddingHorizontal="12dp"
             android:text="🔒 Khóa"
             android:textAllCaps="false"
             android:textColor="@color/red_600"
             android:textSize="12sp"
-            app:cornerRadius="10dp"
+            app:cornerRadius="17dp"
             app:strokeColor="@color/red_600" />
 
     </LinearLayout>

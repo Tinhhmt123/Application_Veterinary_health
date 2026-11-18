@@ -35,6 +35,12 @@ public class Pet implements Serializable {
     @SerializedName("avatar_url")
     private String avatarUrl;
 
+    @SerializedName("owner_name")
+    private String ownerName;
+
+    @SerializedName("owner_phone")
+    private String ownerPhone;
+
     public Pet() {
     }
 
@@ -76,4 +82,10 @@ public class Pet implements Serializable {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getOwnerName() { return ownerName; }
+    public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
+
+    public String getOwnerPhone() { return ownerPhone; }
+    public void setOwnerPhone(String ownerPhone) { this.ownerPhone = ownerPhone; }
 }
