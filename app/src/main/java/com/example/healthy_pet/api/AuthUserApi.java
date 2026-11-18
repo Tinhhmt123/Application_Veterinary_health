@@ -2,6 +2,7 @@ package com.example.healthy_pet.api;
 
 import com.example.healthy_pet.models.User;
 import java.util.List;
+import java.util.Map;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
@@ -24,6 +25,18 @@ public interface AuthUserApi {
 
     @POST("auth/register")
     Call<User> register(@Body User registerRequest);
+
+    @POST("auth/send-otp")
+    Call<Map<String, Object>> sendOtp(@Body Map<String, String> payload);
+
+    @POST("auth/verify-otp")
+    Call<User> verifyOtp(@Body Map<String, String> payload);
+
+    @POST("auth/reset-password")
+    Call<Map<String, Object>> resetPassword(@Body Map<String, String> payload);
+
+    @POST("auth/google")
+    Call<User> googleLogin(@Body Map<String, String> payload);
 
     @GET("users/{id}")
     Call<User> getUserById(@Path("id") Long userId);

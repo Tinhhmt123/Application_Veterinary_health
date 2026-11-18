@@ -25,12 +25,21 @@ def loadDotEnv = { File file ->
     return values
 }
 
+def escapeJavaString = { String value ->
+    return (value ?: '').replace('\\', '\\\\').replace('"', '\\"')
+}
+
 def envMap = loadDotEnv(rootProject.file('.env'))
 def resolvedBaseUrl = (envMap['BASE_URL'] ?: 'http://10.0.2.2:8080/api/').trim()
 if (!resolvedBaseUrl) {
     resolvedBaseUrl = 'http://10.0.2.2:8080/api/'
 }
-def escapedBaseUrl = resolvedBaseUrl.replace('\\', '\\\\').replace('"', '\\"')
+def resolvedGoogleAndroidClientId = (envMap['GOOGLE_ANDROID_CLIENT_ID'] ?: '').trim()
+def resolvedGoogleWebClientId = (envMap['GOOGLE_WEB_CLIENT_ID'] ?: '').trim()
+def resolvedGoogleMapsApiKey = (envMap['GOOGLE_MAPS_API_KEY'] ?: 'YOUR_GOOGLE_MAPS_API_KEY').trim()
+if (!resolvedGoogleMapsApiKey) {
+    resolvedGoogleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY'
+}
 
 android {
     compileSdk 33
@@ -42,7 +51,10 @@ android {
         versionCode 1
         versionName "1.0"
 
-        buildConfigField "String", "BASE_URL", "\"${escapedBaseUrl}\""
+        buildConfigField "String", "BASE_URL", "\"${escapeJavaString(resolvedBaseUrl)}\""
+        buildConfigField "String", "GOOGLE_ANDROID_CLIENT_ID", "\"${escapeJavaString(resolvedGoogleAndroidClientId)}\""
+        buildConfigField "String", "GOOGLE_WEB_CLIENT_ID", "\"${escapeJavaString(resolvedGoogleWebClientId)}\""
+        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: resolvedGoogleMapsApiKey]
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -86,8 +98,9 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
 
-    // Google Maps SDK (Hiển thị điểm ghim chi nhánh VetClinics)
+    // Google Maps SDK (Hiển thị điểm ghim chi nhánh VetClinics) & Google Sign-In OAuth
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
+    implementation 'com.google.android.gms:play-services-auth:20.5.0'
 
     // Testing
     testImplementation 'junit:junit:4.13.2'
