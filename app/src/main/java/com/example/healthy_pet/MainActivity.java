@@ -19,6 +19,7 @@ import com.example.healthy_pet.utils.ImageMultipartUtils;
 import com.example.healthy_pet.utils.SessionManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.example.healthy_pet.ui.ai.AiPetFragment;
 
 /**
  * MainActivity điều phối:
@@ -177,5 +178,16 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnAiFaq2).setOnClickListener(v ->
                 tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nMũi 1 từ 6-8 tuần tuổi, Mũi 2 & 3 cách nhau 3-4 tuần + Tiêm Dại khi đủ 3 tháng. Sau đó tiêm nhắc lại 1 năm/lần.")
         );
+        // Mở giao diện trò chuyện AI Thú Y
+        findViewById(R.id.btnOpenAiChat).setOnClickListener(v -> {
+
+            drawerLayout.closeDrawer(GravityCompat.START);
+
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer, new AiPetFragment())
+                    .addToBackStack("ai_chat")
+                    .commit();
+        });
     }
 }
