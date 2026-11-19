@@ -15,10 +15,12 @@ import androidx.fragment.app.Fragment;
 import com.example.healthy_pet.ui.Page_Admin;
 import com.example.healthy_pet.ui.Page_User;
 import com.example.healthy_pet.ui.auth.Login_Admin_User;
+import com.example.healthy_pet.ui.vaccine.VaccineAlertFragment;
 import com.example.healthy_pet.utils.ImageMultipartUtils;
 import com.example.healthy_pet.utils.SessionManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.example.healthy_pet.ui.ai.AiPetFragment;
 
 /**
  * MainActivity điều phối:
@@ -166,9 +168,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         switchAlert7Days.setChecked(sessionManager.isAlert7DaysEnabled());
-        switchAlert7Days.setOnCheckedChangeListener((buttonView, isChecked) ->
-                sessionManager.setAlert7DaysEnabled(isChecked)
-        );
+        switchAlert7Days.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            sessionManager.setAlert7DaysEnabled(isChecked);
+            Fragment currentRoot = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+            if (currentRoot instanceof Page_User) {
+                Fragment centerFrag = currentRoot.getChildFragmentManager().findFragmentById(R.id.userContentContainer);
+                if (centerFrag instanceof VaccineAlertFragment) {
+                    ((VaccineAlertFragment) centerFrag).refreshHealthAlerts();
+                }
+            }
+        });
 
         findViewById(R.id.btnAiFaq1).setOnClickListener(v ->
                 tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nNôn dịch vàng thường do trào ngược dịch mật hoặc viêm dạ dày. Bạn nên cho bé nhịn ăn 4-6h, uống nước điện giải ít một và đặt lịch khám ngay nếu kèm tiêu chảy!")
@@ -177,5 +186,16 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnAiFaq2).setOnClickListener(v ->
                 tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nMũi 1 từ 6-8 tuần tuổi, Mũi 2 & 3 cách nhau 3-4 tuần + Tiêm Dại khi đủ 3 tháng. Sau đó tiêm nhắc lại 1 năm/lần.")
         );
+        // Mở giao diện trò chuyện AI Thú Y
+        findViewById(R.id.btnOpenAiChat).setOnClickListener(v -> {
+
+            drawerLayout.closeDrawer(GravityCompat.START);
+
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer, new AiPetFragment())
+                    .addToBackStack("ai_chat")
+                    .commit();
+        });
     }
 }

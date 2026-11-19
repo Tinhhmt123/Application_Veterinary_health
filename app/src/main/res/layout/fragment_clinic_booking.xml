@@ -1,91 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/mapFragment"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/btnModuleAction" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnModuleAction"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        android:text="📅 Mở Hộp thoại Đặt lịch hẹn mới" />
 
-        <!-- Overview Header Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:strokeColor="#1F64748B"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:id="@+id/tvModuleTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="📅 Đặt Lịch Khám &amp; Dịch Vụ Spa"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvModuleDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="Đặt lịch khám chữa bệnh, tiêm phòng hoặc dịch vụ làm đẹp cho thú cưng dễ dàng. Lựa chọn chi nhánh, ngày giờ phù hợp theo yêu cầu."
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCreateAppointment"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="➕ Đặt lịch khám mới"
-                    android:textAllCaps="false"
-                    app:cornerRadius="12dp" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- List Section Header -->
-        <TextView
-            android:id="@+id/tvListHeader"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp"
-            android:text="📋 Danh sách lịch hẹn đã đặt:"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <!-- Empty State -->
-        <TextView
-            android:id="@+id/tvEmptyState"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="Chưa có lịch hẹn nào. Bấm nút phía trên để đặt lịch mới!"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
-            android:visibility="gone" />
-
-        <!-- RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvAppointments"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false" />
-
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</RelativeLayout>

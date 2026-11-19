@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F7FA">
+
+    <!-- Tiêu đề -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp"
+        android:background="#FFFFFF">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI Thú Y 🐾"
+            android:textColor="#243447"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Trợ lý chăm sóc sức khỏe thú cưng"
+            android:textColor="#718096"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+
+    <!-- Khu vực tin nhắn -->
+    <ScrollView
+        android:id="@+id/scrollMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:contentDescription="Danh sách tin nhắn trò chuyện với AI Thú Y">
+
+        <LinearLayout
+            android:id="@+id/messageContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="12dp" />
+
+    </ScrollView>
+
+    <!-- Khu vực nhập tin nhắn -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:background="#FFFFFF">
+
+        <EditText
+            android:id="@+id/edtMessage"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_ai_input"
+            android:hint="Nhập câu hỏi về thú cưng..."
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textSize="14sp"
+            android:inputType="textCapSentences|textMultiLine"
+            android:imeOptions="actionSend"
+            android:maxLines="3"
+            android:importantForAutofill="no" />
+
+        <Button
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:minWidth="72dp"
+            android:text="Gửi"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#2196F3" />
+
+    </LinearLayout>
+
+</LinearLayout>

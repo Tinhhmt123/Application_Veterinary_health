@@ -1,19 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.healthy_pet">
 
     <!-- Quyền kết nối Internet tới Spring Boot API & Cloudinary -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Quyền vị trí cho Google Maps API (NV 5 & NV 8) -->
+    <!-- Quyền vị trí -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <!-- Quyền đọc ảnh & Camera để upload lên Cloudinary qua @Multipart -->
+    <!-- Quyền Camera và đọc ảnh -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Camera không bắt buộc -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -32,11 +41,17 @@
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+        <!-- KHAI BÁO MỚI: Màn hình Quản lý Chi nhánh dành cho Admin (NV 8) -->
+        <activity
+            android:name=".ui.admin.AdminClinicActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
