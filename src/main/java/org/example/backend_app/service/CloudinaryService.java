@@ -43,6 +43,9 @@ public class CloudinaryService {
     @Value("${cloudinary.api-secret:}")
     private String apiSecret;
 
+    @Value("${app.public-base-url:http://192.168.1.191:8080}")
+    private String publicBaseUrl;
+
     public String uploadImage(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) {
             return null;
@@ -122,7 +125,8 @@ public class CloudinaryService {
             Files.createDirectories(targetDir);
             Files.copy(file.getInputStream(), targetDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
-            return "http://10.0.2.2:8080/uploads/" + folder + "/" + filename;
+            return publicBaseUrl.replaceAll("/+$", "")
+                    + "/uploads/" + folder + "/" + filename;
         } catch (IOException e) {
             throw new RuntimeException("Không thể lưu file ảnh: " + e.getMessage(), e);
         }
