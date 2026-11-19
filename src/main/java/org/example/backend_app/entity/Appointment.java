@@ -67,17 +67,22 @@ public class Appointment {
     @JsonProperty("appointment_time")
     public void setAppointmentTimeText(String text) {
         if (text == null || text.isBlank()) {
-            this.appointmentTime = LocalDateTime.now();
+            this.appointmentTime = null;
             return;
         }
+
         String clean = text.trim().replace("T", " ");
-        if (clean.length() == 16) {
-            this.appointmentTime = LocalDateTime.parse(clean, DISPLAY_FMT);
-        } else if (clean.length() >= 19) {
-            this.appointmentTime = LocalDateTime.parse(clean.substring(0, 19),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        } else {
-            this.appointmentTime = LocalDateTime.now();
+        try {
+            if (clean.length() == 16) {
+                this.appointmentTime = LocalDateTime.parse(clean, DISPLAY_FMT);
+            } else if (clean.length() >= 19) {
+                this.appointmentTime = LocalDateTime.parse(clean.substring(0, 19),
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            } else {
+                throw new IllegalArgumentException("appointment_time must use yyyy-MM-dd HH:mm or yyyy-MM-dd HH:mm:ss");
+            }
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("appointment_time must use yyyy-MM-dd HH:mm or yyyy-MM-dd HH:mm:ss", ex);
         }
     }
 
@@ -96,7 +101,10 @@ public class Appointment {
     public String getServiceType() { return serviceType; }
     public void setServiceType(String serviceType) { this.serviceType = serviceType; }
 
+    @JsonIgnore
     public LocalDateTime getAppointmentTime() { return appointmentTime; }
+
+    @JsonIgnore
     public void setAppointmentTime(LocalDateTime appointmentTime) { this.appointmentTime = appointmentTime; }
 
     public BigDecimal getEstimatedCost() { return estimatedCost; }
