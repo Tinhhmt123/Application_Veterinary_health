@@ -45,7 +45,7 @@ public class CloudinaryService {
     @Value("${cloudinary.api-secret:}")
     private String apiSecret;
 
-    @Value("${app.public-base-url:http://192.168.1.191:8080}")
+    @Value("${app.public-base-url:http://192.168.1.122:8080}")
     private String publicBaseUrl;
 
     public String uploadImage(MultipartFile file, String folder) {
@@ -66,7 +66,11 @@ public class CloudinaryService {
             try {
                 return uploadToCloudinaryCloud(file, folder, safePublicId);
             } catch (Exception ex) {
-                // Nếu mất kết nối mạng tới Cloudinary, tự động lưu dự phòng vào /uploads/
+                System.err.println("CLOUDINARY UPLOAD FAILED: "
+                        + ex.getMessage());
+
+                ex.printStackTrace();
+
                 return saveLocally(file, folder, safePublicId);
             }
         }

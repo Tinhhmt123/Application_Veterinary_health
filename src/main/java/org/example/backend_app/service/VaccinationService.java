@@ -94,12 +94,18 @@ public class VaccinationService {
         record.setClinicName(clinicName);
 
         if (stampImage != null && !stampImage.isEmpty()) {
-            record.setStampImageUrl(
-                    cloudinaryService.uploadImage(
-                            stampImage, "vaccine_stamps"
-                    )
+            String imageUrl = cloudinaryService.uploadImage(
+                    stampImage,
+                    "vaccine_stamps"
             );
+
+            record.setStampImageUrl(imageUrl);
+
+            System.out.println("VACCINE STAMP URL: " + imageUrl);
+        } else {
+            System.out.println("VACCINE STAMP: Không nhận được ảnh");
         }
+
 
         return vaccinationRepository.save(record);
     }
