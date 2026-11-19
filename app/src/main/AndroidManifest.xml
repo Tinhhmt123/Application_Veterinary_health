@@ -2,7 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.healthy_pet">
 
-    <!-- Quyền kết nối Internet -->
+    <!-- Quyền kết nối Internet tới Spring Boot API & Cloudinary -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -44,7 +48,10 @@
             </intent-filter>
 
         </activity>
-
+        <!-- KHAI BÁO MỚI: Màn hình Quản lý Chi nhánh dành cho Admin (NV 8) -->
+        <activity
+            android:name=".ui.admin.AdminClinicActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
