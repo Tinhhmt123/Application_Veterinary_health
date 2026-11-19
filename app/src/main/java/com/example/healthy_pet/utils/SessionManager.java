@@ -53,7 +53,7 @@ public class SessionManager {
     }
 
     public boolean isLoggedIn() {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, true);
     }
 
     public Long getUserId() {
