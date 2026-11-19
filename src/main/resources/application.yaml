@@ -56,10 +56,11 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY:}
   api-secret: ${CLOUDINARY_API_SECRET:}
 
-  gemini:
-    api:
-      key: ${GEMINI_API_KEY:}
-      model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-2.5-flash}
+
 google:
   android-client-id: ${GOOGLE_ANDROID_CLIENT_ID:}
   client-id: ${GOOGLE_CLIENT_ID:}
