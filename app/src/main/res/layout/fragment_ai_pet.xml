@@ -39,6 +39,7 @@
         android:layout_weight="1"
         android:fillViewport="true"
         android:padding="8dp"
+        android:clipToPadding="false"
         android:contentDescription="Danh sách tin nhắn trò chuyện với AI Thú Y">
 
         <LinearLayout
@@ -70,13 +71,16 @@
             android:paddingEnd="14dp"
             android:textSize="14sp"
             android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="3" />
+            android:imeOptions="actionSend"
+            android:maxLines="3"
+            android:importantForAutofill="no" />
 
         <Button
             android:id="@+id/btnSend"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
+            android:minWidth="72dp"
             android:text="Gửi"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"

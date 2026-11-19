@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class RetrofitClient {
 
     private static final String BASE_URL =
-            "http://192.168.1.191:8080/api/";
+            "http://192.168.1.84:8080/api/";
 
     private static Retrofit retrofit = null;
 
@@ -34,7 +34,7 @@ public class RetrofitClient {
             OkHttpClient client = new OkHttpClient.Builder()
                     .addInterceptor(logging)
                     .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(150, TimeUnit.SECONDS)
                     .writeTimeout(30, TimeUnit.SECONDS)
                     .build();
 
@@ -68,5 +68,8 @@ public class RetrofitClient {
 
     public static AppointmentMedicalApi getAppointmentMedicalApi() {
         return getClient().create(AppointmentMedicalApi.class);
+    }
+    public static AiPetApi getAiPetApi() {
+        return getClient().create(AiPetApi.class);
     }
 }
