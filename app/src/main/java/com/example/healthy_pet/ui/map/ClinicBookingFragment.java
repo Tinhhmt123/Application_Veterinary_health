@@ -38,7 +38,7 @@ import retrofit2.Response;
 /**
  * [Thành viên 5 (NV 5b) & Thành viên 4 (NV 5a)]
  * Nghiệp vụ 5: User Đặt lịch hẹn Khám/Spa (DatePickerDialog, TimePickerDialog, AppointmentAdapter)
- * Đồng bộ lập tức dữ liệu qua AppointmentRepository sang Admin duyệt đơn (NV 7).
+ * Đồng bộ 100% với CSDL SQL Server (CreateTableAndInsertDataExample.sql).
  */
 public class ClinicBookingFragment extends Fragment implements AppointmentAdapter.OnAppointmentActionListener {
 
@@ -121,12 +121,12 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
     }
 
     private void loadUserAppointments() {
-        // 1. Đồng bộ tức thì từ Shared AppointmentRepository
+        // 1. Tải lập tức từ Shared AppointmentRepository
         userAppointments.clear();
         userAppointments.addAll(AppointmentRepository.getInstance().getUserAppointments(sessionManager.getUserId()));
         updateUiState();
 
-        // 2. Đồng bộ từ backend REST API
+        // 2. Tải từ backend REST API
         appointmentApi.getUserAppointments(sessionManager.getUserId()).enqueue(new Callback<List<Appointment>>() {
             @Override
             public void onResponse(@NonNull Call<List<Appointment>> call, @NonNull Response<List<Appointment>> response) {
@@ -161,30 +161,29 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
     private void showCreateAppointmentDialog() {
         DialogCreateAppointmentBinding dialogBinding = DialogCreateAppointmentBinding.inflate(getLayoutInflater());
 
-        // 1. Setup Spinner Thú cưng
+        // 1. Setup Spinner Thú cưng (Khớp Seed Data SQL: Milu, Mochi)
         List<String> petNames = new ArrayList<>();
         if (!availablePets.isEmpty()) {
             for (Pet p : availablePets) {
                 petNames.add(p.getName() + " (" + p.getSpecies() + ")");
             }
         } else {
-            petNames.add("LuLu (Poodle - 3.5kg)");
-            petNames.add("Miu Miu (Mèo Anh - 4.2kg)");
-            petNames.add("Kiki (Corgi - 8.0kg)");
+            petNames.add("Milu (Chó - Golden Retriever)");
+            petNames.add("Mochi (Mèo - Mèo Anh Lông Ngắn)");
         }
         ArrayAdapter<String> petSpinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, petNames);
         dialogBinding.spnPet.setAdapter(petSpinnerAdapter);
 
-        // 2. Setup Spinner Phòng khám
+        // 2. Setup Spinner Phòng khám (Khớp Seed Data SQL: Q.1, Q.3, Thủ Đức)
         List<String> clinicNames = new ArrayList<>();
         if (!availableClinics.isEmpty()) {
             for (VetClinic c : availableClinics) {
                 clinicNames.add(c.getName() + " - " + c.getAddress());
             }
         } else {
-            clinicNames.add("Healthy Pet Q.1 - 120 Nguyễn Thị Minh Khai");
-            clinicNames.add("Healthy Pet Bình Thạnh - 45 Lê Quang Định");
-            clinicNames.add("Healthy Pet Q.7 - 88 Nguyễn Thị Thập");
+            clinicNames.add("Healthy Pet Quận 1 - 125 Nguyễn Thị Minh Khai, Q.1");
+            clinicNames.add("Healthy Pet Quận 3 - 280 Võ Văn Tần, Q.3");
+            clinicNames.add("Healthy Pet Thủ Đức - 01 Võ Văn Ngân, TP. Thủ Đức");
         }
         ArrayAdapter<String> clinicSpinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, clinicNames);
         dialogBinding.spnClinic.setAdapter(clinicSpinnerAdapter);
@@ -198,8 +197,8 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
-                    case 0: dialogBinding.etEstimatedCost.setText("200000"); break;
-                    case 1: dialogBinding.etEstimatedCost.setText("150000"); break;
+                    case 0: dialogBinding.etEstimatedCost.setText("350000"); break;
+                    case 1: dialogBinding.etEstimatedCost.setText("180000"); break;
                     case 2: dialogBinding.etEstimatedCost.setText("350000"); break;
                     case 3: dialogBinding.etEstimatedCost.setText("300000"); break;
                 }
@@ -242,7 +241,7 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
                     if (reason.isEmpty()) reason = "Khám sức khỏe tổng quát";
 
                     String costStr = dialogBinding.etEstimatedCost.getText().toString().trim();
-                    BigDecimal estimatedCost = new BigDecimal(costStr.isEmpty() ? "200000" : costStr);
+                    BigDecimal estimatedCost = new BigDecimal(costStr.isEmpty() ? "350000" : costStr);
 
                     int petPos = dialogBinding.spnPet.getSelectedItemPosition();
                     int clinicPos = dialogBinding.spnClinic.getSelectedItemPosition();
@@ -250,7 +249,7 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
 
                     Long petId = !availablePets.isEmpty() && petPos < availablePets.size()
                             ? availablePets.get(petPos).getId()
-                            : (long) (petPos + 101);
+                            : (long) (petPos + 1);
                     String petName = petNames.get(petPos).split(" \\(")[0];
 
                     Long clinicId = !availableClinics.isEmpty() && clinicPos < availableClinics.size()
@@ -288,12 +287,12 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
                                 AppointmentRepository.getInstance().addAppointment(response.body());
                                 loadUserAppointments();
                             }
-                            Toast.makeText(getContext(), "✅ Đặt lịch thành công! Đã gửi thông báo sang Admin duyệt.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "✅ Đặt lịch thành công! Đã chuyển sang Admin chờ duyệt.", Toast.LENGTH_LONG).show();
                         }
 
                         @Override
                         public void onFailure(@NonNull Call<Appointment> call, @NonNull Throwable t) {
-                            Toast.makeText(getContext(), "✅ Đặt lịch thành công! Đã gửi sang Admin chờ duyệt.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "✅ Đặt lịch thành công! Đã chuyển sang Admin chờ duyệt.", Toast.LENGTH_LONG).show();
                         }
                     });
                 })

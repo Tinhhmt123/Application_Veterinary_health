@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * Repository dùng chung lưu trữ & đồng bộ danh sách Lịch hẹn (Appointments)
  * giữa Luồng USER (NV 5b - Đặt lịch) và Luồng ADMIN (NV 7 - Duyệt lịch & Kê đơn).
+ * Khớp 100% với Seed Data SQL (CreateTableAndInsertDataExample.sql).
  */
 public class AppointmentRepository {
     private static AppointmentRepository instance;
@@ -25,27 +26,32 @@ public class AppointmentRepository {
     }
 
     private void initSampleAppointments() {
-        Appointment apt1 = new Appointment(1L, 101L, 1L, "Khám bệnh", "2026-10-25 09:30:00", new BigDecimal("250000"), "Khám da liễu & tiêm phòng");
-        apt1.setId(501L);
-        apt1.setPetName("LuLu (Poodle)");
-        apt1.setClinicName("Healthy Pet Q.1");
-        apt1.setStatus("PENDING");
+        Appointment apt1 = new Appointment(
+                2L, 1L, 1L,
+                "Khám chuyên khoa Tai - Da liễu",
+                "2026-10-18 09:30:00",
+                new BigDecimal("350000"),
+                "Bé ngứa tai và lắc đầu nhiều"
+        );
+        apt1.setId(1L);
+        apt1.setPetName("Milu (Golden)");
+        apt1.setClinicName("Healthy Pet Quận 1");
+        apt1.setStatus("COMPLETED");
 
-        Appointment apt2 = new Appointment(1L, 102L, 2L, "Spa & Làm đẹp", "2026-10-20 14:00:00", new BigDecimal("350000"), "Tắm sấy & cắt tỉa lông");
-        apt2.setId(502L);
-        apt2.setPetName("Miu Miu (Mèo Anh)");
-        apt2.setClinicName("Healthy Pet Bình Thạnh");
-        apt2.setStatus("CONFIRMED");
-
-        Appointment apt3 = new Appointment(1L, 101L, 1L, "Khám bệnh", "2026-10-18 10:00:00", new BigDecimal("350000"), "Khám viêm tai ngoài");
-        apt3.setId(503L);
-        apt3.setPetName("LuLu (Poodle)");
-        apt3.setClinicName("Healthy Pet Q.1");
-        apt3.setStatus("COMPLETED");
+        Appointment apt2 = new Appointment(
+                2L, 2L, 2L,
+                "Tiêm nhắc Vaccine Phòng Dại",
+                "2026-11-12 15:00:00",
+                new BigDecimal("180000"),
+                "Đặt lịch từ cảnh báo sổ tiêm"
+        );
+        apt2.setId(2L);
+        apt2.setPetName("Mochi (Mèo Anh)");
+        apt2.setClinicName("Healthy Pet Quận 3");
+        apt2.setStatus("PENDING");
 
         appointmentList.add(apt1);
         appointmentList.add(apt2);
-        appointmentList.add(apt3);
     }
 
     public synchronized List<Appointment> getAllAppointments() {
