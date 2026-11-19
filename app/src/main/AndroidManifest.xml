@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.healthy_pet">
 
@@ -10,14 +10,19 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Quyền vị trí cho Google Maps API (NV 5 & NV 8) -->
+    <!-- Quyền vị trí -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <!-- Quyền đọc ảnh & Camera để upload lên Cloudinary qua @Multipart -->
+    <!-- Quyền Camera và đọc ảnh -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Camera không bắt buộc -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -28,18 +33,20 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.Healthy_Pet">
 
-        <!-- Google Maps API Key (Thành viên 4 điền API Key vào đây) -->
+        <!-- Google Maps API Key (Cấu hình trong file .env tại GOOGLE_MAPS_API_KEY) -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCGxTw_Vg7u5j4Mx7VRygO06MVC7Xz9AZE" />
+            android:value="${GOOGLE_MAPS_API_KEY}" />
 
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
         <!-- KHAI BÁO MỚI: Màn hình Quản lý Chi nhánh dành cho Admin (NV 8) -->
         <activity

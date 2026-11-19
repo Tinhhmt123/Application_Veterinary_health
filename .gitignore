@@ -13,14 +13,23 @@ local.properties
 .idea/
 .DS_Store
 
-# 3. Bảo mật API Key (Google Maps, Cloudinary) & Chữ ký APK
+# 3. Bảo mật API Key (Google Maps, Cloudinary, Google OAuth) & Chữ ký APK
 secrets.properties
 apikeys.properties
+.env
 *.env
+!.env.example
 *.jks
 *.keystore
+client_secret_google/
+client_secret_*.json
 
 # 4. Dự phòng nếu đặt chung thư mục Backend Spring Boot
 target/
 *.log
 application-local.properties
+
+
+# 5. Thư mục cấu hình cá nhân của Command Code (Tránh commit lên repo nhóm)
+.commandcode/
+/Rule_project

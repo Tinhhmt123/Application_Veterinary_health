@@ -32,7 +32,34 @@ public class User implements Serializable {
     @SerializedName("is_active")
     private Boolean isActive;
 
+    @SerializedName("is_verified")
+    private Boolean isVerified;
+
+    @SerializedName("auth_provider")
+    private String authProvider;
+
+    @SerializedName("created_at")
+    private String createdAt;
+
     public User() {
+    }
+
+    /**
+     * Constructor dùng khi gửi Request Đăng nhập (Login)
+     */
+    public User(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    /**
+     * Constructor dùng khi gửi Request Đăng ký (Register)
+     */
+    public User(String fullName, String email, String password, String phoneNumber) {
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
     }
 
     public User(Long id, String fullName, String email, String phoneNumber, String avatarUrl, String role, Boolean isActive) {
@@ -68,4 +95,13 @@ public class User implements Serializable {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public Boolean getIsVerified() { return isVerified; }
+    public void setIsVerified(Boolean isVerified) { this.isVerified = isVerified; }
+
+    public String getAuthProvider() { return authProvider; }
+    public void setAuthProvider(String authProvider) { this.authProvider = authProvider; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }
