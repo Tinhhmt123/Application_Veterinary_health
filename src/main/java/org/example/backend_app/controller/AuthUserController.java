@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * [Thành viên 1] REST Controller Quản lý Tài khoản User (NV 1) & Admin Quản lý Users (NV 6a)
@@ -32,6 +33,26 @@ public class AuthUserController {
     @PostMapping("/auth/register")
     public ResponseEntity<User> register(@Valid @RequestBody User registerRequest) {
         return ResponseEntity.ok(authUserService.register(registerRequest));
+    }
+
+    @PostMapping("/auth/send-otp")
+    public ResponseEntity<Map<String, Object>> sendOtp(@RequestBody Map<String, String> payload) {
+        return ResponseEntity.ok(authUserService.sendOtp(payload));
+    }
+
+    @PostMapping("/auth/verify-otp")
+    public ResponseEntity<User> verifyOtp(@RequestBody Map<String, String> payload) {
+        return ResponseEntity.ok(authUserService.verifyOtp(payload));
+    }
+
+    @PostMapping("/auth/reset-password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> payload) {
+        return ResponseEntity.ok(authUserService.resetPassword(payload));
+    }
+
+    @PostMapping("/auth/google")
+    public ResponseEntity<User> googleLogin(@RequestBody Map<String, String> payload) {
+        return ResponseEntity.ok(authUserService.googleLogin(payload));
     }
 
     @GetMapping("/users/{id}")

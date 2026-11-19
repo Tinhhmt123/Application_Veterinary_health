@@ -1,5 +1,6 @@
 package org.example.backend_app.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -32,9 +33,8 @@ public class User {
     @JsonProperty("email")
     private String email;
 
-    @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 6, max = 255, message = "Mật khẩu phải từ 6 ký tự trở lên")
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", length = 255)
     @JsonProperty(value = "password", access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
@@ -55,6 +55,22 @@ public class User {
     @JsonProperty("is_active")
     private Boolean isActive = true;
 
+    @Column(name = "is_verified", nullable = false)
+    @JsonProperty("is_verified")
+    private Boolean isVerified = false;
+
+    @Column(name = "otp_code", length = 10)
+    @JsonIgnore
+    private String otpCode;
+
+    @Column(name = "otp_expiry")
+    @JsonIgnore
+    private LocalDateTime otpExpiry;
+
+    @Column(name = "auth_provider", nullable = false, length = 20)
+    @JsonProperty("auth_provider")
+    private String authProvider = "LOCAL";
+
     @Column(name = "created_at", insertable = false, updatable = false)
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
@@ -69,6 +85,12 @@ public class User {
         }
         if (this.isActive == null) {
             this.isActive = true;
+        }
+        if (this.isVerified == null) {
+            this.isVerified = false;
+        }
+        if (this.authProvider == null || this.authProvider.isBlank()) {
+            this.authProvider = "LOCAL";
         }
     }
 
@@ -95,6 +117,18 @@ public class User {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public Boolean getIsVerified() { return isVerified; }
+    public void setIsVerified(Boolean isVerified) { this.isVerified = isVerified; }
+
+    public String getOtpCode() { return otpCode; }
+    public void setOtpCode(String otpCode) { this.otpCode = otpCode; }
+
+    public LocalDateTime getOtpExpiry() { return otpExpiry; }
+    public void setOtpExpiry(LocalDateTime otpExpiry) { this.otpExpiry = otpExpiry; }
+
+    public String getAuthProvider() { return authProvider; }
+    public void setAuthProvider(String authProvider) { this.authProvider = authProvider; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

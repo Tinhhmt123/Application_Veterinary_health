@@ -31,6 +31,11 @@ public class PetWeightController {
         return ResponseEntity.ok(petWeightService.getPetsByUser(userId));
     }
 
+    @GetMapping("/pets/{id}")
+    public ResponseEntity<Pet> getPetById(@PathVariable("id") Long petId) {
+        return ResponseEntity.ok(petWeightService.getPetById(petId));
+    }
+
     @PostMapping(value = "/pets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Pet> createPet(
             @RequestParam("user_id") Long userId,
@@ -44,6 +49,23 @@ public class PetWeightController {
     ) {
         return ResponseEntity.ok(petWeightService.createPet(
                 userId, name, species, breed, gender, birthDate, currentWeight, avatarImage
+        ));
+    }
+
+    @PutMapping(value = "/pets/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Pet> updatePet(
+            @PathVariable("id") Long petId,
+            @RequestParam(value = "user_id", required = false) Long userId,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "species", required = false) String species,
+            @RequestParam(value = "breed", required = false) String breed,
+            @RequestParam(value = "gender", required = false) String gender,
+            @RequestParam(value = "birth_date", required = false) String birthDate,
+            @RequestParam(value = "current_weight", required = false) Double currentWeight,
+            @RequestPart(value = "avatarImage", required = false) MultipartFile avatarImage
+    ) {
+        return ResponseEntity.ok(petWeightService.updatePet(
+                petId, userId, name, species, breed, gender, birthDate, currentWeight, avatarImage
         ));
     }
 
@@ -63,10 +85,26 @@ public class PetWeightController {
         return ResponseEntity.ok(petWeightService.addWeightLog(weightLog));
     }
 
+    @PutMapping("/weight-logs/{id}")
+    public ResponseEntity<WeightLog> updateWeightLog(
+            @PathVariable("id") Long logId,
+            @RequestBody WeightLog weightLog
+    ) {
+        return ResponseEntity.ok(petWeightService.updateWeightLog(logId, weightLog));
+    }
+
+    @DeleteMapping("/weight-logs/{id}")
+    public ResponseEntity<Void> deleteWeightLog(@PathVariable("id") Long logId) {
+        petWeightService.deleteWeightLog(logId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/admin/pets")
     public ResponseEntity<List<Pet>> searchAllPets(
-            @RequestParam(value = "keyword", required = false) String keyword
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "species", required = false) String species,
+            @RequestParam(value = "userId", required = false) Long userId
     ) {
-        return ResponseEntity.ok(petWeightService.searchAllPets(keyword));
+        return ResponseEntity.ok(petWeightService.searchAllPets(keyword, species, userId));
     }
 }

@@ -10,4 +10,6 @@ import java.util.List;
 public interface MedicalHistoryRepository extends JpaRepository<MedicalHistory, Long> {
 
     List<MedicalHistory> findByPetIdOrderByVisitDateDescIdDesc(Long petId);
+
+    boolean existsByPetId(Long petId);
 }

@@ -50,6 +50,14 @@ public class Pet {
     @JsonProperty("avatar_url")
     private String avatarUrl;
 
+    @Transient
+    @JsonProperty("owner_name")
+    private String ownerName;
+
+    @Transient
+    @JsonProperty("owner_phone")
+    private String ownerPhone;
+
     public Pet() {
     }
 
@@ -79,4 +87,10 @@ public class Pet {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getOwnerName() { return ownerName; }
+    public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
+
+    public String getOwnerPhone() { return ownerPhone; }
+    public void setOwnerPhone(String ownerPhone) { this.ownerPhone = ownerPhone; }
 }
