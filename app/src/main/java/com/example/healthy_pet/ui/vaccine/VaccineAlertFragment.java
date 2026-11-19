@@ -53,7 +53,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import android.widget.ImageView;
 
 public class VaccineAlertFragment extends Fragment {
 
@@ -94,42 +93,59 @@ public class VaccineAlertFragment extends Fragment {
 
     private ImageView ivStampPreview;
 
+    /** Hiển thị ảnh dấu mộc đã được lưu trong hồ sơ tiêm chủng. */
+    /** Hiển thị ảnh dấu mộc đã được lưu trong hồ sơ tiêm chủng. */
     private void addStampImage(LinearLayout parent, String imageUrl) {
-
-        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+        if (parent == null || !isAdded()) {
             return;
         }
 
-        ImageView imageView = new ImageView(requireContext());
-
-        LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        dpToPx(180)
-                );
-
-        params.setMargins(
-                dpToPx(10),
-                dpToPx(8),
-                dpToPx(10),
-                dpToPx(16)
-        );
-
-        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        imageView.setBackgroundColor(Color.WHITE);
-
-        parent.addView(imageView, params);
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            Log.w("VACCINE_IMAGE", "Không có URL ảnh dấu mộc.");
+            return;
+        }
 
         String url = imageUrl.trim();
 
+        // Ghép URL tương đối với địa chỉ máy chủ Backend.
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            String serverRoot = RetrofitClient.BASE_URL
+                    .replaceFirst("/api/?$", "")
+                    .replaceAll("/$", "");
+
+            if (!url.startsWith("/")) {
+                url = "/" + url;
+            }
+
+            url = serverRoot + url;
+        }
+
+        Log.d("VACCINE_IMAGE", "URL ảnh cuối cùng: " + url);
+
+        ImageView imageView = new ImageView(requireContext());
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dpToPx(180)
+        );
+
+        params.setMargins(
+                dpToPx(10), dpToPx(8),
+                dpToPx(10), dpToPx(16)
+        );
+
+        imageView.setLayoutParams(params);
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imageView.setBackgroundColor(Color.WHITE);
+
+        parent.addView(imageView);
+
         Glide.with(this)
                 .load(url)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .placeholder(android.R.drawable.ic_menu_gallery)
-                .error(android.R.drawable.ic_delete)
+                .error(android.R.drawable.ic_menu_report_image)
                 .into(imageView);
     }
-
 
     public VaccineAlertFragment() {
     }
@@ -505,19 +521,12 @@ public class VaccineAlertFragment extends Fragment {
     private void displayVaccinationHistory(
             List<VaccinationRecord> records
     ) {
-
         layoutVaccinationHistory.removeAllViews();
 
-        tvTotalVaccinations.setText(
-                String.valueOf(records.size())
-        );
+        tvTotalVaccinations.setText(String.valueOf(records.size()));
 
         if (records.isEmpty()) {
-
-            tvHistoryEmpty.setText(
-                    "Chưa có lịch sử tiêm chủng."
-            );
-
+            tvHistoryEmpty.setText("Chưa có lịch sử tiêm chủng.");
             tvHistoryEmpty.setVisibility(View.VISIBLE);
             return;
         }
@@ -539,19 +548,27 @@ public class VaccineAlertFragment extends Fragment {
                             + "\n📌 Trạng thái: "
                             + getVaccinationStatus(nextDueDate);
 
+            // Hiển thị thông tin hồ sơ
             addInfoCard(
                     layoutVaccinationHistory,
                     information,
                     nextDueDate
             );
 
-            // Hiển thị ảnh dấu mộc đã lưu trên Backend
+            // Ghi lại URL ảnh Backend trả về để xác định dữ liệu có bị null/rỗng không.
+            Log.d(
+                    "VACCINE_IMAGE",
+                    "Stamp URL từ API: " + record.getStampImageUrl()
+            );
+
+            // Hiển thị ảnh dấu mộc từ Backend
             addStampImage(
                     layoutVaccinationHistory,
                     record.getStampImageUrl()
             );
         }
     }
+
 
     public void refreshHealthAlerts() {
 

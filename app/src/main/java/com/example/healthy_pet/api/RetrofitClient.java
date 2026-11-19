@@ -1,86 +1,87 @@
 
-package com.example.healthy_pet.api;
+    package com.example.healthy_pet.api;
 
-import com.example.healthy_pet.BuildConfig;
+    import com.example.healthy_pet.BuildConfig;
 
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
+    import java.util.concurrent.TimeUnit;
 
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+    import okhttp3.OkHttpClient;
+    import okhttp3.logging.HttpLoggingInterceptor;
 
-import java.util.concurrent.TimeUnit;
+    import retrofit2.Retrofit;
+    import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * Cấu hình Retrofit Singleton dùng chung cho ứng dụng.
- * Kết nối tới Spring Boot Web API.
- * Cấu hình Retrofit Singleton dùng chung cho cả 5 thành viên kết nối tới Spring Boot Web API.
- * Giá trị BASE_URL được đọc từ file .env ở thư mục gốc project qua BuildConfig.BASE_URL
- * (nếu thiếu file .env sẽ mặc định fallback về http://10.0.2.2:8080/api/ cho Android Emulator).
- */
-public class RetrofitClient {
+    /**
+     * Cấu hình Retrofit Singleton dùng chung cho ứng dụng HealthyPet.
+     * Kết nối tới Spring Boot Web API.
+     */
+    public class RetrofitClient {
 
-    private static final String BASE_URL =
-            "http://192.168.1.84:8080/api/";
+        // Chỉ khai báo BASE_URL một lần
+        // Giá trị được lấy từ BuildConfig
+        public static final String BASE_URL = BuildConfig.BASE_URL;
 
-    public static final String BASE_URL = BuildConfig.BASE_URL;
-    private static Retrofit retrofit = null;
+        private static Retrofit retrofit = null;
 
-    public static Retrofit getClient() {
+        public static Retrofit getClient() {
 
-        if (retrofit == null) {
+            if (retrofit == null) {
 
-            HttpLoggingInterceptor logging =
-                    new HttpLoggingInterceptor();
+                // Chỉ tạo một HttpLoggingInterceptor
+                HttpLoggingInterceptor logging =
+                        new HttpLoggingInterceptor();
 
-            logging.setLevel(
-                    HttpLoggingInterceptor.Level.BODY
-            );
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            // Chỉ log dòng request/response cơ bản để tránh in binary ảnh vào Logcat và không lộ thông tin nhạy cảm
-            logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+                // BASIC: chỉ ghi log request/response cơ bản
+                logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(logging)
-                    .connectTimeout(8, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(150, TimeUnit.SECONDS)
-                    .writeTimeout(30, TimeUnit.SECONDS)
-                    .build();
+                // Cấu hình kết nối HTTP
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .addInterceptor(logging)
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(150, TimeUnit.SECONDS)
+                        .writeTimeout(30, TimeUnit.SECONDS)
+                        .build();
 
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .client(client)
-                    .addConverterFactory(
-                            GsonConverterFactory.create()
-                    )
-                    .build();
+                // Khởi tạo Retrofit
+                retrofit = new Retrofit.Builder()
+                        .baseUrl(BASE_URL)
+                        .client(client)
+                        .addConverterFactory(
+                                GsonConverterFactory.create()
+                        )
+                        .build();
+            }
+
+            return retrofit;
         }
 
-        return retrofit;
-    }
+        // API đăng nhập và tài khoản
+        public static AuthUserApi getAuthUserApi() {
+            return getClient().create(AuthUserApi.class);
+        }
 
-    public static AuthUserApi getAuthUserApi() {
-        return getClient().create(AuthUserApi.class);
-    }
+        // API hồ sơ thú cưng và cân nặng
+        public static PetWeightApi getPetWeightApi() {
+            return getClient().create(PetWeightApi.class);
+        }
 
-    public static PetWeightApi getPetWeightApi() {
-        return getClient().create(PetWeightApi.class);
-    }
+        // API tiêm phòng
+        public static VaccinationApi getVaccinationApi() {
+            return getClient().create(VaccinationApi.class);
+        }
 
-    public static VaccinationApi getVaccinationApi() {
-        return getClient().create(VaccinationApi.class);
-    }
+        // API bản đồ phòng khám
+        public static ClinicMapApi getClinicMapApi() {
+            return getClient().create(ClinicMapApi.class);
+        }
 
-    public static ClinicMapApi getClinicMapApi() {
-        return getClient().create(ClinicMapApi.class);
-    }
+        // API đặt lịch và hồ sơ y tế
+        public static AppointmentMedicalApi getAppointmentMedicalApi() {
+            return getClient().create(AppointmentMedicalApi.class);
+        }
 
-    public static AppointmentMedicalApi getAppointmentMedicalApi() {
-        return getClient().create(AppointmentMedicalApi.class);
+        // API trợ lý AI thú y
+        public static AiPetApi getAiPetApi() {
+            return getClient().create(AiPetApi.class);
+        }
     }
-    public static AiPetApi getAiPetApi() {
-        return getClient().create(AiPetApi.class);
-    }
-}
