@@ -1,14 +1,18 @@
+
 server:
+  address: 0.0.0.0
   port: 8080
+
+# Cấu hình URL công khai của Backend
+app:
+  public-base-url: "http://192.168.1.122:8080"
 
 spring:
   application:
     name: Backend_App
 
   config:
-    import:
-      - optional:file:.env[.properties]
-      - optional:file:Backend_App/.env[.properties]
+    import: "optional:file:./.env[.properties]"
 
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=${DB_NAME:HealthyPetDB};encrypt=true;trustServerCertificate=true
@@ -52,6 +56,10 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY:}
   api-secret: ${CLOUDINARY_API_SECRET:}
 
+  gemini:
+    api:
+      key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
 google:
   android-client-id: ${GOOGLE_ANDROID_CLIENT_ID:}
   client-id: ${GOOGLE_CLIENT_ID:}
