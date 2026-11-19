@@ -1,139 +1,117 @@
-
 package com.example.healthy_pet.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import androidx.appcompat.app.AppCompatDelegate;
+import com.example.healthy_pet.models.User;
 
 /**
- * Quản lý phiên đăng nhập và cấu hình hệ thống.
- * Sử dụng SharedPreferences để lưu thông tin người dùng.
- * Phục vụ NV1, NV3 và Menu trượt.
+ * Quản lý phiên đăng nhập và cấu hình hệ thống bằng SharedPreferences (NV 1 & Menu trượt).
  */
 public class SessionManager {
-
     private static final String PREF_NAME = "HealthyPetPrefs";
-
+    private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_EMAIL = "email";
-    private static final String KEY_ROLE = "role";
-
+    private static final String KEY_PHONE_NUMBER = "phone_number";
+    private static final String KEY_AVATAR_URL = "avatar_url";
+    private static final String KEY_ROLE = "role"; // "USER" hoặc "ADMIN"
     private static final String KEY_DARK_MODE = "dark_mode";
     private static final String KEY_ALERT_7_DAYS = "alert_7_days";
 
     private final SharedPreferences prefs;
+    private final SharedPreferences.Editor editor;
 
     public SessionManager(Context context) {
-        prefs = context.getSharedPreferences(
-                PREF_NAME,
-                Context.MODE_PRIVATE
-        );
+        prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        editor = prefs.edit();
     }
 
-    // 1. Lưu thông tin người dùng sau khi đăng nhập
-    public void saveUserSession(
-            Long userId,
-            String fullName,
-            String email,
-            String role
-    ) {
-        SharedPreferences.Editor editor = prefs.edit();
-
-        if (userId != null && userId > 0) {
-            editor.putLong(KEY_USER_ID, userId);
-        } else {
-            editor.remove(KEY_USER_ID);
-        }
-
+    public void saveUserSession(Long userId, String fullName, String email, String role) {
+        editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        editor.putLong(KEY_USER_ID, userId != null ? userId : 1L);
         editor.putString(KEY_FULL_NAME, fullName);
         editor.putString(KEY_EMAIL, email);
-        editor.putString(
-                KEY_ROLE,
-                role != null ? role : "USER"
-        );
-
+        editor.putString(KEY_ROLE, role != null ? role : "USER");
         editor.apply();
     }
 
-    // 2. Lấy ID người dùng
-    // Trả về null nếu chưa đăng nhập hợp lệ
-    public Long getUserId() {
-
-        if (!prefs.contains(KEY_USER_ID)) {
-            return null;
+    public void saveUser(User user) {
+        if (user == null) {
+            return;
         }
-
-        long userId = prefs.getLong(KEY_USER_ID, 0L);
-
-        return userId > 0 ? userId : null;
+        editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        editor.putLong(KEY_USER_ID, user.getId() != null ? user.getId() : 1L);
+        editor.putString(KEY_FULL_NAME, user.getFullName() != null ? user.getFullName() : "");
+        editor.putString(KEY_EMAIL, user.getEmail() != null ? user.getEmail() : "");
+        editor.putString(KEY_PHONE_NUMBER, user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
+        editor.putString(KEY_AVATAR_URL, user.getAvatarUrl());
+        editor.putString(KEY_ROLE, user.getRole() != null ? user.getRole() : "USER");
+        editor.apply();
     }
 
-    // 3. Lấy họ tên
+    public boolean isLoggedIn() {
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
+    }
+
+    public Long getUserId() {
+        return prefs.getLong(KEY_USER_ID, 1L);
+    }
+
     public String getFullName() {
-        return prefs.getString(KEY_FULL_NAME, "");
+        return prefs.getString(KEY_FULL_NAME, "Nguyễn Văn Tính");
     }
 
-    // 4. Lấy email
     public String getEmail() {
-        return prefs.getString(KEY_EMAIL, "");
+        return prefs.getString(KEY_EMAIL, "tinh@gmail.com");
     }
 
-    // 5. Lấy quyền người dùng
+    public String getPhoneNumber() {
+        return prefs.getString(KEY_PHONE_NUMBER, "");
+    }
+
+    public String getAvatarUrl() {
+        return prefs.getString(KEY_AVATAR_URL, null);
+    }
+
     public String getRole() {
         return prefs.getString(KEY_ROLE, "USER");
     }
 
     public void setRole(String role) {
-        prefs.edit()
-                .putString(KEY_ROLE, role)
-                .apply();
+        editor.putString(KEY_ROLE, role);
+        editor.apply();
     }
 
-    // 6. Kiểm tra chế độ tối
     public boolean isDarkMode() {
         return prefs.getBoolean(KEY_DARK_MODE, false);
     }
 
-    // 7. Bật hoặc tắt chế độ tối
     public void setDarkMode(boolean isDark) {
-
-        prefs.edit()
-                .putBoolean(KEY_DARK_MODE, isDark)
-                .apply();
-
+        editor.putBoolean(KEY_DARK_MODE, isDark);
+        editor.apply();
         AppCompatDelegate.setDefaultNightMode(
-                isDark
-                        ? AppCompatDelegate.MODE_NIGHT_YES
-                        : AppCompatDelegate.MODE_NIGHT_NO
+                isDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
         );
     }
 
-    // 8. Kiểm tra trạng thái cảnh báo 7 ngày
     public boolean isAlert7DaysEnabled() {
         return prefs.getBoolean(KEY_ALERT_7_DAYS, true);
     }
 
-    // 9. Bật hoặc tắt cảnh báo 7 ngày
     public void setAlert7DaysEnabled(boolean enabled) {
-
-        prefs.edit()
-                .putBoolean(KEY_ALERT_7_DAYS, enabled)
-                .apply();
+        editor.putBoolean(KEY_ALERT_7_DAYS, enabled);
+        editor.apply();
     }
 
-    // 10. Đăng xuất
     public void logout() {
-        prefs.edit()
-                .remove(KEY_USER_ID)
-                .remove(KEY_FULL_NAME)
-                .remove(KEY_EMAIL)
-                .remove(KEY_ROLE)
-                .apply();
-    }
-    // Kiểm tra người dùng đã đăng nhập hợp lệ hay chưa
-    public boolean isLoggedIn() {
-        return getUserId() != null;
+        boolean darkMode = isDarkMode();
+        boolean alert7Days = isAlert7DaysEnabled();
+        editor.clear();
+        editor.putBoolean(KEY_IS_LOGGED_IN, false);
+        editor.putBoolean(KEY_DARK_MODE, darkMode);
+        editor.putBoolean(KEY_ALERT_7_DAYS, alert7Days);
+        editor.apply();
     }
 }

@@ -1,537 +1,181 @@
-
 package com.example.healthy_pet;
 
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.example.healthy_pet.ui.ai.AiPetFragment;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-
-import com.example.healthy_pet.ui.admin.AdminDashboardFragment;
-import com.example.healthy_pet.ui.auth.AccountFragment;
-import com.example.healthy_pet.ui.map.ClinicBookingFragment;
-import com.example.healthy_pet.ui.medical.MedicalHistoryFragment;
-import com.example.healthy_pet.ui.pet.PetWeightFragment;
-import com.example.healthy_pet.ui.vaccine.VaccineAlertFragment;
+import com.example.healthy_pet.ui.Page_Admin;
+import com.example.healthy_pet.ui.Page_User;
+import com.example.healthy_pet.ui.auth.Login_Admin_User;
+import com.example.healthy_pet.utils.ImageMultipartUtils;
 import com.example.healthy_pet.utils.SessionManager;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
+/**
+ * MainActivity điều phối:
+ * - Nếu chưa đăng nhập -> Mở màn hình Login_Admin_User
+ * - Nếu đăng nhập với role = "USER" -> Mở trang Page_User (page_user.xml)
+ * - Nếu đăng nhập với role = "ADMIN" -> Mở trang Page_Admin (page_admin.xml)
+ */
 public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
-    private LinearLayout topAppBar;
-    private LinearLayout bottomNavUser;
-    private LinearLayout bottomNavAdmin;
-
-    private TextView tvToolbarTitle;
-    private TextView tvToolbarSubtitle;
-    private TextView tvAppIconEmoji;
-
     private SessionManager sessionManager;
-
-    private boolean isAdminMode = false;
+    private LinearLayout layoutDrawerHeader;
+    private ImageView ivDrawerUserAvatar;
+    private TextView tvDrawerUserName;
+    private TextView tvDrawerUserEmail;
+    private MaterialButton btnDrawerLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         sessionManager = new SessionManager(this);
-
-        // Áp dụng giao diện sáng/tối đã lưu
         AppCompatDelegate.setDefaultNightMode(
                 sessionManager.isDarkMode()
                         ? AppCompatDelegate.MODE_NIGHT_YES
                         : AppCompatDelegate.MODE_NIGHT_NO
         );
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        // 1. Kiểm tra đăng nhập
-//        if (!sessionManager.isLoggedIn()) {
-//            Toast.makeText(
-//                    this,
-//                    "Vui lòng đăng nhập để sử dụng ứng dụng!",
-//                    Toast.LENGTH_LONG
-//            ).show();
-//
-//            finish();
-//            return;
-//        }
-        sessionManager = new SessionManager(this);
-
-// TẠM THỜI BỎ QUA ĐĂNG NHẬP ĐỂ TEST
-// Sử dụng tài khoản test có userId = 2
-        sessionManager.saveUserSession(
-                2L,
-                "Test User",
-                "test@gmail.com",
-                "USER"
-        );
-
-        // 2. Đọc quyền người dùng
-        String role = sessionManager.getRole();
-
-        isAdminMode = "ADMIN".equalsIgnoreCase(role);
-
-        // 3. Ánh xạ giao diện
         drawerLayout = findViewById(R.id.drawerLayout);
-        topAppBar = findViewById(R.id.topAppBar);
-        bottomNavUser = findViewById(R.id.bottomNavUser);
-        bottomNavAdmin = findViewById(R.id.bottomNavAdmin);
+        layoutDrawerHeader = findViewById(R.id.layoutDrawerHeader);
+        ivDrawerUserAvatar = findViewById(R.id.ivDrawerUserAvatar);
+        tvDrawerUserName = findViewById(R.id.tvDrawerUserName);
+        tvDrawerUserEmail = findViewById(R.id.tvDrawerUserEmail);
+        btnDrawerLogout = findViewById(R.id.btnDrawerLogout);
 
-        tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
-        tvToolbarSubtitle = findViewById(R.id.tvToolbarSubtitle);
-        tvAppIconEmoji = findViewById(R.id.tvAppIconEmoji);
+        findViewById(R.id.btnCloseDrawer).setOnClickListener(v -> drawerLayout.closeDrawer(GravityCompat.START));
 
-        // 4. Cấu hình menu trượt
-        setupDrawerButtons();
+        btnDrawerLogout.setOnClickListener(v -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            sessionManager.logout();
+            Toast.makeText(this, "Đã đăng xuất tài khoản", Toast.LENGTH_SHORT).show();
+            openLoginPage();
+        });
+
         setupNavigationDrawer();
+        syncDrawerUserHeader();
 
-        // 5. Nút chuyển đổi USER / ADMIN
-        View btnSwitchRole = findViewById(R.id.btnSwitchRole);
-
-        if (btnSwitchRole != null) {
-
-            btnSwitchRole.setVisibility(
-                    isAdminMode ? View.VISIBLE : View.GONE
-            );
-
-            btnSwitchRole.setOnClickListener(v -> {
-
-                if (!"ADMIN".equalsIgnoreCase(sessionManager.getRole())) {
-                    Toast.makeText(
-                            this,
-                            "Bạn không có quyền quản trị!",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    return;
-                }
-
-                isAdminMode = !isAdminMode;
-                updateRoleChrome();
-            });
-        }
-
-        // 6. Cấu hình điều hướng USER
-        setupUserNavigation();
-
-        // 7. Cấu hình điều hướng ADMIN
-        setupAdminNavigation();
-
-        // 8. Mở màn hình mặc định
         if (savedInstanceState == null) {
-
-            if (isAdminMode) {
-
-                updateRoleChrome();
-
+            if (!sessionManager.isLoggedIn()) {
+                openLoginPage();
             } else {
-
-                bottomNavAdmin.setVisibility(View.GONE);
-                bottomNavUser.setVisibility(View.VISIBLE);
-
-                highlightUserTab(R.id.navUserAlert);
-
-                loadScreen(
-                        new VaccineAlertFragment(),
-                        "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm"
-                );
+                openRolePage(sessionManager.getRole());
             }
         }
     }
 
-    // ==============================
-    // DRAWER
-    // ==============================
+    /**
+     * Kiểm tra quyền của tài khoản để chuyển vào đúng trang page_user hoặc page_admin
+     */
+    public void openRolePage(String role) {
+        syncDrawerUserHeader();
+        Fragment targetPage;
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            targetPage = new Page_Admin();
+        } else {
+            targetPage = new Page_User();
+        }
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, targetPage)
+                .commit();
+    }
 
-    private void setupDrawerButtons() {
+    /**
+     * Mở trang Đăng nhập (Login_Admin_User) khi chưa đăng nhập hoặc vừa bấm Đăng xuất
+     */
+    public void openLoginPage() {
+        syncDrawerUserHeader();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, new Login_Admin_User())
+                .commit();
+    }
 
-        View btnAppIconMenu = findViewById(R.id.btnAppIconMenu);
-        View layoutTitleClick = findViewById(R.id.layoutTitleClick);
-        View btnCloseDrawer = findViewById(R.id.btnCloseDrawer);
+    public void openDrawer() {
+        syncDrawerUserHeader();
+        if (drawerLayout != null) {
+            drawerLayout.openDrawer(GravityCompat.START);
+        }
+    }
 
-        View.OnClickListener openDrawerListener =
-                v -> drawerLayout.openDrawer(GravityCompat.START);
+    public void syncDrawerUserHeader() {
+        if (tvDrawerUserName == null || tvDrawerUserEmail == null) return;
 
-        btnAppIconMenu.setOnClickListener(openDrawerListener);
-        layoutTitleClick.setOnClickListener(openDrawerListener);
+        if (sessionManager.isLoggedIn()) {
+            boolean isAdmin = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
+            tvDrawerUserName.setText(sessionManager.getFullName());
+            tvDrawerUserEmail.setText(sessionManager.getEmail() + (isAdmin ? " • Quản trị viên" : " • Khách hàng"));
 
-        btnCloseDrawer.setOnClickListener(
-                v -> drawerLayout.closeDrawer(GravityCompat.START)
-        );
+            if (layoutDrawerHeader != null) {
+                int headerColor = ContextCompat.getColor(
+                        this,
+                        isAdmin ? R.color.indigo_600 : R.color.emerald_700
+                );
+                layoutDrawerHeader.setBackgroundColor(headerColor);
+            }
+
+            if (ivDrawerUserAvatar != null) {
+                String avatarUrl = sessionManager.getAvatarUrl();
+                if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                    ImageMultipartUtils.loadCircularAvatar(this, avatarUrl, ivDrawerUserAvatar);
+                } else {
+                    ivDrawerUserAvatar.setImageResource(R.mipmap.ic_launcher_round);
+                }
+            }
+
+            if (btnDrawerLogout != null) {
+                btnDrawerLogout.setVisibility(View.VISIBLE);
+            }
+        } else {
+            tvDrawerUserName.setText("Healthy Pet");
+            tvDrawerUserEmail.setText("Cài đặt • Theme • Trợ lý AI");
+            if (layoutDrawerHeader != null) {
+                layoutDrawerHeader.setBackgroundColor(ContextCompat.getColor(this, R.color.emerald_700));
+            }
+            if (ivDrawerUserAvatar != null) {
+                ivDrawerUserAvatar.setImageResource(R.mipmap.ic_launcher_round);
+            }
+            if (btnDrawerLogout != null) {
+                btnDrawerLogout.setVisibility(View.GONE);
+            }
+        }
     }
 
     private void setupNavigationDrawer() {
-
-        SwitchMaterial switchDarkMode =
-                findViewById(R.id.switchDarkMode);
-
-        SwitchMaterial switchAlert7Days =
-                findViewById(R.id.switchAlert7Days);
-
-        TextView tvAiAnswerBox =
-                findViewById(R.id.tvAiAnswerBox);
-        // Mở màn hình trò chuyện AI Thú Y
-        View btnOpenAiChat = findViewById(R.id.btnOpenAiChat);
-
-        btnOpenAiChat.setOnClickListener(v -> {
-
-            Toast.makeText(
-                    MainActivity.this,
-                    "Đang mở AI Thú Y...",
-                    Toast.LENGTH_SHORT
-            ).show();
-
-            // Hiển thị màn hình AI
-            loadScreen(
-                    new AiPetFragment(),
-                    "Trợ lý AI Thú Y"
-            );
-
-            // Đóng Menu
-            drawerLayout.closeDrawer(GravityCompat.START);
-        });
-
-        // ==============================
-        // DARK MODE
-        // ==============================
+        SwitchMaterial switchDarkMode = findViewById(R.id.switchDarkMode);
+        SwitchMaterial switchAlert7Days = findViewById(R.id.switchAlert7Days);
+        TextView tvAiAnswerBox = findViewById(R.id.tvAiAnswerBox);
 
         switchDarkMode.setChecked(sessionManager.isDarkMode());
+        switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked != sessionManager.isDarkMode()) {
+                sessionManager.setDarkMode(isChecked);
+            }
+        });
 
-        switchDarkMode.setOnCheckedChangeListener(
-                (buttonView, isChecked) -> {
-                    if (isChecked != sessionManager.isDarkMode()) {
-                        sessionManager.setDarkMode(isChecked);
-                    }
-                }
+        switchAlert7Days.setChecked(sessionManager.isAlert7DaysEnabled());
+        switchAlert7Days.setOnCheckedChangeListener((buttonView, isChecked) ->
+                sessionManager.setAlert7DaysEnabled(isChecked)
         );
-
-        // ==============================
-        // VACCINATION ALERT
-        // ==============================
-
-        switchAlert7Days.setChecked(
-                sessionManager.isAlert7DaysEnabled()
-        );
-
-        switchAlert7Days.setOnCheckedChangeListener(
-                (buttonView, isChecked) -> {
-
-                    // Lưu trạng thái bật/tắt cảnh báo
-                    sessionManager.setAlert7DaysEnabled(isChecked);
-
-                    // Lấy Fragment hiện đang hiển thị
-                    Fragment currentFragment =
-                            getSupportFragmentManager()
-                                    .findFragmentById(R.id.fragmentContainer);
-
-                    // Nếu đang ở màn hình cảnh báo tiêm chủng
-                    if (currentFragment instanceof VaccineAlertFragment) {
-
-                        ((VaccineAlertFragment) currentFragment)
-                                .refreshHealthAlerts();
-                    }
-
-                    Toast.makeText(
-                            MainActivity.this,
-                            isChecked
-                                    ? "Đã bật cảnh báo tiêm chủng."
-                                    : "Đã tắt cảnh báo tiêm chủng.",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-        );
-
-        // ==============================
-        // AI FAQ 1
-        // ==============================
 
         findViewById(R.id.btnAiFaq1).setOnClickListener(v ->
-                tvAiAnswerBox.setText(
-                        "🤖 AI Bác Sĩ Thú Y:\n" +
-                                "Nôn dịch vàng thường do trào ngược dịch mật " +
-                                "hoặc viêm dạ dày. Bạn nên theo dõi tình trạng " +
-                                "của bé và đưa bé đi khám nếu có dấu hiệu bất thường."
-                )
+                tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nNôn dịch vàng thường do trào ngược dịch mật hoặc viêm dạ dày. Bạn nên cho bé nhịn ăn 4-6h, uống nước điện giải ít một và đặt lịch khám ngay nếu kèm tiêu chảy!")
         );
-
-        // ==============================
-        // AI FAQ 2
-        // ==============================
 
         findViewById(R.id.btnAiFaq2).setOnClickListener(v ->
-                tvAiAnswerBox.setText(
-                        "🤖 AI Bác Sĩ Thú Y:\n" +
-                                "Lịch tiêm vaccine phụ thuộc vào độ tuổi, " +
-                                "loại vaccine và tình trạng sức khỏe của thú cưng. " +
-                                "Hãy tham khảo bác sĩ thú y để được tư vấn."
-                )
+                tvAiAnswerBox.setText("🤖 AI Bác Sĩ Thú Y:\nMũi 1 từ 6-8 tuần tuổi, Mũi 2 & 3 cách nhau 3-4 tuần + Tiêm Dại khi đủ 3 tháng. Sau đó tiêm nhắc lại 1 năm/lần.")
         );
-    }
-
-    // ==============================
-    // USER NAVIGATION
-    // ==============================
-
-    private void setupUserNavigation() {
-
-        findViewById(R.id.navUserAlert).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserAlert);
-            loadScreen(
-                    new VaccineAlertFragment(),
-                    "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm"
-            );
-        });
-
-        findViewById(R.id.navUserPet).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserPet);
-            loadScreen(
-                    new PetWeightFragment(),
-                    "NV 2: Hồ sơ thú cưng & Cân nặng"
-            );
-        });
-
-        findViewById(R.id.navUserBookingCenter).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserBookingCenter);
-            loadScreen(
-                    new ClinicBookingFragment(),
-                    "NV 5: Đặt lịch Khám/Spa & Bản đồ"
-            );
-        });
-
-        findViewById(R.id.navUserMedical).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserMedical);
-            loadScreen(
-                    new MedicalHistoryFragment(),
-                    "NV 4: Bệnh án & Chi phí"
-            );
-        });
-
-        findViewById(R.id.navUserAccount).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserAccount);
-            loadScreen(
-                    new AccountFragment(),
-                    "NV 1: Quản lý tài khoản cá nhân"
-            );
-        });
-    }
-
-    // ==============================
-    // ADMIN NAVIGATION
-    // ==============================
-
-    private void setupAdminNavigation() {
-
-        findViewById(R.id.navAdminUserPet).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminUserPet);
-            loadScreen(
-                    AdminDashboardFragment.newInstance(6),
-                    "NV 6: Quản lý Users & Pets toàn hệ thống"
-            );
-        });
-
-        findViewById(R.id.navAdminAppointment).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminAppointment);
-            loadScreen(
-                    AdminDashboardFragment.newInstance(7),
-                    "NV 7: Duyệt lịch hẹn & Kê đơn bệnh án"
-            );
-        });
-
-        findViewById(R.id.navAdminClinic).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminClinic);
-            loadScreen(
-                    AdminDashboardFragment.newInstance(8),
-                    "NV 8: Quản lý Chi nhánh Phòng khám"
-            );
-        });
-    }
-
-    // ==============================
-    // HIGHLIGHT USER TAB
-    // ==============================
-
-    private void highlightUserTab(int activeTabId) {
-
-        int[] tabIds = {
-                R.id.navUserAlert,
-                R.id.navUserPet,
-                R.id.navUserBookingCenter,
-                R.id.navUserMedical,
-                R.id.navUserAccount
-        };
-
-        int[] labelIds = {
-                R.id.tvNavUserAlert,
-                R.id.tvNavUserPet,
-                R.id.tvNavUserBooking,
-                R.id.tvNavUserMedical,
-                R.id.tvNavUserAccount
-        };
-
-        int activeColor = ContextCompat.getColor(
-                this, R.color.emerald_500
-        );
-
-        int inactiveColor = ContextCompat.getColor(
-                this, R.color.slate_500
-        );
-
-        for (int i = 0; i < tabIds.length; i++) {
-
-            View tabView = findViewById(tabIds[i]);
-            TextView tvLabel = findViewById(labelIds[i]);
-
-            boolean isSelected = tabIds[i] == activeTabId;
-
-            if (tvLabel != null) {
-                tvLabel.setTextColor(
-                        isSelected ? activeColor : inactiveColor
-                );
-
-                tvLabel.setTypeface(
-                        null,
-                        isSelected ? Typeface.BOLD : Typeface.NORMAL
-                );
-            }
-
-            if (tabView != null) {
-                tabView.animate()
-                        .scaleX(isSelected ? 1.08f : 1.0f)
-                        .scaleY(isSelected ? 1.08f : 1.0f)
-                        .alpha(
-                                isSelected ||
-                                        tabIds[i] == R.id.navUserBookingCenter
-                                        ? 1.0f : 0.65f
-                        )
-                        .setDuration(160)
-                        .start();
-            }
-        }
-    }
-
-    // ==============================
-    // HIGHLIGHT ADMIN TAB
-    // ==============================
-
-    private void highlightAdminTab(int activeTabId) {
-
-        int[] tabIds = {
-                R.id.navAdminUserPet,
-                R.id.navAdminAppointment,
-                R.id.navAdminClinic
-        };
-
-        int[] labelIds = {
-                R.id.tvNavAdminUserPet,
-                R.id.tvNavAdminAppointment,
-                R.id.tvNavAdminClinic
-        };
-
-        int activeColor = ContextCompat.getColor(
-                this, R.color.emerald_500
-        );
-
-        int inactiveColor = ContextCompat.getColor(
-                this, R.color.slate_500
-        );
-
-        for (int i = 0; i < tabIds.length; i++) {
-
-            View tabView = findViewById(tabIds[i]);
-            TextView tvLabel = findViewById(labelIds[i]);
-
-            boolean isSelected = tabIds[i] == activeTabId;
-
-            if (tvLabel != null) {
-                tvLabel.setTextColor(
-                        isSelected ? activeColor : inactiveColor
-                );
-
-                tvLabel.setTypeface(
-                        null,
-                        isSelected ? Typeface.BOLD : Typeface.NORMAL
-                );
-            }
-
-            if (tabView != null) {
-                tabView.animate()
-                        .scaleX(isSelected ? 1.08f : 1.0f)
-                        .scaleY(isSelected ? 1.08f : 1.0f)
-                        .alpha(isSelected ? 1.0f : 0.65f)
-                        .setDuration(160)
-                        .start();
-            }
-        }
-    }
-
-    // ==============================
-    // CHANGE ROLE INTERFACE
-    // ==============================
-
-    private void updateRoleChrome() {
-
-        if (isAdminMode) {
-
-            topAppBar.setBackgroundColor(
-                    ContextCompat.getColor(this, R.color.indigo_600)
-            );
-
-            tvAppIconEmoji.setText("🛡️");
-            tvToolbarTitle.setText("Healthy Pet Admin (Menu ≡)");
-
-            bottomNavUser.setVisibility(View.GONE);
-            bottomNavAdmin.setVisibility(View.VISIBLE);
-
-            highlightAdminTab(R.id.navAdminUserPet);
-
-            loadScreen(
-                    AdminDashboardFragment.newInstance(6),
-                    "NV 6: Quản lý Users & Pets toàn hệ thống"
-            );
-
-        } else {
-
-            topAppBar.setBackgroundColor(
-                    ContextCompat.getColor(this, R.color.emerald_600)
-            );
-
-            tvAppIconEmoji.setText("🐾");
-            tvToolbarTitle.setText("Healthy Pet (Menu ≡)");
-
-            bottomNavAdmin.setVisibility(View.GONE);
-            bottomNavUser.setVisibility(View.VISIBLE);
-
-            highlightUserTab(R.id.navUserAlert);
-
-            loadScreen(
-                    new VaccineAlertFragment(),
-                    "NV 3: Cảnh báo y tế 7 ngày & Sổ tiêm"
-            );
-        }
-    }
-
-    // ==============================
-    // LOAD FRAGMENT
-    // ==============================
-
-    private void loadScreen(Fragment fragment, String subtitle) {
-
-        tvToolbarSubtitle.setText(subtitle);
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainer, fragment)
-                .commit();
     }
 }

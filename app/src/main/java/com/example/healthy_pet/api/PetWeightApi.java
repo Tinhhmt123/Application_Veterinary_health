@@ -11,6 +11,7 @@ import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -23,9 +24,26 @@ public interface PetWeightApi {
     @GET("pets")
     Call<List<Pet>> getPetsByUser(@Query("userId") Long userId);
 
+    @GET("pets/{id}")
+    Call<Pet> getPetById(@Path("id") Long petId);
+
     @Multipart
     @POST("pets")
     Call<Pet> createPet(
+            @Part("user_id") RequestBody userId,
+            @Part("name") RequestBody name,
+            @Part("species") RequestBody species,
+            @Part("breed") RequestBody breed,
+            @Part("gender") RequestBody gender,
+            @Part("birth_date") RequestBody birthDate,
+            @Part("current_weight") RequestBody currentWeight,
+            @Part MultipartBody.Part avatarImage
+    );
+
+    @Multipart
+    @PUT("pets/{id}")
+    Call<Pet> updatePet(
+            @Path("id") Long petId,
             @Part("user_id") RequestBody userId,
             @Part("name") RequestBody name,
             @Part("species") RequestBody species,
@@ -46,7 +64,17 @@ public interface PetWeightApi {
     @POST("weight-logs")
     Call<WeightLog> addWeightLog(@Body WeightLog weightLog);
 
+    @PUT("weight-logs/{id}")
+    Call<WeightLog> updateWeightLog(@Path("id") Long logId, @Body WeightLog weightLog);
+
+    @DELETE("weight-logs/{id}")
+    Call<Void> deleteWeightLog(@Path("id") Long logId);
+
     // Admin: Tra cứu toàn bộ thú cưng tại quầy
     @GET("admin/pets")
-    Call<List<Pet>> searchAllPets(@Query("keyword") String keyword);
+    Call<List<Pet>> searchAllPets(
+            @Query("keyword") String keyword,
+            @Query("species") String species,
+            @Query("userId") Long userId
+    );
 }

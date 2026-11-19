@@ -26,13 +26,13 @@ public class PetWeightFragment extends Fragment {
         ((TextView) view.findViewById(R.id.tvModuleTitle)).setText("🐶 Hồ sơ Thú cưng & Nhật ký Cân nặng");
         ((TextView) view.findViewById(R.id.tvModuleDescription)).setText(
                 "• Thêm mới, xem chi tiết, sửa hoặc xóa hồ sơ thú cưng; tải ảnh lên Cloudinary (@Multipart) và hiển thị qua Glide.\n" +
-                "• Ghi nhận cân nặng định kỳ (WeightLogs) và tự động đồng bộ vào current_weight của thú cưng."
+                        "• Ghi nhận cân nặng định kỳ (WeightLogs) và tự động đồng bộ vào current_weight của thú cưng."
         );
         ((TextView) view.findViewById(R.id.tvModuleTechInfo)).setText(
                 "Thực thể: Pets, WeightLogs\n" +
-                "API: PetWeightApi.java\n" +
-                "• GET/POST /api/pets (@Multipart)\n" +
-                "• GET/POST /api/weight-logs (Sync current_weight)"
+                        "API: PetWeightApi.java\n" +
+                        "• GET/POST /api/pets (@Multipart)\n" +
+                        "• GET/POST /api/weight-logs (Sync current_weight)"
         );
 
         MaterialButton btn = view.findViewById(R.id.btnModuleAction);
