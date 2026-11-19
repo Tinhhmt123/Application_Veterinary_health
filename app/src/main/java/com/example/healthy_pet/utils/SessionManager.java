@@ -7,6 +7,7 @@ import com.example.healthy_pet.models.User;
 
 /**
  * Quản lý phiên đăng nhập và cấu hình hệ thống bằng SharedPreferences (NV 1 & Menu trượt).
+ * Khớp với Seed Data SQL (User ID 2: Nguyễn Văn Tính - tinh@gmail.com).
  */
 public class SessionManager {
     private static final String PREF_NAME = "HealthyPetPrefs";
@@ -30,7 +31,7 @@ public class SessionManager {
 
     public void saveUserSession(Long userId, String fullName, String email, String role) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
-        editor.putLong(KEY_USER_ID, userId != null ? userId : 1L);
+        editor.putLong(KEY_USER_ID, userId != null ? userId : 2L);
         editor.putString(KEY_FULL_NAME, fullName);
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_ROLE, role != null ? role : "USER");
@@ -52,11 +53,11 @@ public class SessionManager {
     }
 
     public boolean isLoggedIn() {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, true);
     }
 
     public Long getUserId() {
-        return prefs.getLong(KEY_USER_ID, 1L);
+        return prefs.getLong(KEY_USER_ID, 2L);
     }
 
     public String getFullName() {

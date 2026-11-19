@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="3dp"
+    app:strokeColor="#1F64748B"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header: Pet Name & Status Badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvPetName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🐾 LuLu (Poodle)"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#FEF3C7"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:text="CHỜ DUYỆT"
+                android:textColor="#B45309"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Service Type & Details -->
+        <TextView
+            android:id="@+id/tvServiceType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="🏷️ Dịch vụ: Khám bệnh"
+            android:textColor="@color/emerald_700"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvClinicName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="🏥 Chi nhánh: Healthy Pet Q.1"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvDateTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="📅 Thời gian: 2026-10-25 09:30:00"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvEstimatedCost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="💰 Chi phí dự kiến DECIMAL(18,0): 200.000 đ"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvReason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="📝 Ghi chú: Khám da liễu &amp; tiêm phòng"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp" />
+
+        <!-- Actions -->
+        <LinearLayout
+            android:id="@+id/layoutActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnApprove"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="✅ Duyệt lịch"
+                android:textAllCaps="false"
+                android:textSize="12sp"
+                app:cornerRadius="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReject"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="❌ Hủy / Từ chối"
+                android:textAllCaps="false"
+                android:textColor="#B91C1C"
+                android:textSize="12sp"
+                app:cornerRadius="12dp"
+                app:strokeColor="#B91C1C" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnComplete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🩺 Kê đơn &amp; Hoàn thành (@Transactional)"
+                android:textAllCaps="false"
+                android:textSize="13sp"
+                app:cornerRadius="12dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
