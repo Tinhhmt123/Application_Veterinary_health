@@ -31,6 +31,9 @@ import com.example.healthy_pet.utils.SessionManager;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.example.healthy_pet.ui.ai.AiPetFragment;
 
+import com.example.healthy_pet.repository.AppointmentRepository;
+import com.example.healthy_pet.repository.MedicalHistoryRepository;
+
 /**
  * Activity gốc của Healthy Pet.
  * activity_main.xml chỉ cung cấp DrawerLayout, fragmentContainer và các view cài đặt
@@ -46,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         sessionManager = new SessionManager(this);
-
+        AppointmentRepository.getInstance().initContext(this);
+        MedicalHistoryRepository.getInstance().initContext(this);
         AppCompatDelegate.setDefaultNightMode(
                 sessionManager.isDarkMode()
                         ? AppCompatDelegate.MODE_NIGHT_YES
