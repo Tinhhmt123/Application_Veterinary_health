@@ -1,6 +1,11 @@
 package com.example.healthy_pet.repository;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import com.example.healthy_pet.models.MedicalHistory;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,11 +13,15 @@ import java.util.List;
 /**
  * Repository dùng chung lưu trữ & đồng bộ danh sách Bệnh án (MedicalHistories)
  * giữa Luồng ADMIN (NV 7 - Kê đơn bệnh án) và Luồng USER (NV 4 - Xem bệnh án & Thống kê chi phí).
- * Khớp 100% với Seed Data SQL (CreateTableAndInsertDataExample.sql).
+ * Hỗ trợ lưu trữ SharedPreferences + Gson để không bao giờ bị mất dữ liệu bệnh án/đơn thuốc.
  */
 public class MedicalHistoryRepository {
     private static MedicalHistoryRepository instance;
     private final List<MedicalHistory> historyList = new ArrayList<>();
+    private SharedPreferences prefs;
+    private static final String PREF_NAME = "HealthyPetMedicalPrefs";
+    private static final String KEY_HISTORIES = "histories_json";
+    private final Gson gson = new Gson();
 
     private MedicalHistoryRepository() {
         initSampleHistories();
@@ -23,6 +32,56 @@ public class MedicalHistoryRepository {
             instance = new MedicalHistoryRepository();
         }
         return instance;
+    }
+
+    public synchronized void initContext(Context context) {
+        if (context != null) {
+            if (prefs == null) {
+                prefs = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            }
+            loadFromPrefs();
+        }
+    }
+
+    private void loadFromPrefs() {
+        if (prefs == null) return;
+        if (prefs.contains(KEY_HISTORIES)) {
+            String json = prefs.getString(KEY_HISTORIES, null);
+            if (json != null && !json.trim().isEmpty() && !json.equals("[]")) {
+                try {
+                    Type type = new TypeToken<List<MedicalHistory>>(){}.getType();
+                    List<MedicalHistory> saved = gson.fromJson(json, type);
+                    if (saved != null && !saved.isEmpty()) {
+                        for (MedicalHistory savedH : saved) {
+                            boolean found = false;
+                            for (int i = 0; i < historyList.size(); i++) {
+                                if (historyList.get(i).getId() != null && historyList.get(i).getId().equals(savedH.getId())) {
+                                    historyList.set(i, savedH);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                historyList.add(savedH);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        } else {
+            saveToPrefs();
+        }
+    }
+
+    private synchronized void saveToPrefs() {
+        if (prefs != null) {
+            try {
+                String json = gson.toJson(historyList);
+                prefs.edit().putString(KEY_HISTORIES, json).apply();
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private void initSampleHistories() {
@@ -71,10 +130,12 @@ public class MedicalHistoryRepository {
             for (int i = 0; i < historyList.size(); i++) {
                 if (historyList.get(i).getId() != null && historyList.get(i).getId().equals(history.getId())) {
                     historyList.set(i, history);
+                    saveToPrefs();
                     return;
                 }
             }
             historyList.add(0, history);
+            saveToPrefs();
         }
     }
 
@@ -84,6 +145,7 @@ public class MedicalHistoryRepository {
             if (historyId.equals(h.getId())) {
                 h.setPaymentStatus("PAID");
                 h.setPaymentMethod(paymentMethod != null ? paymentMethod : "VIETQR");
+                saveToPrefs();
                 break;
             }
         }
@@ -126,5 +188,6 @@ public class MedicalHistoryRepository {
                 historyList.add(serverHistory);
             }
         }
+        saveToPrefs();
     }
 }

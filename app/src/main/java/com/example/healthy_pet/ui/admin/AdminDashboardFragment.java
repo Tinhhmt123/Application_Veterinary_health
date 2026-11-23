@@ -61,6 +61,8 @@ public class AdminDashboardFragment extends Fragment implements AppointmentAdapt
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         appointmentApi = RetrofitClient.getAppointmentMedicalApi();
+        AppointmentRepository.getInstance().initContext(requireContext());
+        MedicalHistoryRepository.getInstance().initContext(requireContext());
     }
 
     @Nullable

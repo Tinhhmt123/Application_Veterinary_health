@@ -22,6 +22,9 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.example.healthy_pet.ui.ai.AiPetFragment;
 
+import com.example.healthy_pet.repository.AppointmentRepository;
+import com.example.healthy_pet.repository.MedicalHistoryRepository;
+
 /**
  * MainActivity điều phối:
  * - Nếu chưa đăng nhập -> Mở màn hình Login_Admin_User
@@ -41,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         sessionManager = new SessionManager(this);
+        AppointmentRepository.getInstance().initContext(this);
+        MedicalHistoryRepository.getInstance().initContext(this);
         AppCompatDelegate.setDefaultNightMode(
                 sessionManager.isDarkMode()
                         ? AppCompatDelegate.MODE_NIGHT_YES

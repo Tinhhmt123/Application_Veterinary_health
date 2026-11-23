@@ -60,6 +60,7 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
         appointmentApi = RetrofitClient.getAppointmentMedicalApi();
         petApi = RetrofitClient.getPetWeightApi();
         clinicApi = RetrofitClient.getClinicMapApi();
+        AppointmentRepository.getInstance().initContext(requireContext());
 
         fetchPetsAndClinicsFromApi();
     }

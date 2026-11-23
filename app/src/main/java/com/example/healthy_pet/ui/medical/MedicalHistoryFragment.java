@@ -50,6 +50,7 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
         super.onCreate(savedInstanceState);
         sessionManager = new SessionManager(requireContext());
         appointmentApi = RetrofitClient.getAppointmentMedicalApi();
+        MedicalHistoryRepository.getInstance().initContext(requireContext());
     }
 
     @Nullable
