@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import com.example.healthy_pet.R;
 import com.example.healthy_pet.adapters.AppointmentAdapter;
 import com.example.healthy_pet.api.AppointmentMedicalApi;
 import com.example.healthy_pet.api.ClinicMapApi;
@@ -28,15 +29,6 @@ import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.models.VetClinic;
 import com.example.healthy_pet.repository.AppointmentRepository;
 import com.example.healthy_pet.utils.SessionManager;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
-import com.example.healthy_pet.R;
-import com.example.healthy_pet.api.ClinicMapApi;
-import com.example.healthy_pet.api.RetrofitClient;
-import com.example.healthy_pet.models.VetClinic;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -45,21 +37,25 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.material.button.MaterialButton;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * [Thành viên 5 (NV 5b) & Thành viên 4 (NV 5a)]
- * Nghiệp vụ 5: User Đặt lịch hẹn Khám/Spa (DatePickerDialog, TimePickerDialog, AppointmentAdapter)
- * Đồng bộ 100% với CSDL SQL Server (CreateTableAndInsertDataExample.sql).
+ * [Thành viên 4 (NV 5a - Bản đồ Google Maps) & Thành viên 5 (NV 5b - Đặt lịch hẹn Khám/Spa)]
+ * Tích hợp Bản đồ chi nhánh VetClinics (Marker, InfoWindow gọi Hotline ACTION_DIAL)
+ * và Đặt lịch hẹn (DatePickerDialog, TimePickerDialog, AppointmentAdapter).
  */
-public class ClinicBookingFragment extends Fragment implements AppointmentAdapter.OnAppointmentActionListener {
+public class ClinicBookingFragment extends Fragment implements AppointmentAdapter.OnAppointmentActionListener, OnMapReadyCallback {
 
     private FragmentClinicBookingBinding binding;
     private AppointmentAdapter adapter;
+    private GoogleMap mMap;
     private final List<Appointment> userAppointments = new ArrayList<>();
     private final List<Pet> availablePets = new ArrayList<>();
     private final List<VetClinic> availableClinics = new ArrayList<>();
@@ -79,15 +75,16 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
 
         fetchPetsAndClinicsFromApi();
     }
-public class ClinicBookingFragment extends Fragment implements OnMapReadyCallback {
-
-    private GoogleMap mMap;
-    private MaterialButton btnModuleAction;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentClinicBookingBinding.inflate(inflater, container, false);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFragment);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
 
         binding.rvAppointments.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new AppointmentAdapter(userAppointments, false, this);
@@ -351,23 +348,6 @@ public class ClinicBookingFragment extends Fragment implements OnMapReadyCallbac
                 Toast.makeText(getContext(), "Đã hủy lịch hẹn #" + appointment.getId(), Toast.LENGTH_SHORT).show();
             }
         });
-        View view = inflater.inflate(R.layout.fragment_clinic_booking, container, false);
-
-        // Khởi tạo Google Maps
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFragment);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        }
-
-        // Nút đặt lịch hẹn (Nghiệp vụ phối hợp với Thành viên 5)
-        btnModuleAction = view.findViewById(R.id.btnModuleAction);
-        if (btnModuleAction != null) {
-            btnModuleAction.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "Tạo lịch hẹn mới (Trạng thái: PENDING)", Toast.LENGTH_SHORT).show()
-            );
-        }
-
-        return view;
     }
 
     @Override

@@ -13,6 +13,7 @@ import com.example.healthy_pet.MainActivity;
 import com.example.healthy_pet.R;
 import com.example.healthy_pet.api.RetrofitClient;
 import com.example.healthy_pet.models.User;
+import com.example.healthy_pet.ui.component.Auth_Otp_Dialog_User;
 import com.example.healthy_pet.utils.SessionManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -100,16 +101,31 @@ public class Register_User extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null) {
                     User newUser = response.body();
-                    sessionManager.saveUser(newUser);
-                    Toast.makeText(getContext(), "Đăng ký tài khoản thành công!", Toast.LENGTH_SHORT).show();
-                    if (requireActivity() instanceof MainActivity) {
-                        ((MainActivity) requireActivity()).openRolePage(newUser.getRole());
+                    if (Boolean.FALSE.equals(newUser.getIsVerified())) {
+                        Toast.makeText(
+                                getContext(),
+                                "Đăng ký thành công! Mã OTP 6 số đã được gửi tới email " + newUser.getEmail(),
+                                Toast.LENGTH_LONG
+                        ).show();
+                        Auth_Otp_Dialog_User.showActivateDialog(requireContext(), newUser.getEmail(), verifiedUser -> {
+                            if (!isAdded()) return;
+                            sessionManager.saveUser(verifiedUser);
+                            if (requireActivity() instanceof MainActivity) {
+                                ((MainActivity) requireActivity()).openRolePage(verifiedUser.getRole());
+                            }
+                        });
+                    } else {
+                        sessionManager.saveUser(newUser);
+                        Toast.makeText(getContext(), "Đăng ký tài khoản thành công!", Toast.LENGTH_SHORT).show();
+                        if (requireActivity() instanceof MainActivity) {
+                            ((MainActivity) requireActivity()).openRolePage(newUser.getRole());
+                        }
                     }
                 } else if (response.code() == 409) {
                     etRegisterEmail.setError("Email này đã được đăng ký!");
                     etRegisterEmail.requestFocus();
                 } else {
-                    fallbackLocalRegister(fullName, email, phone);
+                    Toast.makeText(getContext(), "Đăng ký thất bại (Mã lỗi: " + response.code() + ")", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -117,19 +133,9 @@ public class Register_User extends Fragment {
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
                 setLoading(false);
-                fallbackLocalRegister(fullName, email, phone);
+                Toast.makeText(getContext(), "Không thể kết nối máy chủ: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-    }
-
-    private void fallbackLocalRegister(String fullName, String email, String phone) {
-        User newUser = new User(System.currentTimeMillis() % 10000, fullName, email, phone, null, "USER", true);
-        newUser.setIsVerified(true);
-        sessionManager.saveUser(newUser);
-        Toast.makeText(getContext(), "Đăng ký tài khoản thành công!", Toast.LENGTH_SHORT).show();
-        if (requireActivity() instanceof MainActivity) {
-            ((MainActivity) requireActivity()).openRolePage(newUser.getRole());
-        }
     }
 
     private void setLoading(boolean loading) {

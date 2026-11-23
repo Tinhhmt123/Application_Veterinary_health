@@ -122,10 +122,7 @@ public class Login_Admin_User extends Fragment {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account == null || account.getEmail() == null) {
-                // Fallback Google Sign-In cho môi trường test
-                User fallbackUser = new User(2L, "Nguyễn Văn Tính", "tinh@gmail.com", "0908123456", null, "USER", true);
-                fallbackUser.setIsVerified(true);
-                onLoginSuccess(fallbackUser);
+                Toast.makeText(getContext(), "Không lấy được thông tin tài khoản Google!", Toast.LENGTH_SHORT).show();
                 return;
             }
             setLoading(true);
@@ -142,10 +139,10 @@ public class Login_Admin_User extends Fragment {
                     setLoading(false);
                     if (response.isSuccessful() && response.body() != null) {
                         onLoginSuccess(response.body());
+                    } else if (response.code() == 403) {
+                        Toast.makeText(getContext(), "Tài khoản của bạn đã bị khóa bởi Quản trị viên!", Toast.LENGTH_LONG).show();
                     } else {
-                        User googleUser = new User(2L, account.getDisplayName() != null ? account.getDisplayName() : "Google User", account.getEmail(), "0908123456", account.getPhotoUrl() != null ? account.getPhotoUrl().toString() : null, "USER", true);
-                        googleUser.setIsVerified(true);
-                        onLoginSuccess(googleUser);
+                        Toast.makeText(getContext(), "Đăng nhập Google thất bại (Mã lỗi: " + response.code() + ")", Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -153,16 +150,16 @@ public class Login_Admin_User extends Fragment {
                 public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                     if (!isAdded()) return;
                     setLoading(false);
-                    User googleUser = new User(2L, account.getDisplayName() != null ? account.getDisplayName() : "Google User", account.getEmail(), "0908123456", account.getPhotoUrl() != null ? account.getPhotoUrl().toString() : null, "USER", true);
-                    googleUser.setIsVerified(true);
-                    onLoginSuccess(googleUser);
+                    Toast.makeText(getContext(), "Không thể kết nối máy chủ: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
-        } catch (Exception e) {
+        } catch (ApiException e) {
             if (!isAdded()) return;
-            User fallbackUser = new User(2L, "Nguyễn Văn Tính", "tinh@gmail.com", "0908123456", null, "USER", true);
-            fallbackUser.setIsVerified(true);
-            onLoginSuccess(fallbackUser);
+            Toast.makeText(
+                    getContext(),
+                    "Đăng nhập Google không thành công (Mã: " + e.getStatusCode() + "). Kiểm tra SHA-1 / Test Users trên Google Cloud Console.",
+                    Toast.LENGTH_LONG
+            ).show();
         }
     }
 
@@ -192,9 +189,27 @@ public class Login_Admin_User extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null) {
                     User loggedInUser = response.body();
+                    if (Boolean.FALSE.equals(loggedInUser.getIsVerified())) {
+                        Toast.makeText(
+                                getContext(),
+                                "Tài khoản chưa kích hoạt! Vui lòng nhập mã OTP 6 số gửi qua email.",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        Auth_Otp_Dialog_User.showActivateDialog(requireContext(), email, Login_Admin_User.this::onLoginSuccess);
+                        return;
+                    }
                     onLoginSuccess(loggedInUser);
+                } else if (response.code() == 423) {
+                    Toast.makeText(
+                            getContext(),
+                            "Tài khoản chưa kích hoạt! Mã OTP 6 số vừa được gửi tới email " + email,
+                            Toast.LENGTH_LONG
+                    ).show();
+                    Auth_Otp_Dialog_User.showActivateDialog(requireContext(), email, Login_Admin_User.this::onLoginSuccess);
+                } else if (response.code() == 403) {
+                    Toast.makeText(getContext(), "Tài khoản của bạn đã bị khóa bởi Quản trị viên!", Toast.LENGTH_LONG).show();
                 } else {
-                    fallbackLocalLogin(email);
+                    Toast.makeText(getContext(), "Email hoặc mật khẩu không chính xác!", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -202,21 +217,13 @@ public class Login_Admin_User extends Fragment {
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
                 setLoading(false);
-                fallbackLocalLogin(email);
+                Toast.makeText(
+                        getContext(),
+                        "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng!",
+                        Toast.LENGTH_LONG
+                ).show();
             }
         });
-    }
-
-    private void fallbackLocalLogin(String email) {
-        boolean isAdmin = email.toLowerCase().contains("admin");
-        User testUser;
-        if (isAdmin) {
-            testUser = new User(1L, "Quản Trị Viên Healthy Pet", email, "0901000111", null, "ADMIN", true);
-        } else {
-            testUser = new User(2L, "Nguyễn Văn Tính", email, "0908123456", null, "USER", true);
-        }
-        testUser.setIsVerified(true);
-        onLoginSuccess(testUser);
     }
 
     private void onLoginSuccess(@NonNull User loggedInUser) {

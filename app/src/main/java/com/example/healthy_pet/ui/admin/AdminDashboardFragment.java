@@ -5,28 +5,35 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.healthy_pet.R;
 import com.example.healthy_pet.adapters.AppointmentAdapter;
+import com.example.healthy_pet.adapters.UserAdminAdapter;
 import com.example.healthy_pet.api.AppointmentMedicalApi;
 import com.example.healthy_pet.api.RetrofitClient;
 import com.example.healthy_pet.databinding.DialogPrescriptionBinding;
 import com.example.healthy_pet.models.Appointment;
 import com.example.healthy_pet.models.MedicalHistory;
+import com.example.healthy_pet.models.User;
 import com.example.healthy_pet.repository.AppointmentRepository;
 import com.example.healthy_pet.repository.MedicalHistoryRepository;
 import com.example.healthy_pet.utils.CurrencyUtils;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +42,10 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * [Luồng ADMIN] Quản trị hệ thống: Quản lý Khách hàng, Duyệt lịch & Kê đơn ca khám, Quản lý Chi nhánh
+ * [Luồng ADMIN] Quản trị hệ thống:
+ * - Luồng 6 (Thành viên 1): Quản lý Khách hàng (manage_user_admin.xml), tìm kiếm & Khóa/Mở khóa tài khoản.
+ * - Luồng 7 (Thành viên 5): Duyệt lịch & Kê đơn ca khám.
+ * - Luồng 8 (Thành viên 4): Quản lý Chi nhánh Phòng khám (AdminClinicActivity).
  */
 public class AdminDashboardFragment extends Fragment implements AppointmentAdapter.OnAppointmentActionListener {
 
@@ -43,6 +53,16 @@ public class AdminDashboardFragment extends Fragment implements AppointmentAdapt
     private final List<Appointment> adminAppointments = new ArrayList<>();
     private AppointmentAdapter adapter;
     private AppointmentMedicalApi appointmentApi;
+
+    private TextInputEditText etSearchUserKeyword;
+    private TextView tvAdminUsersCount;
+    private ProgressBar progressBarAdminUsers;
+    private TextView tvEmptyAdminUsers;
+    private MaterialButton btnFilterAllUsers;
+    private MaterialButton btnFilterActiveUsers;
+    private MaterialButton btnFilterLockedUsers;
+    private UserAdminAdapter userAdminAdapter;
+    private Boolean currentActiveFilter = null;
 
     public static AdminDashboardFragment newInstance(int flowNumber) {
         AdminDashboardFragment fragment = new AdminDashboardFragment();
@@ -61,24 +81,18 @@ public class AdminDashboardFragment extends Fragment implements AppointmentAdapt
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_module_card, container, false);
         int flow = getArguments() != null ? getArguments().getInt(ARG_FLOW, 6) : 6;
 
+        if (flow == 6) {
+            return setupManageUsersView(inflater, container);
+        }
+
+        View view = inflater.inflate(R.layout.fragment_module_card, container, false);
         TextView title = view.findViewById(R.id.tvModuleTitle);
         TextView desc = view.findViewById(R.id.tvModuleDescription);
         MaterialButton btn = view.findViewById(R.id.btnModuleAction);
 
-        if (flow == 6) {
-            title.setText("👥 Quản Lý Người Dùng & Hồ Sơ Thú Cưng");
-            desc.setText(
-                    "• Tra cứu khách hàng theo tên hoặc số điện thoại, thực hiện khóa hoặc mở khóa tài khoản.\n" +
-                    "• Tìm kiếm danh sách thú cưng toàn hệ thống, tạo hồ sơ mới hoặc tiếp nhận khám trực tiếp tại quầy."
-            );
-            btn.setText("🔒 Khóa / Mở khóa tài khoản & Tiếp nhận tại quầy");
-            btn.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "Đang thực hiện thao tác quản trị", Toast.LENGTH_SHORT).show()
-            );
-        } else if (flow == 7) {
+        if (flow == 7) {
             title.setText("🩺 Quản Lý & Duyệt Ca Khám");
             desc.setText(
                     "• Xử lý lịch hẹn từ khách hàng: Bấm Duyệt lịch (CONFIRMED) hoặc Từ chối lịch (CANCELLED).\n" +
@@ -112,22 +126,143 @@ public class AdminDashboardFragment extends Fragment implements AppointmentAdapt
                     "• Cập nhật số điện thoại, giờ mở cửa và tọa độ vị trí để hiển thị điểm ghim trên bản đồ."
             );
             btn.setText("📍 Thêm chi nhánh & Cập nhật tọa độ");
-            btn.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "Đang thực hiện thao tác quản trị chi nhánh", Toast.LENGTH_SHORT).show()
-            );
-        }
-
-        btn.setOnClickListener(v -> {
-            if (flow == 8) {
-                // Mở màn hình quản lý chi nhánh AdminClinicActivity (NV 8 của Thành viên 4)
+            btn.setOnClickListener(v -> {
                 Intent intent = new Intent(requireContext(), AdminClinicActivity.class);
                 startActivity(intent);
-            } else {
-                Toast.makeText(getContext(), "Đang thực thi thao tác Quản trị viên (NV " + flow + ")", Toast.LENGTH_SHORT).show();
-            }
-        });
+            });
+        }
 
         return view;
+    }
+
+    private View setupManageUsersView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
+        View view = inflater.inflate(R.layout.manage_user_admin, container, false);
+
+        etSearchUserKeyword = view.findViewById(R.id.etSearchUserKeyword);
+        MaterialButton btnSearchUser = view.findViewById(R.id.btnSearchUser);
+        btnFilterAllUsers = view.findViewById(R.id.btnFilterAllUsers);
+        btnFilterActiveUsers = view.findViewById(R.id.btnFilterActiveUsers);
+        btnFilterLockedUsers = view.findViewById(R.id.btnFilterLockedUsers);
+        tvAdminUsersCount = view.findViewById(R.id.tvAdminUsersCount);
+        progressBarAdminUsers = view.findViewById(R.id.progressBarAdminUsers);
+        tvEmptyAdminUsers = view.findViewById(R.id.tvEmptyAdminUsers);
+        RecyclerView rvAdminUsers = view.findViewById(R.id.rvAdminUsers);
+
+        rvAdminUsers.setLayoutManager(new LinearLayoutManager(requireContext()));
+        userAdminAdapter = new UserAdminAdapter(this::handleToggleUserLock);
+        rvAdminUsers.setAdapter(userAdminAdapter);
+
+        btnSearchUser.setOnClickListener(v -> loadUsersFromServer());
+        etSearchUserKeyword.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH
+                    || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                loadUsersFromServer();
+                return true;
+            }
+            return false;
+        });
+
+        btnFilterAllUsers.setOnClickListener(v -> selectActiveFilter(null, btnFilterAllUsers));
+        btnFilterActiveUsers.setOnClickListener(v -> selectActiveFilter(true, btnFilterActiveUsers));
+        btnFilterLockedUsers.setOnClickListener(v -> selectActiveFilter(false, btnFilterLockedUsers));
+
+        updateFilterButtonStyles(btnFilterAllUsers);
+        loadUsersFromServer();
+
+        return view;
+    }
+
+    private void selectActiveFilter(@Nullable Boolean activeFilter, MaterialButton activeButton) {
+        currentActiveFilter = activeFilter;
+        updateFilterButtonStyles(activeButton);
+        loadUsersFromServer();
+    }
+
+    private void updateFilterButtonStyles(MaterialButton activeButton) {
+        if (getContext() == null) return;
+        MaterialButton[] buttons = {btnFilterAllUsers, btnFilterActiveUsers, btnFilterLockedUsers};
+        int activeColor = ContextCompat.getColor(requireContext(), R.color.indigo_600);
+        int inactiveColor = ContextCompat.getColor(requireContext(), R.color.slate_500);
+        int activeBg = Color.parseColor("#EEF2FF");
+
+        for (MaterialButton button : buttons) {
+            boolean isActive = (button == activeButton);
+            button.setTextColor(isActive ? activeColor : inactiveColor);
+            button.setStrokeColor(ColorStateList.valueOf(isActive ? activeColor : inactiveColor));
+            button.setBackgroundTintList(ColorStateList.valueOf(isActive ? activeBg : Color.TRANSPARENT));
+        }
+    }
+
+    private void loadUsersFromServer() {
+        String keyword = etSearchUserKeyword != null && etSearchUserKeyword.getText() != null
+                ? etSearchUserKeyword.getText().toString().trim()
+                : "";
+        String queryKeyword = keyword.isEmpty() ? null : keyword;
+
+        progressBarAdminUsers.setVisibility(View.VISIBLE);
+        tvEmptyAdminUsers.setVisibility(View.GONE);
+
+        RetrofitClient.getAuthUserApi()
+                .searchUsers(queryKeyword, currentActiveFilter)
+                .enqueue(new Callback<List<User>>() {
+                    @Override
+                    public void onResponse(@NonNull Call<List<User>> call, @NonNull Response<List<User>> response) {
+                        if (!isAdded()) return;
+                        progressBarAdminUsers.setVisibility(View.GONE);
+
+                        if (response.isSuccessful() && response.body() != null) {
+                            List<User> users = response.body();
+                            userAdminAdapter.setUsers(users);
+                            if (tvAdminUsersCount != null) {
+                                tvAdminUsersCount.setText("👥 Danh sách khách hàng (" + users.size() + ")");
+                            }
+                            tvEmptyAdminUsers.setVisibility(users.isEmpty() ? View.VISIBLE : View.GONE);
+                        } else {
+                            Toast.makeText(getContext(), "Không thể tải danh sách khách hàng (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<List<User>> call, @NonNull Throwable t) {
+                        if (!isAdded()) return;
+                        progressBarAdminUsers.setVisibility(View.GONE);
+                        Toast.makeText(getContext(), "Lỗi kết nối máy chủ: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void handleToggleUserLock(User user, int position) {
+        if (user == null || user.getId() == null) return;
+
+        progressBarAdminUsers.setVisibility(View.VISIBLE);
+        RetrofitClient.getAuthUserApi()
+                .toggleUserActive(user.getId())
+                .enqueue(new Callback<User>() {
+                    @Override
+                    public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
+                        if (!isAdded()) return;
+                        progressBarAdminUsers.setVisibility(View.GONE);
+
+                        if (response.isSuccessful() && response.body() != null) {
+                            User updated = response.body();
+                            userAdminAdapter.updateUserAt(position, updated);
+                            boolean activeNow = Boolean.TRUE.equals(updated.getIsActive());
+                            String msg = activeNow
+                                    ? "Đã mở khóa tài khoản " + updated.getFullName()
+                                    : "Đã khóa tài khoản " + updated.getFullName();
+                            Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Không thể thay đổi trạng thái tài khoản!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
+                        if (!isAdded()) return;
+                        progressBarAdminUsers.setVisibility(View.GONE);
+                        Toast.makeText(getContext(), "Lỗi kết nối máy chủ: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     @Override
