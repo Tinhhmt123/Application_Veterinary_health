@@ -27,7 +27,7 @@ public class MedicalHistoryRepository {
 
     private void initSampleHistories() {
         MedicalHistory h1 = new MedicalHistory(
-                1L, 1L, 1L, "2026-10-18",
+                1L, null, 1L, "2026-10-18",
                 "Ngứa tai, lắc đầu liên tục",
                 "Viêm ống tai ngoài do nấm Otodectes",
                 "Thuốc nhỏ tai Oridermyl 10g (nhỏ 2 lần/ngày trong 7 ngày)",
@@ -68,6 +68,12 @@ public class MedicalHistoryRepository {
 
     public synchronized void addMedicalHistory(MedicalHistory history) {
         if (history != null) {
+            for (int i = 0; i < historyList.size(); i++) {
+                if (historyList.get(i).getId() != null && historyList.get(i).getId().equals(history.getId())) {
+                    historyList.set(i, history);
+                    return;
+                }
+            }
             historyList.add(0, history);
         }
     }
@@ -95,10 +101,30 @@ public class MedicalHistoryRepository {
         return sum;
     }
 
+    /**
+     * Đồng bộ danh sách bệnh án từ Server mà KHÔNG xóa mất dữ liệu mới tạo (Smart Merge).
+     */
     public synchronized void setHistories(List<MedicalHistory> newList) {
-        if (newList != null && !newList.isEmpty()) {
-            this.historyList.clear();
-            this.historyList.addAll(newList);
+        if (newList == null || newList.isEmpty()) return;
+        for (MedicalHistory serverHistory : newList) {
+            boolean found = false;
+            for (MedicalHistory localHistory : historyList) {
+                if (serverHistory.getId() != null && serverHistory.getId().equals(localHistory.getId())) {
+                    if (serverHistory.getPaymentStatus() != null) localHistory.setPaymentStatus(serverHistory.getPaymentStatus());
+                    if (serverHistory.getPaymentMethod() != null) localHistory.setPaymentMethod(serverHistory.getPaymentMethod());
+                    if (serverHistory.getCost() != null) localHistory.setCost(serverHistory.getCost());
+                    if (serverHistory.getDiagnosis() != null) localHistory.setDiagnosis(serverHistory.getDiagnosis());
+                    if (serverHistory.getPrescription() != null) localHistory.setPrescription(serverHistory.getPrescription());
+                    if (serverHistory.getPetName() != null && !serverHistory.getPetName().trim().isEmpty()) {
+                        localHistory.setPetName(serverHistory.getPetName());
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                historyList.add(serverHistory);
+            }
         }
     }
 }

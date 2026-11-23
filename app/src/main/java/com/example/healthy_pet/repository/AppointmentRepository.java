@@ -36,7 +36,8 @@ public class AppointmentRepository {
         apt1.setId(1L);
         apt1.setPetName("Milu (Golden)");
         apt1.setClinicName("Healthy Pet Quận 1");
-        apt1.setStatus("COMPLETED");
+        // ĐÃ DUYỆT (CONFIRMED) -> Sẵn sàng để Bác sĩ/Admin bấm "Kê đơn & Hoàn thành", KHÔNG tự động kê đơn!
+        apt1.setStatus("CONFIRMED");
 
         Appointment apt2 = new Appointment(
                 2L, 2L, 2L,
@@ -48,6 +49,7 @@ public class AppointmentRepository {
         apt2.setId(2L);
         apt2.setPetName("Mochi (Mèo Anh)");
         apt2.setClinicName("Healthy Pet Quận 3");
+        // CHỜ DUYỆT (PENDING) -> Admin bấm "Duyệt lịch" hoặc "Từ chối"
         apt2.setStatus("PENDING");
 
         appointmentList.add(apt1);
@@ -90,10 +92,34 @@ public class AppointmentRepository {
         }
     }
 
+    /**
+     * Đồng bộ danh sách lịch hẹn từ Server mà KHÔNG xóa mất dữ liệu cũ (Smart Merge).
+     * Giữ nguyên petName, clinicName cục bộ nếu Server trả về null.
+     */
     public synchronized void setAppointments(List<Appointment> newList) {
-        if (newList != null && !newList.isEmpty()) {
-            this.appointmentList.clear();
-            this.appointmentList.addAll(newList);
+        if (newList == null || newList.isEmpty()) return;
+        for (Appointment serverApt : newList) {
+            boolean found = false;
+            for (Appointment localApt : appointmentList) {
+                if (serverApt.getId() != null && serverApt.getId().equals(localApt.getId())) {
+                    if (serverApt.getStatus() != null) localApt.setStatus(serverApt.getStatus());
+                    if (serverApt.getServiceType() != null) localApt.setServiceType(serverApt.getServiceType());
+                    if (serverApt.getAppointmentTime() != null) localApt.setAppointmentTime(serverApt.getAppointmentTime());
+                    if (serverApt.getEstimatedCost() != null) localApt.setEstimatedCost(serverApt.getEstimatedCost());
+                    if (serverApt.getNote() != null) localApt.setNote(serverApt.getNote());
+                    if (serverApt.getPetName() != null && !serverApt.getPetName().trim().isEmpty()) {
+                        localApt.setPetName(serverApt.getPetName());
+                    }
+                    if (serverApt.getClinicName() != null && !serverApt.getClinicName().trim().isEmpty()) {
+                        localApt.setClinicName(serverApt.getClinicName());
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                appointmentList.add(serverApt);
+            }
         }
     }
 }

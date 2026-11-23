@@ -457,8 +457,7 @@ public class VaccineAlertFragment extends Fragment {
         cancelCall(historyCall);
 
         historyCall = vaccinationApi.getVaccinationsByPet(
-                requestedPetId,
-                userId
+                requestedPetId
         );
 
         historyCall.enqueue(new Callback<List<VaccinationRecord>>() {
@@ -1003,7 +1002,6 @@ public class VaccineAlertFragment extends Fragment {
 
         createCall = vaccinationApi.createVaccination(
                 petIdBody,
-                userIdBody,
                 vaccineNameBody,
                 injectionDateBody,
                 nextDueDateBody,

@@ -82,20 +82,31 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
 
     private void loadMedicalHistoriesAndStats() {
         Long userId = sessionManager.getUserId();
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
 
         // 1. Tải lập tức từ Shared MedicalHistoryRepository
         medicalHistories.clear();
-        medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
+        if (isAdmin) {
+            // Admin xem tất cả bệnh án trong hệ thống
+            medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(null));
+        } else {
+            medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
+        }
         updateUiState();
 
         // 2. Tải từ backend REST API
         appointmentApi.getMedicalHistoriesByUser(userId).enqueue(new Callback<List<MedicalHistory>>() {
             @Override
             public void onResponse(@NonNull Call<List<MedicalHistory>> call, @NonNull Response<List<MedicalHistory>> response) {
+                if (!isAdded() || binding == null) return;
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     MedicalHistoryRepository.getInstance().setHistories(response.body());
                     medicalHistories.clear();
-                    medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
+                    if (isAdmin) {
+                        medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(null));
+                    } else {
+                        medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
+                    }
                     updateUiState();
                 }
             }
@@ -108,9 +119,10 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
         appointmentApi.getTotalMedicalCost(userId).enqueue(new Callback<Map<String, BigDecimal>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, BigDecimal>> call, @NonNull Response<Map<String, BigDecimal>> response) {
+                if (!isAdded() || binding == null) return;
                 if (response.isSuccessful() && response.body() != null && response.body().containsKey("totalCost")) {
                     BigDecimal apiTotal = response.body().get("totalCost");
-                    if (binding != null && apiTotal != null) {
+                    if (apiTotal != null) {
                         binding.tvTotalStats.setText(CurrencyUtils.formatVND(apiTotal));
                     }
                 }
@@ -124,7 +136,11 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
     private void updateUiState() {
         if (binding == null) return;
 
-        BigDecimal localSum = MedicalHistoryRepository.getInstance().getTotalCostByUser(sessionManager.getUserId());
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
+        Long userId = sessionManager.getUserId();
+        BigDecimal localSum = isAdmin
+                ? MedicalHistoryRepository.getInstance().getTotalCostByUser(null)
+                : MedicalHistoryRepository.getInstance().getTotalCostByUser(userId);
         binding.tvTotalStats.setText(CurrencyUtils.formatVND(localSum));
 
         if (medicalHistories.isEmpty()) {
