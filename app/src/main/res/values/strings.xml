@@ -1,3 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Healthy Pet</string>
+    <string name="app_name">HealthyPet</string>
+
+    <string name="google_web_client_id">YOUR_WEB_CLIENT_ID</string>
+
+    <!-- Sổ tiêm chủng -->
+    <string name="pet_vaccination_title">💉 Sổ tiêm chủng</string>
+    <string name="pet_vaccination_empty">Chưa có hồ sơ tiêm chủng.</string>
+    <string name="pet_vaccination_add">+ Thêm mũi tiêm mới</string>
+    <string name="pet_vaccination_count">0 mũi tiêm</string>
+
+    <!-- Thông tin thú cưng -->
+    <string name="pet_booking">+ Đặt lịch</string>
+    <string name="pet_delete">🗑️ Xóa hồ sơ</string>
+    <string name="pet_edit">📷 Sửa / Đổi ảnh</string>
+    <string name="pet_add_weight">⚖️ + Ghi cân nặng</string>
+    <string name="pet_birth_date">Ngày sinh</string>
+    <string name="pet_current_weight">Cân hiện tại</string>
+
+    <!-- Nhật ký cân nặng -->
+    <string name="pet_weight_history">📈 Nhật ký cân nặng (WeightLogs)</string>
+    <string name="pet_weight_empty">Chưa có mốc cân nặng nào</string>
+    <string name="pet_auto_sync">Tự đồng bộ</string>
 </resources>

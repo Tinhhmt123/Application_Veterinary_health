@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardBackgroundColor="#E2EAF2"
     app:cardCornerRadius="14dp"
-    app:cardElevation="2dp"
-    app:strokeColor="#3364748B"
+    app:cardElevation="3dp"
+    app:strokeColor="#8295A8"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -36,7 +36,6 @@
                 android:src="@mipmap/ic_launcher_round" />
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Cột thông tin thú cưng ở giữa -->
         <LinearLayout
             android:id="@+id/layoutItemPetInfo"
             android:layout_width="0dp"
@@ -59,8 +58,8 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:text="Milu"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="15sp"
+                    android:textColor="#071421"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -83,8 +82,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Chó • Golden Retriever • Đực"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp" />
+                android:textColor="#1C3042"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvItemPetBirthDate"
@@ -92,8 +92,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Ngày sinh: 2024-05-10"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp" />
+                android:textColor="#263B50"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvItemPetOwner"
@@ -101,13 +102,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="3dp"
                 android:text="Chủ: Nguyễn Văn Tính • 0908123456"
-                android:textColor="@color/indigo_600"
+                android:textColor="#251778"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- Cột nút thao tác nằm bên phải thông tin pet (mặc định GONE, hiện khi hover 3s hoặc chạm) -->
         <LinearLayout
             android:id="@+id/layoutItemPetActions"
             android:layout_width="wrap_content"

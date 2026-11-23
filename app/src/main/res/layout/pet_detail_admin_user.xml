@@ -12,7 +12,7 @@
         android:orientation="vertical"
         android:padding="14dp">
 
-        <!-- Card Chi tiết Thú cưng (theo thiết kế UI Demo NV 2) -->
+        <!-- CARD THÔNG TIN THÚ CƯNG -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,7 +27,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Dải banner đầu card đổi màu theo vai trò -->
                 <View
                     android:id="@+id/viewDetailPetBanner"
                     android:layout_width="match_parent"
@@ -64,6 +63,7 @@
                                 android:contentDescription="Ảnh thú cưng"
                                 android:scaleType="centerCrop"
                                 android:src="@mipmap/ic_launcher_round" />
+
                         </com.google.android.material.card.MaterialCardView>
 
                         <View
@@ -80,7 +80,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Cân hiện tại"
+                                android:text="@string/pet_current_weight"
                                 android:textColor="?android:attr/textColorSecondary"
                                 android:textSize="11sp" />
 
@@ -96,6 +96,7 @@
                                 android:textColor="@color/emerald_700"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
+
                         </LinearLayout>
                     </LinearLayout>
 
@@ -147,7 +148,7 @@
                         android:layout_marginVertical="12dp"
                         android:background="@color/slate_100" />
 
-                    <!-- Hàng nút thao tác giống Demo -->
+                    <!-- NÚT THAO TÁC THÚ CƯNG -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -157,17 +158,18 @@
                             android:id="@+id/btnDetailPetEdit"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="38dp"
+                            android:layout_height="48dp"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
+                            android:minWidth="48dp"
+                            android:minHeight="48dp"
                             android:ellipsize="end"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             android:letterSpacing="0"
                             android:maxLines="1"
-                            android:minWidth="0dp"
                             android:paddingHorizontal="8dp"
-                            android:text="📷 Sửa / Đổi ảnh"
+                            android:text="@string/pet_edit"
                             android:textAllCaps="false"
                             android:textColor="?android:attr/textColorPrimary"
                             android:textSize="12sp"
@@ -176,29 +178,32 @@
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnDetailPetWeight"
                             android:layout_width="0dp"
-                            android:layout_height="38dp"
+                            android:layout_height="48dp"
                             android:layout_marginStart="6dp"
                             android:layout_weight="1"
+                            android:minWidth="48dp"
+                            android:minHeight="48dp"
                             android:ellipsize="end"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             android:letterSpacing="0"
                             android:maxLines="1"
-                            android:minWidth="0dp"
                             android:paddingHorizontal="8dp"
-                            android:text="⚖️ + Ghi cân nặng"
+                            android:text="@string/pet_add_weight"
                             android:textAllCaps="false"
+                            android:textColor="@android:color/white"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             app:backgroundTint="@color/emerald_600"
                             app:cornerRadius="19dp" />
+
                     </LinearLayout>
 
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Card Nhật ký cân nặng (WeightLogs Timeline giống UI Demo) -->
+        <!-- CARD NHẬT KÝ CÂN NẶNG -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -225,7 +230,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📈 Nhật ký cân nặng (WeightLogs)"
+                        android:text="@string/pet_weight_history"
                         android:textColor="?android:attr/textColorPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -233,13 +238,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tự đồng bộ"
+                        android:text="@string/pet_auto_sync"
                         android:textColor="@color/emerald_600"
                         android:textSize="11sp"
                         android:textStyle="bold" />
+
                 </LinearLayout>
 
-                <!-- Dải tóm tắt biến động cân nặng -->
                 <TextView
                     android:id="@+id/tvDetailWeightTrend"
                     android:layout_width="wrap_content"
@@ -269,8 +274,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:gravity="center"
-                    android:text="Chưa có mốc cân nặng nào"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:text="@string/pet_weight_empty"
+                    android:textColor="@color/slate_800"
                     android:textSize="12sp"
                     android:visibility="gone" />
 
@@ -284,11 +289,96 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- CARD SỔ TIÊM CHỦNG - ĐẶT RIÊNG SAU CARD CÂN NẶNG -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeColor="#3364748B"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pet_vaccination_title"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDetailVaccinationCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pet_vaccination_count"
+                        android:textColor="@color/emerald_600"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/progressDetailVaccinations"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:indeterminate="true"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvDetailVaccinationsEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="@string/pet_vaccination_empty"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutDetailVaccinations"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDetailAddVaccination"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/pet_vaccination_add"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    app:backgroundTint="@color/indigo_600"
+                    app:cornerRadius="22dp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
+        <!-- NÚT XÓA VÀ ĐẶT LỊCH -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -299,16 +389,17 @@
                 android:id="@+id/btnDetailPetDelete"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
                 android:ellipsize="end"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:letterSpacing="0"
                 android:maxLines="1"
-                android:minWidth="0dp"
-                android:text="🗑️ Xóa hồ sơ"
+                android:text="@string/pet_delete"
                 android:textAllCaps="false"
                 android:textColor="@color/red_600"
                 android:textSize="13sp"
@@ -318,21 +409,24 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDetailPetBooking"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
                 android:ellipsize="end"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:letterSpacing="0"
                 android:maxLines="1"
-                android:minWidth="0dp"
-                android:text="+ Đặt lịch"
+                android:text="@string/pet_booking"
                 android:textAllCaps="false"
+                android:textColor="@android:color/white"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 app:backgroundTint="@color/indigo_600"
                 app:cornerRadius="20dp" />
+
         </LinearLayout>
 
     </LinearLayout>

@@ -1,14 +1,15 @@
 package com.example.healthy_pet.ui.vaccine;
-import android.util.Log;
-
 import android.app.AlertDialog;
+import android.util.Log;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -18,6 +19,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.ScrollView;
+import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,9 +55,11 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 public class VaccineAlertFragment extends Fragment {
+
+    private static final String ARG_HISTORY_ONLY = "history_only";
+    private boolean historyOnly = false;
 
     private Spinner spinnerPets;
 
@@ -68,7 +73,11 @@ public class VaccineAlertFragment extends Fragment {
     private LinearLayout layoutVaccinationHistory;
 
     private Button btnAddVaccination;
+    private Button btnVaccinationNotifications;
     private ProgressBar progressBar;
+
+    // Danh sách cảnh báo được lưu để hiển thị trong hộp thoại khi bấm chuông.
+    private final List<VaccinationRecord> currentHealthAlerts = new ArrayList<>();
 
     private PetWeightApi petWeightApi;
     private VaccinationApi vaccinationApi;
@@ -87,13 +96,10 @@ public class VaccineAlertFragment extends Fragment {
 
     private boolean isCreatingVaccination = false;
 
-    private ActivityResultLauncher<String> imagePickerLauncher;
+    // Chỉ USER sử dụng launcher này để tải ảnh dấu mộc cho hồ sơ đã tồn tại.
+    private ActivityResultLauncher<String> stampUploadLauncher;
+    private Long pendingStampRecordId;
 
-    private Uri selectedStampImageUri;
-
-    private ImageView ivStampPreview;
-
-    /** Hiển thị ảnh dấu mộc đã được lưu trong hồ sơ tiêm chủng. */
     /** Hiển thị ảnh dấu mộc đã được lưu trong hồ sơ tiêm chủng. */
     private void addStampImage(LinearLayout parent, String imageUrl) {
         if (parent == null || !isAdded()) {
@@ -150,22 +156,27 @@ public class VaccineAlertFragment extends Fragment {
     public VaccineAlertFragment() {
     }
 
+    /** Tạo màn hình chỉ hiển thị lịch sử tiêm chủng, mở từ menu trượt. */
+    public static VaccineAlertFragment newHistoryInstance() {
+        VaccineAlertFragment fragment = new VaccineAlertFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_HISTORY_ONLY, true);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        imagePickerLauncher = registerForActivityResult(
+        stampUploadLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
                 uri -> {
-                    if (uri != null) {
-                        selectedStampImageUri = uri;
+                    Long recordId = pendingStampRecordId;
+                    pendingStampRecordId = null;
 
-                        if (ivStampPreview != null) {
-                            ivStampPreview.setImageURI(uri);
-                            ivStampPreview.setVisibility(View.VISIBLE);
-                        }
-
-                        showToast("Đã chọn ảnh dấu mộc.");
+                    if (uri != null && recordId != null) {
+                        uploadStampForUser(recordId, uri);
                     }
                 }
         );
@@ -192,7 +203,15 @@ public class VaccineAlertFragment extends Fragment {
     ) {
         super.onViewCreated(view, savedInstanceState);
 
+        historyOnly = getArguments() != null
+                && getArguments().getBoolean(ARG_HISTORY_ONLY, false);
+
         initViews(view);
+        if (historyOnly) {
+            configureHistoryOnlyScreen(view);
+        } else {
+            configureMainVaccineScreen(view);
+        }
 
         sessionManager = new SessionManager(requireContext());
 
@@ -200,11 +219,16 @@ public class VaccineAlertFragment extends Fragment {
         vaccinationApi = RetrofitClient.getVaccinationApi();
 
         userId = sessionManager.getUserId();
-        Log.d("VACCINE_DEBUG", "Current userId = " + userId);
 
+        // USER chỉ được xem sổ tiêm; ADMIN mới được thao tác thêm hồ sơ.
+        btnAddVaccination.setVisibility(isAdmin() ? View.VISIBLE : View.GONE);
         btnAddVaccination.setEnabled(false);
 
         btnAddVaccination.setOnClickListener(v -> {
+            if (!"ADMIN".equalsIgnoreCase(sessionManager.getRole())) {
+                showToast("Tài khoản USER chỉ có quyền xem sổ tiêm chủng.");
+                return;
+            }
 
             if (userId == null || selectedPetId == null) {
                 showToast("Vui lòng chọn thú cưng trước!");
@@ -255,6 +279,249 @@ public class VaccineAlertFragment extends Fragment {
 
         progressBar =
                 view.findViewById(R.id.progressBar);
+
+        if (!historyOnly) {
+            setupAlertNotificationHeader(view);
+        }
+    }
+
+    /**
+     * Màn hình Sổ tiêm chủng chính chỉ hiển thị bộ chọn thú cưng,
+     * thống kê và thanh thông báo. Danh sách lịch sử chỉ mở từ menu.
+     */
+    private void configureMainVaccineScreen(View root) {
+        // Ẩn toàn bộ khu vực lịch sử ở màn hình chính.
+        hideSectionAtContentLevel(root, layoutVaccinationHistory);
+        hideSectionAtContentLevel(root, tvHistoryEmpty);
+        hideHistoryHeading(root);
+
+        // Đảm bảo phần cảnh báo cũ dạng danh sách không chiếm chỗ.
+        if (layoutAlerts != null) layoutAlerts.setVisibility(View.GONE);
+        if (tvAlertEmpty != null) tvAlertEmpty.setVisibility(View.GONE);
+    }
+
+    private void hideHistoryHeading(View view) {
+        if (view instanceof TextView) {
+            CharSequence value = ((TextView) view).getText();
+            if (value != null) {
+                String text = value.toString().toLowerCase(Locale.ROOT);
+                if (text.contains("lịch sử tiêm chủng")
+                        || text.contains("lịch sử tiêm phòng")) {
+                    view.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                hideHistoryHeading(group.getChildAt(i));
+            }
+        }
+    }
+
+    /** Chỉ giữ bộ chọn thú cưng và danh sách hồ sơ khi mở từ menu Lịch sử. */
+    private void configureHistoryOnlyScreen(View root) {
+        if (layoutAlerts != null) layoutAlerts.setVisibility(View.GONE);
+        if (tvAlertEmpty != null) tvAlertEmpty.setVisibility(View.GONE);
+
+        // Ẩn các khối thống kê và tiêu đề cảnh báo, không đụng đến bộ chọn thú cưng
+        // hoặc danh sách lịch sử tiêm chủng.
+        hideSectionAtContentLevel(root, tvTotalVaccinations);
+        hideSectionAtContentLevel(root, tvUpcomingVaccinations);
+        hideSectionAtContentLevel(root, layoutAlerts);
+
+        // Ẩn tiêu đề trang cũ và đổi thành tiêu đề riêng của màn hình lịch sử.
+        updateHistoryHeading(root);
+
+        View content = findScrollContent(root);
+        if (content instanceof ViewGroup) {
+            TextView heading = new TextView(requireContext());
+            heading.setText("📋 Lịch sử tiêm chủng");
+            heading.setTextColor(Color.parseColor("#1E293B"));
+            heading.setTextSize(22);
+            heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            heading.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(8));
+            ((ViewGroup) content).addView(heading, 0);
+        }
+    }
+
+    private View findScrollContent(View root) {
+        if (root instanceof ScrollView) {
+            ScrollView scroll = (ScrollView) root;
+            return scroll.getChildCount() > 0 ? scroll.getChildAt(0) : root;
+        }
+        if (root instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) root;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View found = findScrollContent(group.getChildAt(i));
+                if (found != null && found != group.getChildAt(i)) return found;
+                if (group.getChildAt(i) instanceof ScrollView) {
+                    ScrollView scroll = (ScrollView) group.getChildAt(i);
+                    return scroll.getChildCount() > 0 ? scroll.getChildAt(0) : scroll;
+                }
+            }
+        }
+        return root;
+    }
+
+    private void hideSectionAtContentLevel(View root, View target) {
+        if (target == null) return;
+        View content = findScrollContent(root);
+        View current = target;
+        while (current.getParent() instanceof View && current.getParent() != content) {
+            current = (View) current.getParent();
+        }
+        if (current != content) current.setVisibility(View.GONE);
+        else target.setVisibility(View.GONE);
+    }
+
+    private void updateHistoryHeading(View view) {
+        if (view instanceof TextView) {
+            TextView textView = (TextView) view;
+            CharSequence value = textView.getText();
+            if (value != null) {
+                String text = value.toString().toLowerCase(Locale.ROOT);
+                if (text.contains("cảnh báo tiêm phòng")
+                        || text.contains("cảnh báo tiêm chủng")) {
+                    textView.setVisibility(View.GONE);
+                } else if (text.contains("lịch sử tiêm chủng")
+                        || text.equals("💉 sổ tiêm chủng")
+                        || text.equals("sổ tiêm chủng")) {
+                    textView.setVisibility(View.GONE);
+                }
+            }
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                updateHistoryHeading(group.getChildAt(i));
+            }
+        }
+    }
+
+    /** Tiêu đề cảnh báo nằm cùng một hàng với nút chuông thông báo. */
+    private void setupAlertNotificationHeader(View root) {
+        if (layoutAlerts == null) {
+            return;
+        }
+
+        // Ẩn tiêu đề cũ trong XML để tránh hiển thị trùng.
+        hideOldAlertHeading(root);
+
+        // Đặt thanh thông báo ở đầu nội dung fragment, phía trên tiêu đề,
+        // bộ chọn thú cưng và các thẻ thống kê.
+        View contentView = findScrollContent(root);
+        if (!(contentView instanceof ViewGroup)) {
+            return;
+        }
+        ViewGroup content = (ViewGroup) contentView;
+
+        LinearLayout header = new LinearLayout(requireContext());
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(dpToPx(2), dpToPx(7), dpToPx(2), dpToPx(7));
+
+        TextView title = new TextView(requireContext());
+        title.setText("💉 Cảnh báo tiêm phòng");
+        title.setTextColor(Color.parseColor("#334155"));
+        title.setTextSize(18);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        header.addView(title, titleParams);
+
+        btnVaccinationNotifications = new Button(requireContext());
+        btnVaccinationNotifications.setAllCaps(false);
+        btnVaccinationNotifications.setText("🔔 0");
+        btnVaccinationNotifications.setTextColor(Color.WHITE);
+        btnVaccinationNotifications.setTextSize(14);
+        btnVaccinationNotifications.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        btnVaccinationNotifications.setPadding(dpToPx(12), 0, dpToPx(12), 0);
+        btnVaccinationNotifications.setMinWidth(dpToPx(64));
+        btnVaccinationNotifications.setMinHeight(dpToPx(42));
+        GradientDrawable buttonBackground = new GradientDrawable();
+        buttonBackground.setColor(Color.parseColor("#059669"));
+        buttonBackground.setCornerRadius(dpToPx(22));
+        btnVaccinationNotifications.setBackground(buttonBackground);
+        btnVaccinationNotifications.setOnClickListener(v -> showVaccinationNotifications());
+        header.addView(btnVaccinationNotifications);
+
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        headerParams.setMargins(dpToPx(16), dpToPx(4), dpToPx(16), dpToPx(10));
+        content.addView(header, 0, headerParams);
+
+        // Ẩn các thẻ cảnh báo dài khỏi màn hình chính.
+        layoutAlerts.setVisibility(View.GONE);
+        if (tvAlertEmpty != null) tvAlertEmpty.setVisibility(View.GONE);
+    }
+
+    private void hideOldAlertHeading(View view) {
+        if (view instanceof TextView) {
+            CharSequence text = ((TextView) view).getText();
+            if (text != null) {
+                String value = text.toString().toLowerCase(Locale.ROOT);
+                if (value.contains("cảnh báo tiêm phòng")
+                        || value.contains("cảnh báo tiêm chủng")) {
+                    view.setVisibility(View.GONE);
+                }
+            }
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                hideOldAlertHeading(group.getChildAt(i));
+            }
+        }
+    }
+
+    /** Mở danh sách chi tiết các mũi tiêm khi người dùng nhấn nút chuông. */
+    private void showVaccinationNotifications() {
+        if (!isAdded()) return;
+
+        ScrollView scrollView = new ScrollView(requireContext());
+        LinearLayout content = new LinearLayout(requireContext());
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(4));
+        scrollView.addView(content);
+
+        if (currentHealthAlerts.isEmpty()) {
+            TextView empty = new TextView(requireContext());
+            empty.setText("Hiện không có mũi tiêm quá hạn hoặc sắp đến hạn.");
+            empty.setTextColor(Color.parseColor("#475569"));
+            empty.setTextSize(15);
+            empty.setPadding(dpToPx(8), dpToPx(18), dpToPx(8), dpToPx(18));
+            content.addView(empty);
+        } else {
+            for (VaccinationRecord record : currentHealthAlerts) {
+                String dueDate = record.getNextDueDate();
+                String information =
+                        "⚠️ Vaccine: " + safeText(record.getVaccineName())
+                                + "\n📅 Ngày tiêm tiếp theo: " + safeText(dueDate)
+                                + "\n🏥 Phòng khám: " + safeText(record.getClinicName())
+                                + "\n📌 Trạng thái: " + getVaccinationStatus(dueDate);
+                addInfoCard(content, information, dueDate);
+            }
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Thông báo tiêm phòng")
+                .setView(scrollView)
+                .setPositiveButton("Đóng", null)
+                .show();
+    }
+
+    private boolean isAdmin() {
+        return sessionManager != null
+                && "ADMIN".equalsIgnoreCase(sessionManager.getRole());
+    }
+
+    private boolean isUser() {
+        return sessionManager != null
+                && "USER".equalsIgnoreCase(sessionManager.getRole());
     }
 
     private void loadPets() {
@@ -271,7 +538,9 @@ public class VaccineAlertFragment extends Fragment {
 
         cancelCall(petsCall);
 
-        petsCall = petWeightApi.getPetsByUser(userId);
+        petsCall = isAdmin()
+                ? petWeightApi.searchAllPets("", "", null)
+                : petWeightApi.getPetsByUser(userId);
 
         petsCall.enqueue(new Callback<List<Pet>>() {
 
@@ -382,7 +651,9 @@ public class VaccineAlertFragment extends Fragment {
         spinnerPets.setAdapter(adapter);
 
         spinnerPets.setEnabled(true);
-        btnAddVaccination.setEnabled(true);
+        btnAddVaccination.setEnabled(
+                isAdmin()
+        );
 
         spinnerPets.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
@@ -421,8 +692,13 @@ public class VaccineAlertFragment extends Fragment {
 
                         clearVaccinationData();
 
+                        // Luôn tải lịch sử theo petId để cập nhật Tổng mũi tiêm.
                         loadVaccinationHistory();
-                        loadHealthAlerts();
+
+                        // Màn hình chính mới cần tải cảnh báo và số sắp đến hạn.
+                        if (!historyOnly) {
+                            loadHealthAlerts();
+                        }
                     }
 
                     @Override
@@ -455,10 +731,7 @@ public class VaccineAlertFragment extends Fragment {
 
         cancelCall(historyCall);
 
-        historyCall = vaccinationApi.getVaccinationsByPet(
-                requestedPetId,
-                userId
-        );
+        historyCall = vaccinationApi.getVaccinationsByPet(requestedPetId);
 
         historyCall.enqueue(new Callback<List<VaccinationRecord>>() {
 
@@ -555,20 +828,266 @@ public class VaccineAlertFragment extends Fragment {
                     nextDueDate
             );
 
-            // Ghi lại URL ảnh Backend trả về để xác định dữ liệu có bị null/rỗng không.
-            Log.d(
-                    "VACCINE_IMAGE",
-                    "Stamp URL từ API: " + record.getStampImageUrl()
-            );
-
             // Hiển thị ảnh dấu mộc từ Backend
             addStampImage(
                     layoutVaccinationHistory,
                     record.getStampImageUrl()
             );
+
+            if (isAdmin()) {
+                // ADMIN chỉ quản lý thông tin hồ sơ tiêm chủng.
+                addAdminRecordActions(layoutVaccinationHistory, record);
+            } else if (isUser()) {
+                // USER chỉ được tải/thay ảnh dấu mộc của hồ sơ đã tồn tại.
+                addUserStampUploadButton(layoutVaccinationHistory, record);
+            }
         }
     }
 
+    /** Tạo nút tải/thay ảnh dấu mộc dành riêng cho USER. */
+    private void addUserStampUploadButton(
+            LinearLayout parent,
+            VaccinationRecord record
+    ) {
+        if (!isAdded() || parent == null || record == null
+                || record.getId() == null || !isUser()) {
+            return;
+        }
+
+        boolean hasStamp = !TextUtils.isEmpty(record.getStampImageUrl());
+
+        com.google.android.material.button.MaterialButton button =
+                new com.google.android.material.button.MaterialButton(requireContext());
+
+        button.setText(hasStamp
+                ? "📷 Thay ảnh dấu mộc"
+                : "📷 Tải ảnh dấu mộc");
+        button.setTextSize(14);
+        button.setTextColor(Color.WHITE);
+        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setAllCaps(false);
+        button.setCornerRadius(dpToPx(10));
+        button.setBackgroundTintList(
+                android.content.res.ColorStateList.valueOf(Color.parseColor("#059669"))
+        );
+        button.setInsetTop(0);
+        button.setInsetBottom(0);
+        button.setMinWidth(0);
+        button.setMinimumWidth(0);
+        button.setMinimumHeight(0);
+        button.setPadding(dpToPx(8), 0, dpToPx(8), 0);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dpToPx(44)
+        );
+        params.setMargins(dpToPx(10), dpToPx(4), dpToPx(10), dpToPx(14));
+        parent.addView(button, params);
+
+        button.setOnClickListener(v -> {
+            if (!isUser()) {
+                showToast("Bạn không có quyền tải ảnh dấu mộc.");
+                return;
+            }
+
+            pendingStampRecordId = record.getId();
+            stampUploadLauncher.launch("image/*");
+        });
+    }
+
+    /** Gửi riêng ảnh dấu mộc; không gửi các trường thông tin vaccine. */
+    private void uploadStampForUser(Long recordId, Uri imageUri) {
+        if (!isAdded() || !isUser()) {
+            showToast("Bạn không có quyền tải ảnh dấu mộc.");
+            return;
+        }
+
+        if (recordId == null || imageUri == null) {
+            showToast("Không tìm thấy hồ sơ hoặc ảnh được chọn.");
+            return;
+        }
+
+        MultipartBody.Part stampImagePart;
+        try {
+            stampImagePart = createStampImagePart(imageUri);
+        } catch (Exception e) {
+            showToast("Không thể đọc ảnh dấu mộc: " + e.getMessage());
+            return;
+        }
+
+        showLoading(true);
+
+        vaccinationApi.uploadVaccinationStamp(recordId, stampImagePart)
+                .enqueue(new Callback<VaccinationRecord>() {
+                    @Override
+                    public void onResponse(
+                            Call<VaccinationRecord> call,
+                            Response<VaccinationRecord> response
+                    ) {
+                        if (!isAdded() || call.isCanceled()) {
+                            return;
+                        }
+
+                        showLoading(false);
+
+                        if (response.isSuccessful()) {
+                            showToast("Tải ảnh dấu mộc thành công.");
+                            loadVaccinationHistory();
+                            loadHealthAlerts();
+                        } else {
+                            String message = "Không thể tải ảnh dấu mộc. Mã lỗi: "
+                                    + response.code();
+                            try {
+                                if (response.errorBody() != null) {
+                                    message += "\n" + response.errorBody().string();
+                                }
+                            } catch (Exception ignored) {
+                            }
+                            showError(message);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(
+                            Call<VaccinationRecord> call,
+                            Throwable t
+                    ) {
+                        if (!isAdded() || call.isCanceled()) {
+                            return;
+                        }
+                        showLoading(false);
+                        showError("Lỗi tải ảnh dấu mộc: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void addAdminRecordActions(
+            LinearLayout parent,
+            VaccinationRecord record
+    ) {
+        if (!isAdded() || parent == null || record == null) {
+            return;
+        }
+
+        LinearLayout actions = new LinearLayout(requireContext());
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
+        actions.setPadding(
+                dpToPx(12),
+                0,
+                dpToPx(12),
+                dpToPx(12)
+        );
+
+        int greenColor = Color.parseColor("#059669");
+
+        com.google.android.material.button.MaterialButton edit =
+                createVaccinationActionButton("Sửa", greenColor);
+
+        com.google.android.material.button.MaterialButton delete =
+                createVaccinationActionButton("Xóa", greenColor);
+
+        // Hai nút có chiều rộng bằng nhau.
+        LinearLayout.LayoutParams editParams =
+                new LinearLayout.LayoutParams(
+                        0,
+                        dpToPx(42),
+                        1f
+                );
+
+        LinearLayout.LayoutParams deleteParams =
+                new LinearLayout.LayoutParams(
+                        0,
+                        dpToPx(42),
+                        1f
+                );
+
+        // Dùng Space để tạo khoảng trống cố định, không phụ thuộc margin của Button.
+        Space gap = new Space(requireContext());
+        LinearLayout.LayoutParams gapParams =
+                new LinearLayout.LayoutParams(
+                        dpToPx(14),
+                        1
+                );
+
+        actions.addView(edit, editParams);
+        actions.addView(gap, gapParams);
+        actions.addView(delete, deleteParams);
+
+        edit.setOnClickListener(v -> showVaccinationDialog(record));
+
+        delete.setOnClickListener(v ->
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Xóa hồ sơ tiêm chủng")
+                        .setMessage("Bạn có chắc chắn muốn xóa hồ sơ này không?")
+                        .setNegativeButton("Hủy", null)
+                        .setPositiveButton(
+                                "Xóa",
+                                (dialog, which) -> deleteVaccination(record)
+                        )
+                        .show()
+        );
+
+        parent.addView(
+                actions,
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+        );
+    }
+
+    private com.google.android.material.button.MaterialButton
+    createVaccinationActionButton(String label, int backgroundColor) {
+
+        com.google.android.material.button.MaterialButton button =
+                new com.google.android.material.button.MaterialButton(requireContext());
+
+        button.setText(label);
+        button.setTextSize(14);
+        button.setTextColor(Color.WHITE);
+        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setAllCaps(false);
+        button.setCornerRadius(dpToPx(11));
+        button.setBackgroundTintList(
+                android.content.res.ColorStateList.valueOf(backgroundColor)
+        );
+
+        // Chỉ dùng các API được hỗ trợ; không gọi setInsetLeft/Right.
+        button.setInsetTop(0);
+        button.setInsetBottom(0);
+        button.setMinWidth(0);
+        button.setMinimumWidth(0);
+        button.setMinimumHeight(0);
+        button.setPadding(
+                dpToPx(8),
+                0,
+                dpToPx(8),
+                0
+        );
+
+        return button;
+    }
+
+    private void deleteVaccination(VaccinationRecord record) {
+        if (!isAdmin() || record.getId() == null) {
+            showToast("Bạn không có quyền xóa hồ sơ.");
+            return;
+        }
+        vaccinationApi.deleteVaccination(record.getId()).enqueue(new Callback<Void>() {
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful()) {
+                    showToast("Đã xóa hồ sơ tiêm chủng.");
+                    loadVaccinationHistory();
+                    loadHealthAlerts();
+                } else showError("Không thể xóa hồ sơ. Mã lỗi: " + response.code());
+            }
+            @Override public void onFailure(Call<Void> call, Throwable t) {
+                if (isAdded()) showError("Lỗi xóa hồ sơ: " + t.getMessage());
+            }
+        });
+    }
 
     public void refreshHealthAlerts() {
 
@@ -585,40 +1104,44 @@ public class VaccineAlertFragment extends Fragment {
 
     private void loadHealthAlerts() {
 
+        if (historyOnly || !isAdded() || selectedPetId == null) {
+            return;
+        }
+
+        // Nếu người dùng tắt cảnh báo 7 ngày, xóa dữ liệu cũ của thú cưng.
         if (sessionManager != null
                 && !sessionManager.isAlert7DaysEnabled()) {
 
             cancelCall(alertsCall);
+            currentHealthAlerts.clear();
 
-            if (layoutAlerts != null) {
-                layoutAlerts.removeAllViews();
+            if (btnVaccinationNotifications != null) {
+                btnVaccinationNotifications.setText("🔔 0");
             }
-
             if (tvUpcomingVaccinations != null) {
                 tvUpcomingVaccinations.setText("0");
             }
-
-            if (tvAlertEmpty != null) {
-
-                tvAlertEmpty.setText(
-                        "Bạn đã tắt cảnh báo tiêm chủng."
-                );
-
-                tvAlertEmpty.setVisibility(View.VISIBLE);
+            if (layoutAlerts != null) {
+                layoutAlerts.removeAllViews();
+                layoutAlerts.setVisibility(View.GONE);
             }
-
+            if (tvAlertEmpty != null) {
+                tvAlertEmpty.setText("Bạn đã tắt cảnh báo tiêm chủng.");
+                tvAlertEmpty.setVisibility(View.GONE);
+            }
             return;
         }
 
-        if (userId == null || selectedPetId == null || !isAdded()) {
+        if (userId == null) {
             return;
         }
 
+        // Ghi nhớ petId của request để bỏ qua phản hồi cũ khi người dùng đổi thú cưng.
         final Long requestedPetId = selectedPetId;
-
         cancelCall(alertsCall);
 
-        alertsCall = vaccinationApi.getHealthAlerts(userId);
+        // Theo VaccinationApi hiện tại: getHealthAlerts() không nhận tham số.
+        alertsCall = vaccinationApi.getHealthAlerts();
 
         alertsCall.enqueue(new Callback<List<VaccinationRecord>>() {
 
@@ -627,41 +1150,45 @@ public class VaccineAlertFragment extends Fragment {
                     Call<List<VaccinationRecord>> call,
                     Response<List<VaccinationRecord>> response
             ) {
-
                 if (!isAdded() || call.isCanceled()) {
                     return;
                 }
 
+                // Không cập nhật UI nếu người dùng đã chuyển sang thú cưng khác.
                 if (!requestedPetId.equals(selectedPetId)) {
                     return;
                 }
 
                 if (response.isSuccessful() && response.body() != null) {
-
-                    List<VaccinationRecord> petAlerts =
-                            new ArrayList<>();
+                    List<VaccinationRecord> petAlerts = new ArrayList<>();
 
                     for (VaccinationRecord record : response.body()) {
-
-                        if (requestedPetId.equals(record.getPetId())) {
+                        if (record != null
+                                && record.getPetId() != null
+                                && requestedPetId.equals(record.getPetId())) {
                             petAlerts.add(record);
                         }
                     }
 
                     displayHealthAlerts(petAlerts);
-
                 } else {
-
+                    currentHealthAlerts.clear();
                     layoutAlerts.removeAllViews();
-
+                    layoutAlerts.setVisibility(View.GONE);
                     tvUpcomingVaccinations.setText("0");
 
-                    tvAlertEmpty.setText(
-                            "Không thể tải cảnh báo tiêm chủng. Mã lỗi: "
-                                    + response.code()
-                    );
-
-                    tvAlertEmpty.setVisibility(View.VISIBLE);
+                    if (btnVaccinationNotifications != null) {
+                        btnVaccinationNotifications.setText("🔔 0");
+                    }
+                    if (tvAlertEmpty != null) {
+                        tvAlertEmpty.setText(
+                                "Không thể tải cảnh báo tiêm chủng. Mã lỗi: "
+                                        + response.code()
+                        );
+                        tvAlertEmpty.setVisibility(View.GONE);
+                    }
+                    showToast("Không thể tải cảnh báo tiêm chủng. Mã lỗi: "
+                            + response.code());
                 }
             }
 
@@ -670,75 +1197,77 @@ public class VaccineAlertFragment extends Fragment {
                     Call<List<VaccinationRecord>> call,
                     Throwable t
             ) {
-
                 if (!isAdded() || call.isCanceled()) {
                     return;
                 }
-
                 if (!requestedPetId.equals(selectedPetId)) {
                     return;
                 }
 
-                tvAlertEmpty.setText(
-                        "Lỗi tải cảnh báo: " + t.getMessage()
-                );
-
-                tvAlertEmpty.setVisibility(View.VISIBLE);
+                currentHealthAlerts.clear();
+                if (btnVaccinationNotifications != null) {
+                    btnVaccinationNotifications.setText("🔔 0");
+                }
+                if (tvUpcomingVaccinations != null) {
+                    tvUpcomingVaccinations.setText("0");
+                }
+                if (tvAlertEmpty != null) {
+                    tvAlertEmpty.setVisibility(View.GONE);
+                }
+                showToast("Lỗi tải cảnh báo: " + t.getMessage());
             }
         });
     }
 
-    private void displayHealthAlerts(
-            List<VaccinationRecord> alerts
-    ) {
-
-        layoutAlerts.removeAllViews();
-
-        tvUpcomingVaccinations.setText(
-                String.valueOf(alerts.size())
-        );
-
-        if (alerts.isEmpty()) {
-
-            tvAlertEmpty.setText(
-                    "Không có mũi tiêm quá hạn hoặc sắp đến hạn."
-            );
-
-            tvAlertEmpty.setVisibility(View.VISIBLE);
+    private void displayHealthAlerts(List<VaccinationRecord> alerts) {
+        if (!isAdded()) {
             return;
         }
 
-        tvAlertEmpty.setVisibility(View.GONE);
+        layoutAlerts.removeAllViews();
+        currentHealthAlerts.clear();
+        if (alerts != null) {
+            currentHealthAlerts.addAll(alerts);
+        }
 
-        for (VaccinationRecord record : alerts) {
-
-            String nextDueDate = record.getNextDueDate();
-
-            String information =
-                    "⚠️ Vaccine: " + safeText(record.getVaccineName())
-                            + "\n📅 Ngày tiêm tiếp theo: "
-                            + safeText(nextDueDate)
-                            + "\n🏥 Phòng khám: "
-                            + safeText(record.getClinicName())
-                            + "\n📌 Trạng thái: "
-                            + getVaccinationStatus(nextDueDate);
-
-            addInfoCard(
-                    layoutAlerts,
-                    information,
-                    nextDueDate
+        // Nút chuông đếm tất cả cảnh báo của thú cưng đang chọn.
+        if (btnVaccinationNotifications != null) {
+            btnVaccinationNotifications.setText(
+                    "🔔 " + currentHealthAlerts.size()
             );
+        }
+
+        // Thẻ "Sắp đến hạn" chỉ đếm các mũi trong 7 ngày tới,
+        // không cộng các mũi đã quá hạn.
+        int upcomingCount = 0;
+        for (VaccinationRecord record : currentHealthAlerts) {
+            if (record != null
+                    && "Sắp đến hạn".equals(
+                    getVaccinationStatus(record.getNextDueDate()))) {
+                upcomingCount++;
+            }
+        }
+
+        if (tvUpcomingVaccinations != null) {
+            tvUpcomingVaccinations.setText(String.valueOf(upcomingCount));
+        }
+
+        // Danh sách chi tiết chỉ mở trong hộp thoại khi nhấn nút chuông.
+        layoutAlerts.setVisibility(View.GONE);
+        if (tvAlertEmpty != null) {
+            tvAlertEmpty.setVisibility(View.GONE);
         }
     }
 
     private void showAddVaccinationDialog() {
+        showVaccinationDialog(null);
+    }
+
+    private void showVaccinationDialog(@Nullable VaccinationRecord editing) {
 
         if (!isAdded() || selectedPetId == null) {
             return;
         }
-
-        selectedStampImageUri = null;
-        ivStampPreview = null;
 
         LinearLayout form = new LinearLayout(requireContext());
         form.setOrientation(LinearLayout.VERTICAL);
@@ -764,46 +1293,35 @@ public class VaccineAlertFragment extends Fragment {
         EditText edtClinicName =
                 createEditText("Tên phòng khám");
 
+        // ADMIN chỉ nhập thông tin tiêm chủng; không tải ảnh dấu mộc tại đây.
         form.addView(edtVaccineName);
         form.addView(edtInjectionDate);
         form.addView(edtNextDueDate);
         form.addView(edtClinicName);
 
-        Button btnChooseImage = new Button(requireContext());
-        btnChooseImage.setText("Chọn ảnh dấu mộc");
+        // Điền dữ liệu cũ khi ADMIN chỉnh sửa hồ sơ.
+        if (editing != null) {
+            edtVaccineName.setText(editing.getVaccineName());
+            edtInjectionDate.setText(editing.getInjectionDate());
+            edtNextDueDate.setText(editing.getNextDueDate());
+            edtClinicName.setText(editing.getClinicName());
+        }
 
-        form.addView(btnChooseImage);
-
-        ivStampPreview = new ImageView(requireContext());
-        ivStampPreview.setVisibility(View.GONE);
-        ivStampPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
-        LinearLayout.LayoutParams imageParams =
-                new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        dpToPx(160)
-                );
-
-        imageParams.setMargins(
-                0,
-                dpToPx(10),
-                0,
-                dpToPx(10)
-        );
-
-        form.addView(ivStampPreview, imageParams);
+        // Cho phép cuộn biểu mẫu trên màn hình nhỏ.
+        ScrollView scrollView = new ScrollView(requireContext());
+        scrollView.setFillViewport(true);
+        scrollView.setVerticalScrollBarEnabled(true);
+        scrollView.addView(form);
 
         AlertDialog dialog =
                 new AlertDialog.Builder(requireContext())
-                        .setTitle("Thêm hồ sơ tiêm chủng")
-                        .setView(form)
+                        .setTitle(editing == null
+                                ? "Thêm hồ sơ tiêm chủng"
+                                : "Cập nhật hồ sơ tiêm chủng")
+                        .setView(scrollView)
                         .setNegativeButton("Hủy", null)
                         .setPositiveButton("Lưu", null)
                         .create();
-
-        btnChooseImage.setOnClickListener(v -> {
-            imagePickerLauncher.launch("image/*");
-        });
 
         dialog.setOnShowListener(d -> {
 
@@ -869,18 +1387,14 @@ public class VaccineAlertFragment extends Fragment {
                 }
 
                 createVaccination(
+                        editing,
                         vaccineName,
                         injectionDate,
                         nextDueDate,
                         clinicName,
-                        selectedStampImageUri,
                         dialog
                 );
             });
-        });
-
-        dialog.setOnDismissListener(d -> {
-            ivStampPreview = null;
         });
 
         dialog.show();
@@ -897,11 +1411,11 @@ public class VaccineAlertFragment extends Fragment {
     }
 
     private void createVaccination(
+            @Nullable VaccinationRecord editing,
             String vaccineName,
             String injectionDate,
             String nextDueDate,
             String clinicName,
-            Uri imageUri,
             AlertDialog dialog
     ) {
 
@@ -927,11 +1441,6 @@ public class VaccineAlertFragment extends Fragment {
                         String.valueOf(selectedPetId)
                 );
 
-        RequestBody userIdBody =
-                createPartFromString(
-                        String.valueOf(userId)
-                );
-
         RequestBody vaccineNameBody =
                 createPartFromString(vaccineName);
 
@@ -944,41 +1453,20 @@ public class VaccineAlertFragment extends Fragment {
         RequestBody clinicNameBody =
                 createPartFromString(clinicName);
 
+        // ADMIN không gửi ảnh dấu mộc khi thêm hoặc cập nhật hồ sơ.
         MultipartBody.Part stampImagePart = null;
-
-        if (imageUri != null) {
-
-            try {
-
-                stampImagePart = createStampImagePart(imageUri);
-
-            } catch (Exception e) {
-
-                isCreatingVaccination = false;
-
-                btnAddVaccination.setEnabled(true);
-
-                showError(
-                        "Không thể đọc ảnh dấu mộc: " + e.getMessage()
-                );
-
-                return;
-            }
-        }
 
         showLoading(true);
 
         final Long requestedPetId = selectedPetId;
 
-        createCall = vaccinationApi.createVaccination(
-                petIdBody,
-                userIdBody,
-                vaccineNameBody,
-                injectionDateBody,
-                nextDueDateBody,
-                clinicNameBody,
-                stampImagePart
-        );
+        createCall = editing == null
+                ? vaccinationApi.createVaccination(
+                petIdBody, vaccineNameBody, injectionDateBody,
+                nextDueDateBody, clinicNameBody, stampImagePart)
+                : vaccinationApi.updateVaccination(
+                editing.getId(), petIdBody, vaccineNameBody, injectionDateBody,
+                nextDueDateBody, clinicNameBody, stampImagePart);
 
         createCall.enqueue(new Callback<VaccinationRecord>() {
 
@@ -996,15 +1484,15 @@ public class VaccineAlertFragment extends Fragment {
 
                 isCreatingVaccination = false;
 
-                btnAddVaccination.setEnabled(selectedPetId != null);
+                btnAddVaccination.setEnabled(selectedPetId != null && isAdmin());
 
                 if (response.isSuccessful() && response.body() != null) {
 
                     dialog.dismiss();
 
-                    showToast(
-                            "Thêm hồ sơ tiêm chủng thành công!"
-                    );
+                    showToast(editing == null
+                            ? "Thêm hồ sơ tiêm chủng thành công!"
+                            : "Cập nhật hồ sơ tiêm chủng thành công!");
 
                     if (requestedPetId.equals(selectedPetId)) {
 
@@ -1047,7 +1535,7 @@ public class VaccineAlertFragment extends Fragment {
 
                 isCreatingVaccination = false;
 
-                btnAddVaccination.setEnabled(selectedPetId != null);
+                btnAddVaccination.setEnabled(selectedPetId != null && isAdmin());
 
                 showError(
                         "Lỗi kết nối khi thêm hồ sơ: "
@@ -1360,8 +1848,13 @@ public class VaccineAlertFragment extends Fragment {
 
     private void clearVaccinationData() {
 
+        currentHealthAlerts.clear();
+        if (btnVaccinationNotifications != null) {
+            btnVaccinationNotifications.setText("🔔 0");
+        }
         if (layoutAlerts != null) {
             layoutAlerts.removeAllViews();
+            layoutAlerts.setVisibility(View.GONE);
         }
 
         if (layoutVaccinationHistory != null) {
@@ -1400,7 +1893,7 @@ public class VaccineAlertFragment extends Fragment {
         cancelCall(alertsCall);
         cancelCall(createCall);
 
-        ivStampPreview = null;
+        pendingStampRecordId = null;
 
         super.onDestroyView();
     }
