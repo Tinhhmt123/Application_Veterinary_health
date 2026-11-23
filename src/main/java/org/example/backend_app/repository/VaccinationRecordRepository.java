@@ -14,14 +14,19 @@ public interface VaccinationRecordRepository extends JpaRepository<VaccinationRe
 
     List<VaccinationRecord> findByPetIdOrderByNextDueDateAsc(Long petId);
 
+    List<VaccinationRecord> findAllByOrderByNextDueDateAsc();
+
+    @Query("SELECT v FROM VaccinationRecord v WHERE v.nextDueDate <= :thresholdDate ORDER BY v.nextDueDate ASC")
+    List<VaccinationRecord> findAlertsForAll(@Param("thresholdDate") LocalDate thresholdDate);
+
     /**
      * Quét tất cả mũi tiêm của các thú cưng thuộc userId có next_due_date <= (Hôm nay + 7 ngày)
      * (Bao gồm cả mũi đã QUÁ HẠN và mũi SẮP ĐẾN HẠN trong vòng 7 ngày).
      */
     @Query("SELECT v FROM VaccinationRecord v WHERE v.petId IN " +
-           "(SELECT p.id FROM Pet p WHERE p.userId = :userId) " +
-           "AND v.nextDueDate <= :thresholdDate " +
-           "ORDER BY v.nextDueDate ASC")
+            "(SELECT p.id FROM Pet p WHERE p.userId = :userId) " +
+            "AND v.nextDueDate <= :thresholdDate " +
+            "ORDER BY v.nextDueDate ASC")
     List<VaccinationRecord> findAlertsForUser(@Param("userId") Long userId,
                                               @Param("thresholdDate") LocalDate thresholdDate);
 }
