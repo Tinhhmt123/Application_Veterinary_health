@@ -41,6 +41,9 @@ public class User implements Serializable {
     @SerializedName("created_at")
     private String createdAt;
 
+    @SerializedName("access_token")
+    private String accessToken;
+
     public User() {
     }
 
@@ -104,4 +107,7 @@ public class User implements Serializable {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public String getAccessToken() { return accessToken; }
+    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
 }
