@@ -1,6 +1,7 @@
 package com.example.healthy_pet.ui.vaccine;
 import android.app.AlertDialog;
 import android.util.Log;
+import android.app.DatePickerDialog;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -1286,9 +1287,11 @@ public class VaccineAlertFragment extends Fragment {
 
         EditText edtInjectionDate =
                 createEditText("Ngày tiêm (yyyy-MM-dd)");
+        attachDatePicker(edtInjectionDate);
 
         EditText edtNextDueDate =
                 createEditText("Ngày tiêm tiếp theo (yyyy-MM-dd)");
+        attachDatePicker(edtNextDueDate);
 
         EditText edtClinicName =
                 createEditText("Tên phòng khám");
@@ -1408,6 +1411,34 @@ public class VaccineAlertFragment extends Fragment {
         editText.setSingleLine(true);
 
         return editText;
+    }
+
+    private void attachDatePicker(EditText editText) {
+        editText.setFocusable(false);
+        editText.setClickable(true);
+        editText.setOnClickListener(v -> {
+            if (!isAdded()) return;
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            String currentText = editText.getText().toString().trim();
+            if (isValidDate(currentText)) {
+                try {
+                    Date parsed = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(currentText);
+                    if (parsed != null) {
+                        cal.setTime(parsed);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            new DatePickerDialog(
+                    requireContext(),
+                    (view, year, month, dayOfMonth) -> editText.setText(
+                            String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                    ),
+                    cal.get(java.util.Calendar.YEAR),
+                    cal.get(java.util.Calendar.MONTH),
+                    cal.get(java.util.Calendar.DAY_OF_MONTH)
+            ).show();
+        });
     }
 
     private void createVaccination(

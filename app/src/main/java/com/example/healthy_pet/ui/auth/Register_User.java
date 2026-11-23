@@ -22,7 +22,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Màn hình Đăng ký tài khoản dành cho User (gắn với register_user.xml)
+ * Màn hình Đăng ký tài khoản dành cho Khách hàng (gắn với register_user.xml)
+ * Tự động tạo phiên đăng nhập trực tiếp cả online và offline.
  */
 public class Register_User extends Fragment {
 
@@ -52,7 +53,9 @@ public class Register_User extends Fragment {
         btnRegisterSubmit.setOnClickListener(v -> handleRegister());
 
         btnBackToLogin.setOnClickListener(v -> {
-            if (requireActivity() instanceof MainActivity) {
+            if (requireActivity().getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                requireActivity().getSupportFragmentManager().popBackStack();
+            } else if (requireActivity() instanceof MainActivity) {
                 ((MainActivity) requireActivity()).openLoginPage();
             }
         });
@@ -67,7 +70,7 @@ public class Register_User extends Fragment {
         String password = etRegisterPassword.getText() != null ? etRegisterPassword.getText().toString() : "";
 
         if (fullName.isEmpty()) {
-            etRegisterFullName.setError("Vui lòng nhập Họ và tên");
+            etRegisterFullName.setError("Vui lòng nhập Họ tên");
             etRegisterFullName.requestFocus();
             return;
         }
@@ -77,13 +80,18 @@ public class Register_User extends Fragment {
             return;
         }
         if (password.length() < 6) {
-            etRegisterPassword.setError("Mật khẩu phải có từ 6 ký tự trở lên");
+            etRegisterPassword.setError("Mật khẩu phải từ 6 ký tự trở lên");
             etRegisterPassword.requestFocus();
             return;
         }
 
         setLoading(true);
-        User registerRequest = new User(fullName, email, password, phone);
+        User registerRequest = new User();
+        registerRequest.setFullName(fullName);
+        registerRequest.setEmail(email);
+        registerRequest.setPassword(password);
+        registerRequest.setPhoneNumber(phone);
+        registerRequest.setRole("USER");
 
         RetrofitClient.getAuthUserApi().register(registerRequest).enqueue(new Callback<User>() {
             @Override
