@@ -171,6 +171,21 @@
                     android:textColor="?android:attr/textColorPrimary"
                     android:textSize="12sp"
                     app:strokeColor="@color/emerald_500" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenAiChat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="🤖 Mở Chat AI Thú Y"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/emerald_700"
+                    app:cornerRadius="10dp"
+                    app:icon="@android:drawable/ic_menu_send"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/white" />
 
                 <!-- Nút Đăng xuất nhanh ngay trên Menu trượt -->
                 <com.google.android.material.button.MaterialButton

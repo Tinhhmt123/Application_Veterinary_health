@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:padding="16dp">
 
     <LinearLayout
@@ -10,138 +11,139 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Pet Spinner -->
+        <!-- Tiêu đề -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💉 Sổ tiêm chủng"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Theo dõi lịch tiêm và sức khỏe thú cưng"
+            android:textSize="14sp"
+            android:textColor="?android:attr/textColorSecondary" />
+
+        <!-- Chọn thú cưng -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:strokeColor="#1F64748B"
-            app:strokeWidth="1dp">
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@color/emerald_100"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp"
-                    android:text="🐾 CHỌN THÚ CƯNG"
-                    android:textColor="@color/emerald_700"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:text="Chọn thú cưng"
+                    android:textStyle="bold"
+                    android:textSize="15sp" />
 
                 <Spinner
                     android:id="@+id/spinnerPets"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp" />
-
-                <!-- Stats Row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvTotalVaccinations"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textColor="@color/emerald_700"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Đã tiêm"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvUpcomingVaccinations"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textColor="#EA580C"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Cảnh báo"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </LinearLayout>
+                    android:layout_height="50dp"
+                    android:layout_marginTop="8dp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Error TextView -->
-        <TextView
-            android:id="@+id/tvError"
+        <!-- Thống kê -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#FEE2E2"
-            android:padding="12dp"
-            android:textColor="#B91C1C"
-            android:textSize="14sp"
-            android:visibility="gone" />
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
 
-        <!-- ProgressBar -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:visibility="gone" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="95dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="14dp">
 
-        <!-- Health Alerts Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvTotalVaccinations"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tổng mũi tiêm"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="95dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                app:cardCornerRadius="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvUpcomingVaccinations"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="#D97706" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sắp đến hạn"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+        <!-- Cảnh báo tiêm phòng -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp"
-            android:text="⚠️ Cảnh báo tiêm chủng:"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
+            android:layout_marginTop="22dp"
+            android:text="🔔 Cảnh báo tiêm phòng"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvAlertEmpty"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:text="Không có cảnh báo."
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
+            android:padding="16dp"
+            android:gravity="center"
+            android:text="Chưa có cảnh báo tiêm phòng."
             android:visibility="gone" />
 
         <LinearLayout
@@ -150,25 +152,22 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- Vaccination History Section -->
+        <!-- Lịch sử tiêm chủng -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="8dp"
-            android:text="💉 Lịch sử tiêm chủng:"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
+            android:layout_marginTop="22dp"
+            android:text="📋 Lịch sử tiêm chủng"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvHistoryEmpty"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
+            android:padding="16dp"
+            android:gravity="center"
             android:text="Chưa có lịch sử tiêm chủng."
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
             android:visibility="gone" />
 
         <LinearLayout
@@ -177,15 +176,33 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- Add Vaccination Button -->
+        <!-- Thêm mũi tiêm -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddVaccination"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="💉 Thêm hồ sơ tiêm chủng"
+            android:layout_marginTop="20dp"
+            android:text="＋ Thêm mũi tiêm mới"
             android:textAllCaps="false"
             app:cornerRadius="12dp" />
 
+        <!-- Trạng thái tải dữ liệu -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textColor="#DC2626"
+            android:visibility="gone" />
+
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</ScrollView>
