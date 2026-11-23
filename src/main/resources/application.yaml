@@ -5,7 +5,10 @@ server:
 
 # Cấu hình URL công khai của Backend
 app:
-  public-base-url: "http://192.168.1.122:8080"
+  public-base-url: "http://192.168.1.25:8080"
+  auth:
+    token-secret: ${JWT_SECRET:HealthyPet-DEV-ONLY-change-this-secret-before-deployment-2026}
+    token-lifetime-seconds: ${JWT_LIFETIME_SECONDS:86400}
 
 spring:
   application:
@@ -59,8 +62,8 @@ cloudinary:
 gemini:
   api:
     key: ${GEMINI_API_KEY:}
-    model: ${GEMINI_MODEL:gemini-2.5-flash}
-
+    model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
 google:
   android-client-id: ${GOOGLE_ANDROID_CLIENT_ID:}
   client-id: ${GOOGLE_CLIENT_ID:}
+

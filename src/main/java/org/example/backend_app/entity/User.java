@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "Users")
 public class User {
+    @JsonProperty("access_token")
+    @jakarta.persistence.Transient
+    private String accessToken;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -132,4 +135,12 @@ public class User {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
 }

@@ -45,7 +45,7 @@ public class CloudinaryService {
     @Value("${cloudinary.api-secret:}")
     private String apiSecret;
 
-    @Value("${app.public-base-url:http://192.168.1.122:8080}")
+    @Value("${app.public-base-url:http://192.168.1.25:8080}")
     private String publicBaseUrl;
 
     public String uploadImage(MultipartFile file, String folder) {
