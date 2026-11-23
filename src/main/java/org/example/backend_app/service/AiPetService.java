@@ -24,7 +24,7 @@ public class AiPetService {
     @Value("${gemini.api.key:}")
     private String apiKey;
 
-    @Value("${gemini.api.model:gemini-3.5-flash-lite}")
+    @Value("${gemini.api.model:gemini-2.5-flash}")
     private String model;
 
     private final ObjectMapper objectMapper;
