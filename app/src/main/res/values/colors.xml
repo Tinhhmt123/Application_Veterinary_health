@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="slate_600">#475569</color>
     <color name="emerald_50">#ECFDF5</color>
     <color name="emerald_100">#D1FAE5</color>
     <color name="emerald_500">#10B981</color>

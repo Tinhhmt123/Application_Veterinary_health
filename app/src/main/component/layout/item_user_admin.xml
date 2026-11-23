@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardBackgroundColor="#E2EAF2"
     app:cardCornerRadius="14dp"
-    app:cardElevation="2dp"
-    app:strokeColor="#3364748B"
+    app:cardElevation="3dp"
+    app:strokeColor="#8295A8"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -17,7 +17,6 @@
         android:orientation="horizontal"
         android:padding="14dp">
 
-        <!-- Ảnh đại diện tròn của khách hàng có viền nhẹ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="56dp"
             android:layout_height="56dp"
@@ -36,7 +35,6 @@
                 android:src="@mipmap/ic_launcher_round" />
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Khối thông tin Họ tên, Email, SĐT, Trạng thái -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -50,8 +48,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Nguyễn Văn Tính"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="15sp"
+                android:textColor="#071421"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -60,8 +58,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="tinh@gmail.com"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp" />
+                android:textColor="#1C3042"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvItemUserPhone"
@@ -69,10 +68,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="SĐT: 0987654321"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp" />
+                android:textColor="#263B50"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-            <!-- Hàng hiển thị nhãn Quyền & Trạng thái hoạt động -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -107,7 +106,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Nút Khóa / Mở khóa tài khoản -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnToggleUserLock"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
