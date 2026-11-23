@@ -3,6 +3,8 @@ package com.example.healthy_pet.ui.map;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import com.example.healthy_pet.R;
 import com.example.healthy_pet.adapters.AppointmentAdapter;
 import com.example.healthy_pet.api.AppointmentMedicalApi;
 import com.example.healthy_pet.api.ClinicMapApi;
@@ -26,6 +29,14 @@ import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.models.VetClinic;
 import com.example.healthy_pet.repository.AppointmentRepository;
 import com.example.healthy_pet.utils.SessionManager;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -36,14 +47,15 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * [Thành viên 5 (NV 5b) & Thành viên 4 (NV 5a)]
- * Nghiệp vụ 5: User Đặt lịch hẹn Khám/Spa (DatePickerDialog, TimePickerDialog, AppointmentAdapter)
- * Đồng bộ 100% với CSDL SQL Server (CreateTableAndInsertDataExample.sql).
+ * [Thành viên 4 (NV 5a - Bản đồ Google Maps) & Thành viên 5 (NV 5b - Đặt lịch hẹn Khám/Spa)]
+ * Tích hợp Bản đồ chi nhánh VetClinics (Marker, InfoWindow gọi Hotline ACTION_DIAL)
+ * và Đặt lịch hẹn (DatePickerDialog, TimePickerDialog, AppointmentAdapter).
  */
-public class ClinicBookingFragment extends Fragment implements AppointmentAdapter.OnAppointmentActionListener {
+public class ClinicBookingFragment extends Fragment implements AppointmentAdapter.OnAppointmentActionListener, OnMapReadyCallback {
 
     private FragmentClinicBookingBinding binding;
     private AppointmentAdapter adapter;
+    private GoogleMap mMap;
     private final List<Appointment> userAppointments = new ArrayList<>();
     private final List<Pet> availablePets = new ArrayList<>();
     private final List<VetClinic> availableClinics = new ArrayList<>();
@@ -69,6 +81,11 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentClinicBookingBinding.inflate(inflater, container, false);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFragment);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
 
         binding.rvAppointments.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new AppointmentAdapter(userAppointments, false, this);
@@ -330,6 +347,68 @@ public class ClinicBookingFragment extends Fragment implements AppointmentAdapte
             @Override
             public void onFailure(@NonNull Call<Appointment> call, @NonNull Throwable t) {
                 Toast.makeText(getContext(), "Đã hủy lịch hẹn #" + appointment.getId(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        loadClinicsOnMap();
+    }
+
+    private void loadClinicsOnMap() {
+        ClinicMapApi api = RetrofitClient.getClient().create(ClinicMapApi.class);
+        api.getAllClinics().enqueue(new Callback<List<VetClinic>>() {
+            @Override
+            public void onResponse(Call<List<VetClinic>> call, Response<List<VetClinic>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<VetClinic> clinics = response.body();
+                    for (VetClinic clinic : clinics) {
+                        if (clinic.getLatitude() != null && clinic.getLongitude() != null) {
+                            LatLng pos = new LatLng(clinic.getLatitude(), clinic.getLongitude());
+
+                            String snippetInfo = "📞 Hotline: " + (clinic.getPhoneNumber() != null ? clinic.getPhoneNumber() : "Chưa có")
+                                    + " | 🕒 Giờ mở: " + (clinic.getOpenHours() != null ? clinic.getOpenHours() : "8:00 - 20:00");
+
+                            Marker marker = mMap.addMarker(new MarkerOptions()
+                                    .position(pos)
+                                    .title(clinic.getName())
+                                    .snippet(snippetInfo)
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+
+                            if (marker != null) {
+                                marker.setTag(clinic);
+                            }
+                        }
+                    }
+
+                    if (!clinics.isEmpty() && clinics.get(0).getLatitude() != null) {
+                        VetClinic first = clinics.get(0);
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                new LatLng(first.getLatitude(), first.getLongitude()), 13f));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<VetClinic>> call, Throwable t) {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Không thể kết nối lấy dữ liệu phòng khám!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // Xử lý sự kiện bấm vào InfoWindow của ghim để gọi Hotline trực tiếp (ACTION_DIAL)
+        mMap.setOnInfoWindowClickListener(marker -> {
+            VetClinic clinic = (VetClinic) marker.getTag();
+            if (clinic != null && clinic.getPhoneNumber() != null && !clinic.getPhoneNumber().isEmpty()) {
+                Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+                dialIntent.setData(Uri.parse("tel:" + clinic.getPhoneNumber()));
+                startActivity(dialIntent);
+            } else {
+                Toast.makeText(getContext(), "Chi nhánh này chưa cập nhật số điện thoại Hotline", Toast.LENGTH_SHORT).show();
             }
         });
     }

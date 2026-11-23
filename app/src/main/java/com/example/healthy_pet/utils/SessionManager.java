@@ -53,19 +53,19 @@ public class SessionManager {
     }
 
     public boolean isLoggedIn() {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, true);
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
     }
 
     public Long getUserId() {
-        return prefs.getLong(KEY_USER_ID, 2L);
+        return prefs.getLong(KEY_USER_ID, -1L);
     }
 
     public String getFullName() {
-        return prefs.getString(KEY_FULL_NAME, "Nguyễn Văn Tính");
+        return prefs.getString(KEY_FULL_NAME, "");
     }
 
     public String getEmail() {
-        return prefs.getString(KEY_EMAIL, "tinh@gmail.com");
+        return prefs.getString(KEY_EMAIL, "");
     }
 
     public String getPhoneNumber() {

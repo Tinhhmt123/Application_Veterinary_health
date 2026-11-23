@@ -42,13 +42,12 @@ if (!resolvedGoogleMapsApiKey) {
 }
 
 android {
-    namespace 'com.example.healthy_pet'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.healthy_pet"
         minSdk 21
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -69,7 +68,6 @@ android {
 
     buildFeatures {
         viewBinding true
-        buildConfig true
     }
 
     compileOptions {
