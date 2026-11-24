@@ -2,12 +2,13 @@ package com.example.healthy_pet.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 import androidx.appcompat.app.AppCompatDelegate;
+import com.example.healthy_pet.api.RetrofitClient;
 import com.example.healthy_pet.models.User;
 
 /**
- * Quản lý phiên đăng nhập và cấu hình hệ thống bằng SharedPreferences (NV 1 & Menu trượt).
- * Khớp với Seed Data SQL (User ID 2: Nguyễn Văn Tính - tinh@gmail.com).
+ * Quản lý phiên đăng nhập, Bearer Access Token và cấu hình hệ thống bằng SharedPreferences (NV 1 & Menu trượt).
  */
 public class SessionManager {
     private static final String PREF_NAME = "HealthyPetPrefs";
@@ -18,6 +19,7 @@ public class SessionManager {
     private static final String KEY_PHONE_NUMBER = "phone_number";
     private static final String KEY_AVATAR_URL = "avatar_url";
     private static final String KEY_ROLE = "role"; // "USER" hoặc "ADMIN"
+    private static final String KEY_ACCESS_TOKEN = "access_token";
     private static final String KEY_DARK_MODE = "dark_mode";
     private static final String KEY_ALERT_7_DAYS = "alert_7_days";
 
@@ -27,11 +29,15 @@ public class SessionManager {
     public SessionManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = prefs.edit();
+
+        String savedToken = prefs.getString(KEY_ACCESS_TOKEN, null);
+        RetrofitClient.setAccessToken(savedToken);
+        Log.d("AUTH_DEBUG", "Session initialized. Token exists: " + hasValidToken(savedToken));
     }
 
     public void saveUserSession(Long userId, String fullName, String email, String role) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
-        editor.putLong(KEY_USER_ID, userId != null ? userId : 2L);
+        editor.putLong(KEY_USER_ID, userId != null ? userId : 1L);
         editor.putString(KEY_FULL_NAME, fullName);
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_ROLE, role != null ? role : "USER");
@@ -49,7 +55,24 @@ public class SessionManager {
         editor.putString(KEY_PHONE_NUMBER, user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
         editor.putString(KEY_AVATAR_URL, user.getAvatarUrl());
         editor.putString(KEY_ROLE, user.getRole() != null ? user.getRole() : "USER");
+
+        String token = user.getAccessToken();
+        if (hasValidToken(token)) {
+            editor.putString(KEY_ACCESS_TOKEN, token.trim());
+        }
+
         editor.apply();
+
+        String savedToken = prefs.getString(KEY_ACCESS_TOKEN, null);
+        RetrofitClient.setAccessToken(savedToken);
+    }
+
+    private boolean hasValidToken(String token) {
+        return token != null && !token.trim().isEmpty();
+    }
+
+    public String getAccessToken() {
+        return prefs.getString(KEY_ACCESS_TOKEN, null);
     }
 
     public boolean isLoggedIn() {
@@ -110,6 +133,7 @@ public class SessionManager {
         boolean darkMode = isDarkMode();
         boolean alert7Days = isAlert7DaysEnabled();
         editor.clear();
+        RetrofitClient.setAccessToken(null);
         editor.putBoolean(KEY_IS_LOGGED_IN, false);
         editor.putBoolean(KEY_DARK_MODE, darkMode);
         editor.putBoolean(KEY_ALERT_7_DAYS, alert7Days);

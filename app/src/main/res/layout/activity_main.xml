@@ -15,16 +15,17 @@
 
     <!-- ==================== MENU TRƯỢT BÊN TRÁI (OVERLAY DRAWER) ==================== -->
     <ScrollView
-        android:layout_width="300dp"
+        android:layout_width="312dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="?attr/colorSurface"
+        android:background="?android:attr/windowBackground"
         android:elevation="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="20dp">
 
             <!-- Drawer Header hiển thị Avatar tròn + Họ tên + Email của người đang đăng nhập -->
             <LinearLayout
@@ -36,18 +37,28 @@
                 android:orientation="horizontal"
                 android:padding="20dp">
 
-                <ImageView
-                    android:id="@+id/ivDrawerUserAvatar"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:contentDescription="Ảnh đại diện người dùng"
-                    android:scaleType="centerCrop"
-                    android:src="@mipmap/ic_launcher_round" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="30dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="#80FFFFFF"
+                    app:strokeWidth="2dp">
+
+                    <ImageView
+                        android:id="@+id/ivDrawerUserAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="Ảnh đại diện người dùng"
+                        android:scaleType="centerCrop"
+                        android:src="@mipmap/ic_launcher_round" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="14dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -57,7 +68,7 @@
                         android:layout_height="wrap_content"
                         android:text="Healthy Pet"
                         android:textColor="@color/white"
-                        android:textSize="16sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -71,143 +82,174 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Mục 1: Theme (Sáng / Tối) -->
+            <!-- Nội dung Menu trượt được chia thành các thẻ Card rõ ràng -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="14dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🎨 GIAO DIỆN (THEME)"
-                    android:textColor="@color/emerald_500"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchDarkMode"
+                <!-- Thẻ 1: Giao diện & Cài đặt hệ thống -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="Chế độ Ban đêm (Dark Mode)"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="14sp" />
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="#3364748B"
+                    app:strokeWidth="1dp">
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="12dp"
-                    android:background="#3364748B" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
 
-                <!-- Mục 2: Cài đặt (Settings) -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⚙️ CÀI ĐẶT HỆ THỐNG"
-                    android:textColor="@color/emerald_500"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎨 GIAO DIỆN &amp; CÀI ĐẶT"
+                            android:textColor="@color/emerald_500"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchAlert7Days"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:checked="true"
-                    android:text="Tự động cảnh báo tiêm trước 7 ngày"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="14sp" />
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchDarkMode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="🌙 Chế độ Ban đêm (Dark Mode)"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="12dp"
-                    android:background="#3364748B" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginVertical="8dp"
+                            android:background="#2664748B" />
 
-                <!-- Mục 3: Trợ giúp & Trợ lý AI Thú Y -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🤖 TRỢ GIÚP &amp; TRỢ LÝ AI THÚ Y"
-                    android:textColor="@color/emerald_500"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchAlert7Days"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:text="🔔 Cảnh báo tiêm trước 7 ngày"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/tvAiAnswerBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="@color/emerald_50"
-                    android:padding="12dp"
-                    android:text="🤖 AI Bác Sĩ Thú Y: Chào bạn! Hãy chọn câu hỏi nhanh bên dưới để được tư vấn sơ cứu cho thú cưng."
-                    android:textColor="@color/slate_800"
-                    android:textSize="13sp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnAiFaq1"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                <!-- Thẻ 2: Trợ giúp & Trợ lý AI Thú Y -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="🐕 Chó bỏ ăn, nôn dịch vàng?"
-                    android:textAllCaps="false"
-                    android:textAlignment="viewStart"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="12sp"
-                    app:strokeColor="@color/emerald_500" />
+                    android:layout_marginTop="12dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="#3310B981"
+                    app:strokeWidth="1dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnAiFaq2"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="💉 Lịch tiêm phòng chuẩn cho chó/mèo?"
-                    android:textAllCaps="false"
-                    android:textAlignment="viewStart"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="12sp"
-                    app:strokeColor="@color/emerald_500" />
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnOpenAiChat"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="🤖 Mở Chat AI Thú Y"
-                    android:textAllCaps="false"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/emerald_700"
-                    app:cornerRadius="10dp"
-                    app:icon="@android:drawable/ic_menu_send"
-                    app:iconGravity="textStart"
-                    app:iconTint="@color/white" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
 
-                <!-- Nút Đăng xuất nhanh ngay trên Menu trượt -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🤖 TRỢ GIÚP &amp; TRỢ LÝ AI THÚ Y"
+                            android:textColor="@color/emerald_500"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvAiAnswerBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_pet_weight_badge"
+                            android:lineSpacingExtra="3dp"
+                            android:padding="12dp"
+                            android:text="🤖 AI Bác Sĩ Thú Y: Chào bạn! Hãy chọn câu hỏi nhanh bên dưới để được tư vấn sơ cứu cho thú cưng."
+                            android:textColor="@color/emerald_700"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAiFaq1"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="🐕 Chó bỏ ăn, nôn dịch vàng?"
+                            android:textAlignment="viewStart"
+                            android:textAllCaps="false"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="12sp"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="@color/emerald_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAiFaq2"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="💉 Lịch tiêm phòng chuẩn cho chó/mèo?"
+                            android:textAlignment="viewStart"
+                            android:textAllCaps="false"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="12sp"
+                            app:cornerRadius="10dp"
+                            app:strokeColor="@color/emerald_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnOpenAiChat"
+                            android:layout_width="match_parent"
+                            android:layout_height="46dp"
+                            android:layout_marginTop="10dp"
+                            android:text="🤖 Mở Chat AI Thú Y"
+                            android:textAllCaps="false"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="@color/emerald_600"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/ic_menu_send"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/white" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Nút Đăng xuất & Đóng Menu -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDrawerLogout"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="14dp"
                     android:text="🚪 Đăng xuất tài khoản"
                     android:textAllCaps="false"
                     android:textColor="@color/red_600"
-                    app:cornerRadius="10dp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp"
                     app:strokeColor="@color/red_600" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCloseDrawer"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="6dp"
                     android:text="Đóng Menu ←"
                     android:textAllCaps="false"
-                    app:cornerRadius="10dp" />
+                    android:textColor="?android:attr/textColorPrimary"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="#4D64748B" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

@@ -84,7 +84,15 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
             String timeStr = item.getAppointmentTime() != null ? item.getAppointmentTime() : "";
             binding.tvDateTime.setText("📅 Thời gian: " + timeStr);
 
-            binding.tvEstimatedCost.setText("💰 Dự kiến DECIMAL(18,0): " + CurrencyUtils.formatVND(item.getEstimatedCost()));
+            String costDisplay;
+            if (item.getEstimatedCost() != null && item.getEstimatedCost().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                costDisplay = CurrencyUtils.formatVND(item.getEstimatedCost());
+            } else if (item.getServiceType() != null && item.getServiceType().toLowerCase().contains("chích ngừa")) {
+                costDisplay = "Giá tùy theo loại mũi tiêm";
+            } else {
+                costDisplay = "Giá tùy theo thú cưng";
+            }
+            binding.tvEstimatedCost.setText("💰 Chi phí dự kiến: " + costDisplay);
 
             String noteStr = item.getNote() != null ? item.getNote() : "";
             binding.tvReason.setText("📝 Ghi chú: " + noteStr);

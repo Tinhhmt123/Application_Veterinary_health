@@ -5,11 +5,15 @@ import com.example.healthy_pet.models.MedicalHistory;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -39,11 +43,23 @@ public interface AppointmentMedicalApi {
             @Query("status") String status
     );
 
-    // NV 7 (Ăn điểm @Transactional): Hoàn thành ca khám & tự động tạo bệnh án + đơn thuốc (POST /api/appointments/{id}/complete)
+    // NV 7: Hoàn thành ca khám & tự động tạo bệnh án + đơn thuốc (POST /api/appointments/{id}/complete)
     @POST("appointments/{id}/complete")
     Call<MedicalHistory> completeAppointmentAndPrescribe(
             @Path("id") Long appointmentId,
             @Body MedicalHistory medicalRequest
+    );
+
+    @Multipart
+    @POST("admin/appointments/{id}/complete")
+    Call<MedicalHistory> completeAppointmentAndPrescribeMultipart(
+            @Path("id") Long appointmentId,
+            @Part("pet_id") RequestBody petId,
+            @Part("symptoms") RequestBody symptoms,
+            @Part("diagnosis") RequestBody diagnosis,
+            @Part("prescription") RequestBody prescription,
+            @Part("cost") RequestBody cost,
+            @Part MultipartBody.Part prescriptionImage
     );
 
     // NV 4: Xem lịch sử bệnh án theo user (GET /api/medical-histories/user/{userId})

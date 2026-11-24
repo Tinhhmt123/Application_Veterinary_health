@@ -24,7 +24,6 @@ public class MedicalHistoryRepository {
     private final Gson gson = new Gson();
 
     private MedicalHistoryRepository() {
-        initSampleHistories();
     }
 
     public static synchronized MedicalHistoryRepository getInstance() {
@@ -53,6 +52,10 @@ public class MedicalHistoryRepository {
                     List<MedicalHistory> saved = gson.fromJson(json, type);
                     if (saved != null && !saved.isEmpty()) {
                         for (MedicalHistory savedH : saved) {
+                            if (savedH.getPrescriptionUrl() != null
+                                    && savedH.getPrescriptionUrl().contains("res.cloudinary.com/demo/")) {
+                                savedH.setPrescriptionImageUrl(null);
+                            }
                             boolean found = false;
                             for (int i = 0; i < historyList.size(); i++) {
                                 if (historyList.get(i).getId() != null && historyList.get(i).getId().equals(savedH.getId())) {
@@ -128,7 +131,12 @@ public class MedicalHistoryRepository {
     public synchronized void addMedicalHistory(MedicalHistory history) {
         if (history != null) {
             for (int i = 0; i < historyList.size(); i++) {
-                if (historyList.get(i).getId() != null && historyList.get(i).getId().equals(history.getId())) {
+                MedicalHistory existing = historyList.get(i);
+                boolean sameId = existing.getId() != null && existing.getId().equals(history.getId());
+                boolean sameApt = existing.getAppointmentId() != null
+                        && history.getAppointmentId() != null
+                        && existing.getAppointmentId().equals(history.getAppointmentId());
+                if (sameId || sameApt) {
                     historyList.set(i, history);
                     saveToPrefs();
                     return;
@@ -163,31 +171,90 @@ public class MedicalHistoryRepository {
         return sum;
     }
 
-    /**
-     * Đồng bộ danh sách bệnh án từ Server mà KHÔNG xóa mất dữ liệu mới tạo (Smart Merge).
-     */
-    public synchronized void setHistories(List<MedicalHistory> newList) {
-        if (newList == null || newList.isEmpty()) return;
-        for (MedicalHistory serverHistory : newList) {
-            boolean found = false;
-            for (MedicalHistory localHistory : historyList) {
-                if (serverHistory.getId() != null && serverHistory.getId().equals(localHistory.getId())) {
-                    if (serverHistory.getPaymentStatus() != null) localHistory.setPaymentStatus(serverHistory.getPaymentStatus());
-                    if (serverHistory.getPaymentMethod() != null) localHistory.setPaymentMethod(serverHistory.getPaymentMethod());
-                    if (serverHistory.getCost() != null) localHistory.setCost(serverHistory.getCost());
-                    if (serverHistory.getDiagnosis() != null) localHistory.setDiagnosis(serverHistory.getDiagnosis());
-                    if (serverHistory.getPrescription() != null) localHistory.setPrescription(serverHistory.getPrescription());
-                    if (serverHistory.getPetName() != null && !serverHistory.getPetName().trim().isEmpty()) {
-                        localHistory.setPetName(serverHistory.getPetName());
-                    }
-                    found = true;
-                    break;
+    public synchronized BigDecimal getUnpaidCostByUser(Long userId) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (MedicalHistory h : historyList) {
+            if (userId == null || userId.equals(h.getUserId()) || h.getUserId() == null) {
+                String status = h.getPaymentStatus() != null ? h.getPaymentStatus().trim().toUpperCase() : "UNPAID";
+                if (!"PAID".equals(status) && h.getCost() != null) {
+                    sum = sum.add(h.getCost());
                 }
             }
-            if (!found) {
-                historyList.add(serverHistory);
+        }
+        return sum;
+    }
+
+    public synchronized BigDecimal getPaidCostByUser(Long userId) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (MedicalHistory h : historyList) {
+            if (userId == null || userId.equals(h.getUserId()) || h.getUserId() == null) {
+                String status = h.getPaymentStatus() != null ? h.getPaymentStatus().trim().toUpperCase() : "UNPAID";
+                if ("PAID".equals(status) && h.getCost() != null) {
+                    sum = sum.add(h.getCost());
+                }
             }
         }
+        return sum;
+    }
+
+    /**
+     * Đồng bộ danh sách bệnh án của một User từ Server:
+     * Xóa bỏ hoàn toàn các bản ghi tạm/cũ bị lệch của User đó và cập nhật đúng 1-1 với Database.
+     */
+    public synchronized void setHistoriesForUser(Long userId, List<MedicalHistory> serverList) {
+        if (serverList == null) return;
+        List<MedicalHistory> oldList = new ArrayList<>(historyList);
+
+        for (MedicalHistory serverHistory : serverList) {
+            if (serverHistory == null) continue;
+            if (serverHistory.getUserId() == null && userId != null) {
+                serverHistory.setUserId(userId);
+            }
+            if (serverHistory.getPrescriptionUrl() != null
+                    && serverHistory.getPrescriptionUrl().contains("res.cloudinary.com/demo/")) {
+                serverHistory.setPrescriptionImageUrl(null);
+            }
+            if (serverHistory.getPetName() == null || serverHistory.getPetName().trim().isEmpty()) {
+                for (MedicalHistory old : oldList) {
+                    if (old == null) continue;
+                    boolean matchId = serverHistory.getId() != null && serverHistory.getId().equals(old.getId());
+                    boolean matchApt = serverHistory.getAppointmentId() != null
+                            && serverHistory.getAppointmentId().equals(old.getAppointmentId());
+                    boolean matchPet = serverHistory.getPetId() != null
+                            && serverHistory.getPetId().equals(old.getPetId());
+                    if ((matchId || matchApt || matchPet)
+                            && old.getPetName() != null && !old.getPetName().trim().isEmpty()) {
+                        serverHistory.setPetName(old.getPetName());
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (userId == null) {
+            historyList.clear();
+            historyList.addAll(serverList);
+        } else {
+            historyList.removeIf(h -> h == null
+                    || h.getUserId() == null
+                    || userId.equals(h.getUserId())
+                    || containsMatchingHistory(serverList, h));
+            historyList.addAll(serverList);
+        }
         saveToPrefs();
+    }
+
+    private boolean containsMatchingHistory(List<MedicalHistory> list, MedicalHistory target) {
+        if (list == null || target == null) return false;
+        for (MedicalHistory item : list) {
+            if (item == null) continue;
+            if (item.getId() != null && item.getId().equals(target.getId())) return true;
+            if (item.getAppointmentId() != null && item.getAppointmentId().equals(target.getAppointmentId())) return true;
+        }
+        return false;
+    }
+
+    public synchronized void setHistories(List<MedicalHistory> newList) {
+        setHistoriesForUser(null, newList);
     }
 }

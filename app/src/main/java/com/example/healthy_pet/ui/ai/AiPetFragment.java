@@ -23,6 +23,8 @@ import androidx.fragment.app.Fragment;
 import com.example.healthy_pet.R;
 import com.example.healthy_pet.api.AiPetApi;
 import com.example.healthy_pet.api.RetrofitClient;
+import com.example.healthy_pet.utils.InfoHintHelper;
+import com.example.healthy_pet.utils.SessionManager;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -67,6 +69,16 @@ public class AiPetFragment extends Fragment {
         scrollMessages = view.findViewById(R.id.scrollMessages);
         edtMessage = view.findViewById(R.id.edtMessage);
         btnSend = view.findViewById(R.id.btnSend);
+
+        SessionManager session = new SessionManager(requireContext());
+        boolean isAdminRole = "ADMIN".equalsIgnoreCase(session.getRole());
+        View btnInfoAi = view.findViewById(R.id.btnInfoAiPet);
+        TextView tvAiDesc = view.findViewById(R.id.tvAiPetDesc);
+        InfoHintHelper.attach(
+                btnInfoAi,
+                tvAiDesc != null ? tvAiDesc.getText() : "Trợ lý chăm sóc sức khỏe thú cưng.",
+                isAdminRole
+        );
 
         addBotMessage(
                 "Xin chào! 🐾 Mình là AI Thú Y. " +

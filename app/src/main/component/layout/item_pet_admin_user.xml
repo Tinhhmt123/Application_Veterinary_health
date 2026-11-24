@@ -3,29 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="#E2EAF2"
-    app:cardCornerRadius="14dp"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="18dp"
     app:cardElevation="3dp"
-    app:strokeColor="#8295A8"
-    app:strokeWidth="1dp">
+    app:strokeColor="#3310B981"
+    app:strokeWidth="1.5dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="14dp">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardItemPetAvatarRing"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             app:cardBackgroundColor="@color/emerald_50"
-            app:cardCornerRadius="28dp"
+            app:cardCornerRadius="32dp"
             app:cardElevation="0dp"
             app:strokeColor="#4D10B981"
-            app:strokeWidth="1.5dp">
+            app:strokeWidth="2dp">
 
             <ImageView
                 android:id="@+id/ivItemPetAvatar"
@@ -40,7 +40,7 @@
             android:id="@+id/layoutItemPetInfo"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -58,21 +58,24 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:text="Milu"
-                    android:textColor="#071421"
-                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="17sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvItemPetWeightBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="8dp"
                     android:background="@drawable/bg_pet_weight_badge"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="3dp"
-                    android:text="14.5 kg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="⚖️ 14.5 kg"
                     android:textColor="@color/emerald_700"
-                    android:textSize="11sp"
+                    android:textSize="13.5sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -80,30 +83,29 @@
                 android:id="@+id/tvItemPetSpeciesBreed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="4dp"
                 android:text="Chó • Golden Retriever • Đực"
-                android:textColor="#1C3042"
-                android:textSize="13sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13.5sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvItemPetBirthDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Ngày sinh: 2024-05-10"
-                android:textColor="#263B50"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="3dp"
+                android:text="🎂 Ngày sinh: 2024-05-10"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12.5sp" />
 
             <TextView
                 android:id="@+id/tvItemPetOwner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="Chủ: Nguyễn Văn Tính • 0908123456"
-                android:textColor="#251778"
-                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:text="👤 Chủ: Nguyễn Văn Tính • 0908123456"
+                android:textColor="@color/indigo_600"
+                android:textSize="12.5sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
         </LinearLayout>
@@ -112,7 +114,7 @@
             android:id="@+id/layoutItemPetActions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="10dp"
             android:gravity="end"
             android:orientation="vertical"
             android:visibility="gone">
@@ -120,9 +122,9 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnItemPetWeight"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="96dp"
-                android:layout_height="28dp"
-                android:layout_marginBottom="4dp"
+                android:layout_width="108dp"
+                android:layout_height="34dp"
+                android:layout_marginBottom="5dp"
                 android:ellipsize="end"
                 android:gravity="center"
                 android:insetTop="0dp"
@@ -131,23 +133,24 @@
                 android:maxLines="1"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:paddingStart="6dp"
+                android:paddingStart="8dp"
                 android:paddingTop="0dp"
-                android:paddingEnd="6dp"
+                android:paddingEnd="8dp"
                 android:paddingBottom="0dp"
                 android:text="⚖️ Cân nặng"
                 android:textAllCaps="false"
                 android:textColor="@color/emerald_700"
-                android:textSize="11sp"
-                app:cornerRadius="14dp"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                app:cornerRadius="17dp"
                 app:strokeColor="@color/emerald_600" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnItemPetEdit"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="96dp"
-                android:layout_height="28dp"
-                android:layout_marginBottom="4dp"
+                android:layout_width="108dp"
+                android:layout_height="34dp"
+                android:layout_marginBottom="5dp"
                 android:ellipsize="end"
                 android:gravity="center"
                 android:insetTop="0dp"
@@ -156,22 +159,23 @@
                 android:maxLines="1"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:paddingStart="6dp"
+                android:paddingStart="8dp"
                 android:paddingTop="0dp"
-                android:paddingEnd="6dp"
+                android:paddingEnd="8dp"
                 android:paddingBottom="0dp"
-                android:text="Sửa"
+                android:text="✏️ Sửa"
                 android:textAllCaps="false"
                 android:textColor="@color/indigo_600"
-                android:textSize="11sp"
-                app:cornerRadius="14dp"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                app:cornerRadius="17dp"
                 app:strokeColor="@color/indigo_600" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnItemPetDelete"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="96dp"
-                android:layout_height="28dp"
+                android:layout_width="108dp"
+                android:layout_height="34dp"
                 android:ellipsize="end"
                 android:gravity="center"
                 android:insetTop="0dp"
@@ -180,15 +184,16 @@
                 android:maxLines="1"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:paddingStart="6dp"
+                android:paddingStart="8dp"
                 android:paddingTop="0dp"
-                android:paddingEnd="6dp"
+                android:paddingEnd="8dp"
                 android:paddingBottom="0dp"
-                android:text="Xóa"
+                android:text="🗑️ Xóa"
                 android:textAllCaps="false"
                 android:textColor="@color/red_600"
-                android:textSize="11sp"
-                app:cornerRadius="14dp"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                app:cornerRadius="17dp"
                 app:strokeColor="@color/red_600" />
         </LinearLayout>
 

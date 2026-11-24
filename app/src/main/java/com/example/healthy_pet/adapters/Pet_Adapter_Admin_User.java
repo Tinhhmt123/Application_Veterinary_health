@@ -105,7 +105,12 @@ public class Pet_Adapter_Admin_User extends RecyclerView.Adapter<Pet_Adapter_Adm
         holder.tvName.setText(pet.getName() != null ? pet.getName() : "Chưa đặt tên");
 
         double weight = pet.getCurrentWeight() != null ? pet.getCurrentWeight() : 0.0;
-        holder.tvWeightBadge.setText(String.format(Locale.US, "%.1f kg", weight));
+        holder.tvWeightBadge.setText(String.format(Locale.US, "⚖️ %.1f kg", weight));
+        holder.tvWeightBadge.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onWeightClick(pet);
+            }
+        });
 
         StringBuilder info = new StringBuilder();
         info.append(pet.getSpecies() != null && !pet.getSpecies().isEmpty() ? pet.getSpecies() : "Thú cưng");

@@ -18,6 +18,7 @@ import com.example.healthy_pet.databinding.FragmentMedicalHistoryBinding;
 import com.example.healthy_pet.models.MedicalHistory;
 import com.example.healthy_pet.repository.MedicalHistoryRepository;
 import com.example.healthy_pet.utils.CurrencyUtils;
+import com.example.healthy_pet.utils.InfoHintHelper;
 import com.example.healthy_pet.utils.SessionManager;
 import com.example.healthy_pet.utils.payment.CashPaymentStrategy;
 import com.example.healthy_pet.utils.payment.PaymentContext;
@@ -62,6 +63,8 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
         adapter = new MedicalHistoryAdapter(medicalHistories, this);
         binding.rvMedicalHistories.setAdapter(adapter);
 
+        boolean isAdminRole = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
+        InfoHintHelper.attach(binding.btnInfoMedical, binding.tvModuleDescription.getText(), isAdminRole);
         binding.btnRefresh.setOnClickListener(v -> loadMedicalHistoriesAndStats());
 
         loadMedicalHistoriesAndStats();
@@ -88,24 +91,25 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
         // 1. Tải lập tức từ Shared MedicalHistoryRepository
         medicalHistories.clear();
         if (isAdmin) {
-            // Admin xem tất cả bệnh án trong hệ thống
             medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(null));
         } else {
             medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
         }
         updateUiState();
 
-        // 2. Tải từ backend REST API
+        // 2. Đồng bộ chuẩn 100% từ Backend REST API (một nguồn dữ liệu duy nhất, không còn xung đột 2 API)
         appointmentApi.getMedicalHistoriesByUser(userId).enqueue(new Callback<List<MedicalHistory>>() {
             @Override
             public void onResponse(@NonNull Call<List<MedicalHistory>> call, @NonNull Response<List<MedicalHistory>> response) {
                 if (!isAdded() || binding == null) return;
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    MedicalHistoryRepository.getInstance().setHistories(response.body());
-                    medicalHistories.clear();
+                if (response.isSuccessful() && response.body() != null) {
                     if (isAdmin) {
+                        MedicalHistoryRepository.getInstance().setHistoriesForUser(null, response.body());
+                        medicalHistories.clear();
                         medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(null));
                     } else {
+                        MedicalHistoryRepository.getInstance().setHistoriesForUser(userId, response.body());
+                        medicalHistories.clear();
                         medicalHistories.addAll(MedicalHistoryRepository.getInstance().getMedicalHistoriesByUser(userId));
                     }
                     updateUiState();
@@ -113,36 +117,43 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<MedicalHistory>> call, @NonNull Throwable t) {}
-        });
-
-        // 3. Tải tổng chi phí từ API
-        appointmentApi.getTotalMedicalCost(userId).enqueue(new Callback<Map<String, BigDecimal>>() {
-            @Override
-            public void onResponse(@NonNull Call<Map<String, BigDecimal>> call, @NonNull Response<Map<String, BigDecimal>> response) {
-                if (!isAdded() || binding == null) return;
-                if (response.isSuccessful() && response.body() != null && response.body().containsKey("totalCost")) {
-                    BigDecimal apiTotal = response.body().get("totalCost");
-                    if (apiTotal != null) {
-                        binding.tvTotalStats.setText(CurrencyUtils.formatVND(apiTotal));
-                    }
+            public void onFailure(@NonNull Call<List<MedicalHistory>> call, @NonNull Throwable t) {
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Không thể đồng bộ bệnh án từ máy chủ", Toast.LENGTH_SHORT).show();
                 }
             }
-
-            @Override
-            public void onFailure(@NonNull Call<Map<String, BigDecimal>> call, @NonNull Throwable t) {}
         });
     }
 
     private void updateUiState() {
         if (binding == null) return;
 
-        boolean isAdmin = "ADMIN".equalsIgnoreCase(sessionManager.getRole());
-        Long userId = sessionManager.getUserId();
-        BigDecimal localSum = isAdmin
-                ? MedicalHistoryRepository.getInstance().getTotalCostByUser(null)
-                : MedicalHistoryRepository.getInstance().getTotalCostByUser(userId);
-        binding.tvTotalStats.setText(CurrencyUtils.formatVND(localSum));
+        BigDecimal totalAll = BigDecimal.ZERO;
+        BigDecimal totalUnpaid = BigDecimal.ZERO;
+        BigDecimal totalPaid = BigDecimal.ZERO;
+
+        for (MedicalHistory h : medicalHistories) {
+            if (h == null || h.getCost() == null) continue;
+            totalAll = totalAll.add(h.getCost());
+            String st = h.getPaymentStatus() != null ? h.getPaymentStatus().trim().toUpperCase() : "UNPAID";
+            if ("PAID".equals(st)) {
+                totalPaid = totalPaid.add(h.getCost());
+            } else {
+                totalUnpaid = totalUnpaid.add(h.getCost());
+            }
+        }
+
+        if (!medicalHistories.isEmpty() && totalUnpaid.compareTo(BigDecimal.ZERO) == 0) {
+            binding.tvTotalStats.setText("0 đ (Đã thanh toán hết)");
+        } else {
+            binding.tvTotalStats.setText("Cần thanh toán: " + CurrencyUtils.formatVND(totalUnpaid));
+        }
+
+        binding.tvModuleDescription.setText(
+                "✅ Đã thanh toán: " + CurrencyUtils.formatVND(totalPaid)
+                        + "  |  📊 Tổng chi phí tích lũy: " + CurrencyUtils.formatVND(totalAll)
+                        + "\nTra cứu lịch sử bệnh án, đơn thuốc của bác sĩ và thanh toán viện phí qua VietQR hoặc Tiền mặt."
+        );
 
         if (medicalHistories.isEmpty()) {
             binding.tvEmptyState.setVisibility(View.VISIBLE);
@@ -198,15 +209,23 @@ public class MedicalHistoryFragment extends Fragment implements MedicalHistoryAd
                 .setPositiveButton("✓ Xác nhận đã thanh toán", (d, w) -> {
                     String resultMsg = paymentContext.processPayment(requireContext(), history);
                     MedicalHistoryRepository.getInstance().payMedicalHistory(history.getId(), history.getPaymentMethod());
-                    loadMedicalHistoriesAndStats();
+                    updateUiState();
                     Toast.makeText(getContext(), resultMsg, Toast.LENGTH_LONG).show();
 
                     appointmentApi.payMedicalHistory(history.getId(), history.getPaymentMethod()).enqueue(new Callback<MedicalHistory>() {
                         @Override
-                        public void onResponse(@NonNull Call<MedicalHistory> call, @NonNull Response<MedicalHistory> response) {}
+                        public void onResponse(@NonNull Call<MedicalHistory> call, @NonNull Response<MedicalHistory> response) {
+                            if (isAdded() && binding != null) {
+                                loadMedicalHistoriesAndStats();
+                            }
+                        }
 
                         @Override
-                        public void onFailure(@NonNull Call<MedicalHistory> call, @NonNull Throwable t) {}
+                        public void onFailure(@NonNull Call<MedicalHistory> call, @NonNull Throwable t) {
+                            if (isAdded() && binding != null) {
+                                updateUiState();
+                            }
+                        }
                     });
                 })
                 .setNegativeButton("Quay lại", null)

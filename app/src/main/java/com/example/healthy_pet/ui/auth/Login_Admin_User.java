@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.healthy_pet.BuildConfig;
 import com.example.healthy_pet.MainActivity;
 import com.example.healthy_pet.R;
 import com.example.healthy_pet.api.RetrofitClient;
@@ -140,7 +141,7 @@ public class Login_Admin_User extends Fragment {
     }
 
     private void setupGoogleSignInClient() {
-        String webClientId = getString(R.string.google_web_client_id);
+        String webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID;
 
         GoogleSignInOptions.Builder gsoBuilder =
                 new GoogleSignInOptions.Builder(
@@ -149,7 +150,9 @@ public class Login_Admin_User extends Fragment {
                         .requestEmail()
                         .requestProfile();
 
-        if (webClientId != null && !webClientId.trim().isEmpty()) {
+        if (webClientId != null
+                && !webClientId.trim().isEmpty()
+                && !"YOUR_WEB_CLIENT_ID".equalsIgnoreCase(webClientId.trim())) {
             gsoBuilder.requestIdToken(webClientId.trim());
         }
 

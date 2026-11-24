@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.healthy_pet.R;
+import com.example.healthy_pet.utils.InfoHintHelper;
 import com.google.android.material.button.MaterialButton;
 
 /**
@@ -24,10 +25,12 @@ public class PetWeightFragment extends Fragment {
 
         ((TextView) view.findViewById(R.id.tvModuleBadge)).setText("NGHIỆP VỤ 2 • THÀNH VIÊN 2");
         ((TextView) view.findViewById(R.id.tvModuleTitle)).setText("🐶 Hồ sơ Thú cưng & Nhật ký Cân nặng");
-        ((TextView) view.findViewById(R.id.tvModuleDescription)).setText(
+        TextView tvDesc = view.findViewById(R.id.tvModuleDescription);
+        tvDesc.setText(
                 "• Thêm mới, xem chi tiết, sửa hoặc xóa hồ sơ thú cưng; tải ảnh lên Cloudinary (@Multipart) và hiển thị qua Glide.\n" +
                         "• Ghi nhận cân nặng định kỳ (WeightLogs) và tự động đồng bộ vào current_weight của thú cưng."
         );
+        InfoHintHelper.attach(view.findViewById(R.id.btnModuleInfo), tvDesc.getText(), false);
         ((TextView) view.findViewById(R.id.tvModuleTechInfo)).setText(
                 "Thực thể: Pets, WeightLogs\n" +
                         "API: PetWeightApi.java\n" +

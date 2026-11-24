@@ -1,8 +1,9 @@
-
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/windowBackground"
     android:fillViewport="true"
     android:padding="16dp">
 
@@ -11,30 +12,65 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Tiêu đề -->
-        <TextView
+        <!-- Tiêu đề trang + Nút chú thích (!) -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutVaccineTitleRow"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="💉 Sổ tiêm chủng"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvVaccinePageTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💉 Sổ tiêm chủng"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btnInfoVaccine"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/btnInfoVaccine"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginStart="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="!"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/tvVaccinePageTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/tvVaccinePageTitle"
+                app:layout_constraintTop_toTopOf="@id/tvVaccinePageTitle" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
+            android:id="@+id/tvVaccinePageDesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="Theo dõi lịch tiêm và sức khỏe thú cưng"
-            android:textSize="14sp"
-            android:textColor="?android:attr/textColorSecondary" />
+            android:layout_marginTop="4dp"
+            android:text="Theo dõi lịch tiêm định kỳ và cảnh báo sức khỏe thú cưng"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="13sp"
+            android:visibility="gone" />
 
-        <!-- Chọn thú cưng -->
+        <!-- Thẻ Chọn thú cưng -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp">
+            android:layout_marginTop="14dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeColor="#3310B981"
+            app:strokeWidth="1.5dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -45,105 +81,129 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chọn thú cưng"
-                    android:textStyle="bold"
-                    android:textSize="15sp" />
+                    android:text="🐾 Chọn thú cưng theo dõi"
+                    android:textColor="@color/emerald_500"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <Spinner
                     android:id="@+id/spinnerPets"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="48dp"
                     android:layout_marginTop="8dp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Thống kê -->
+        <!-- Hai thẻ Thống kê -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="0dp"
-                android:layout_height="95dp"
-                android:layout_weight="1"
+                android:layout_height="104dp"
                 android:layout_marginEnd="6dp"
-                app:cardCornerRadius="14dp">
+                android:layout_weight="1"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#3310B981"
+                app:strokeWidth="1.5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="10dp">
 
                     <TextView
                         android:id="@+id/tvTotalVaccinations"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0"
-                        android:textSize="24sp"
+                        android:textColor="@color/emerald_500"
+                        android:textSize="28sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tổng mũi tiêm"
-                        android:textSize="12sp" />
+                        android:layout_marginTop="4dp"
+                        android:text="💉 Tổng mũi tiêm"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="0dp"
-                android:layout_height="95dp"
-                android:layout_weight="1"
+                android:layout_height="104dp"
                 android:layout_marginStart="6dp"
-                app:cardCornerRadius="14dp">
+                android:layout_weight="1"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#4DF59E0B"
+                app:strokeWidth="1.5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="10dp">
 
                     <TextView
                         android:id="@+id/tvUpcomingVaccinations"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="#D97706" />
+                        android:textColor="#F59E0B"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sắp đến hạn"
-                        android:textSize="12sp" />
+                        android:layout_marginTop="4dp"
+                        android:text="⏰ Sắp đến hạn (7 ngày)"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
-        <!-- Cảnh báo tiêm phòng -->
+        <!-- Khu vực Cảnh báo tiêm phòng -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
             android:text="🔔 Cảnh báo tiêm phòng"
-            android:textSize="18sp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="17sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvAlertEmpty"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
+            android:background="@drawable/bg_pet_weight_badge"
             android:gravity="center"
-            android:text="Chưa có cảnh báo tiêm phòng."
+            android:padding="16dp"
+            android:text="✅ Hiện không có mũi tiêm quá hạn hoặc sắp đến hạn."
+            android:textColor="@color/emerald_700"
+            android:textSize="14sp"
+            android:textStyle="bold"
             android:visibility="gone" />
 
         <LinearLayout
@@ -152,22 +212,26 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- Lịch sử tiêm chủng -->
+        <!-- Khu vực Lịch sử tiêm chủng -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
             android:text="📋 Lịch sử tiêm chủng"
-            android:textSize="18sp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="17sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvHistoryEmpty"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
             android:gravity="center"
-            android:text="Chưa có lịch sử tiêm chủng."
+            android:padding="16dp"
+            android:text="Chưa có lịch sử tiêm chủng cho thú cưng này."
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp"
             android:visibility="gone" />
 
         <LinearLayout
@@ -176,15 +240,18 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- Thêm mũi tiêm -->
+        <!-- Nút Thêm mũi tiêm -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddVaccination"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
             android:text="＋ Thêm mũi tiêm mới"
             android:textAllCaps="false"
-            app:cornerRadius="12dp" />
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/emerald_600"
+            app:cornerRadius="14dp" />
 
         <!-- Trạng thái tải dữ liệu -->
         <ProgressBar
@@ -201,7 +268,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:textColor="#DC2626"
+            android:textColor="@color/red_600"
+            android:textSize="13sp"
             android:visibility="gone" />
 
     </LinearLayout>

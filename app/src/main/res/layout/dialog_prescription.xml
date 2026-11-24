@@ -13,7 +13,7 @@
             android:id="@+id/tvHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🩺 Nhập kết quả khám &amp; Đơn thuốc (@Transactional):"
+            android:text="🩺 Nhập kết quả khám &amp; Đơn thuốc:"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="15sp"
             android:textStyle="bold" />
@@ -75,12 +75,12 @@
             android:inputType="textMultiLine"
             android:textSize="14sp" />
 
-        <!-- 4. Total Cost DECIMAL(18,0) -->
+        <!-- 4. Total Cost -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="4. Viện phí khám chữa bệnh (DECIMAL 18, 0):"
+            android:text="4. Viện phí khám chữa bệnh (VNĐ):"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -94,24 +94,40 @@
             android:inputType="number"
             android:textSize="14sp" />
 
-        <!-- 5. Cloudinary Image URL -->
+        <!-- 5. Optional Prescription Image Picker -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="5. URL Ảnh đơn thuốc (Cloudinary):"
+            android:text="5. Ảnh chụp đơn thuốc (Tùy chọn):"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="13sp"
             android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/ivPrescriptionPreview"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="6dp"
+            android:contentDescription="Xem trước ảnh đơn thuốc"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPickPrescriptionImage"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="📷 Chọn ảnh đơn thuốc từ máy (Không bắt buộc)"
+            android:textAllCaps="false"
+            android:textSize="13sp" />
 
         <EditText
             android:id="@+id/etImageUrl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:hint="https://res.cloudinary.com/..."
-            android:inputType="textUri"
-            android:textSize="14sp" />
+            android:visibility="gone" />
 
     </LinearLayout>
 </ScrollView>

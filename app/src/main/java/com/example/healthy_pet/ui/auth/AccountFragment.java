@@ -92,10 +92,16 @@ public class AccountFragment extends Fragment {
         bindUserSessionToViews();
         refreshUserFromServer();
 
-        // 1. Chọn ảnh đại diện từ thư viện máy
-        View.OnClickListener pickImageListener = v -> pickAvatarLauncher.launch("image/*");
-        btnChangeAvatar.setOnClickListener(pickImageListener);
-        ivProfileAvatar.setOnClickListener(pickImageListener);
+        // 1. Nút Đổi ảnh đại diện -> Chọn ảnh mới từ thư viện máy
+        btnChangeAvatar.setOnClickListener(v -> pickAvatarLauncher.launch("image/*"));
+
+        // 1b. Nhấp vào ảnh Avatar -> Hiện tag phóng to ảnh đại diện (không mở đổi hình)
+        View.OnClickListener zoomAvatarListener = v -> showAvatarZoomDialog();
+        ivProfileAvatar.setOnClickListener(zoomAvatarListener);
+        View cardAvatarRing = view.findViewById(R.id.cardProfileAvatarRing);
+        if (cardAvatarRing != null) {
+            cardAvatarRing.setOnClickListener(zoomAvatarListener);
+        }
 
         // 2. Lưu thay đổi Hồ sơ & Upload Avatar lên Cloudinary (@Multipart)
         btnSaveProfile.setOnClickListener(v -> handleSaveProfile());
@@ -216,6 +222,56 @@ public class AccountFragment extends Fragment {
                 // Giữ nguyên dữ liệu đang lưu trong SessionManager khi mất mạng tạm thời
             }
         });
+    }
+
+    /**
+     * Hiện hộp thoại phóng to ảnh đại diện khi người dùng hoặc Admin nhấp vào Avatar.
+     */
+    private void showAvatarZoomDialog() {
+        if (!isAdded()) return;
+
+        int pad = Math.round(16 * getResources().getDisplayMetrics().density);
+        int size = Math.round(280 * getResources().getDisplayMetrics().density);
+
+        android.widget.LinearLayout container = new android.widget.LinearLayout(requireContext());
+        container.setOrientation(android.widget.LinearLayout.VERTICAL);
+        container.setGravity(android.view.Gravity.CENTER);
+        container.setPadding(pad, pad, pad, pad);
+
+        ImageView zoomedImageView = new ImageView(requireContext());
+        android.widget.LinearLayout.LayoutParams imgParams =
+                new android.widget.LinearLayout.LayoutParams(size, size);
+        zoomedImageView.setLayoutParams(imgParams);
+        zoomedImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        String avatarUrl = sessionManager.getAvatarUrl();
+        if (selectedAvatarUri != null) {
+            Glide.with(requireContext())
+                    .load(selectedAvatarUri)
+                    .placeholder(R.mipmap.ic_launcher_round)
+                    .into(zoomedImageView);
+        } else if (avatarUrl != null && !avatarUrl.trim().isEmpty()) {
+            Glide.with(requireContext())
+                    .load(avatarUrl.trim())
+                    .placeholder(R.mipmap.ic_launcher_round)
+                    .error(R.mipmap.ic_launcher_round)
+                    .into(zoomedImageView);
+        } else {
+            zoomedImageView.setImageResource(R.mipmap.ic_launcher_round);
+        }
+
+        container.addView(zoomedImageView);
+
+        String titleName = sessionManager.getFullName();
+        if (titleName == null || titleName.trim().isEmpty()) {
+            titleName = "Ảnh đại diện";
+        }
+
+        new android.app.AlertDialog.Builder(requireContext())
+                .setTitle("🖼️ " + titleName)
+                .setView(container)
+                .setPositiveButton("Đóng", null)
+                .show();
     }
 
     private void setLoading(boolean loading) {

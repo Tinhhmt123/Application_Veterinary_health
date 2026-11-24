@@ -24,7 +24,6 @@ public class AppointmentRepository {
     private final Gson gson = new Gson();
 
     private AppointmentRepository() {
-        initSampleAppointments();
     }
 
     public static synchronized AppointmentRepository getInstance() {
@@ -154,35 +153,159 @@ public class AppointmentRepository {
         }
     }
 
+    public synchronized void removeAppointment(Long appointmentId) {
+        if (appointmentId == null) return;
+        for (int i = 0; i < appointmentList.size(); i++) {
+            if (appointmentId.equals(appointmentList.get(i).getId())) {
+                appointmentList.remove(i);
+                saveToPrefs();
+                break;
+            }
+        }
+    }
+
+    private long parseAppointmentTimeMillis(String timeStr) {
+        if (timeStr == null || timeStr.trim().isEmpty()) return -1L;
+        String clean = timeStr.trim().replace("T", " ");
+        String[] patterns = {"yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm"};
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(pattern, java.util.Locale.US);
+                sdf.setLenient(false);
+                java.util.Date parsed = sdf.parse(clean.length() > pattern.length() ? clean.substring(0, pattern.length()) : clean);
+                if (parsed != null) {
+                    return parsed.getTime();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return -1L;
+    }
+
     /**
-     * Đồng bộ danh sách lịch hẹn từ Server mà KHÔNG xóa mất dữ liệu cũ (Smart Merge).
-     * Giữ nguyên petName, clinicName cục bộ nếu Server trả về null.
+     * Kiểm tra thú cưng của User có lịch hẹn PENDING hoặc CONFIRMED nào trùng trong khoảng ±30 phút không.
+     * Chỉ xét các lịch hẹn thuộc về chính User đang đăng nhập (userId).
+     */
+    public synchronized Appointment findPetBookingConflict(Long userId, Long petId, String appointmentTimeStr) {
+        if (petId == null || appointmentTimeStr == null) return null;
+        long targetMs = parseAppointmentTimeMillis(appointmentTimeStr);
+        if (targetMs <= 0) return null;
+
+        for (Appointment existing : appointmentList) {
+            if (existing == null || existing.getPetId() == null || !petId.equals(existing.getPetId())) {
+                continue;
+            }
+            if (userId != null && !userId.equals(existing.getUserId())) {
+                continue;
+            }
+            String st = existing.getStatus() != null ? existing.getStatus().trim().toUpperCase() : "PENDING";
+            if (!"PENDING".equals(st) && !"CONFIRMED".equals(st)) {
+                continue;
+            }
+            long existingMs = parseAppointmentTimeMillis(existing.getAppointmentTime());
+            if (existingMs > 0 && Math.abs(targetMs - existingMs) < 30L * 60L * 1000L) {
+                return existing;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Thay toàn bộ lịch hẹn của một User bằng danh sách thật từ Database (kể cả khi danh sách rỗng),
+     * đồng thời xóa các lịch giả/lịch rác không có userId.
+     */
+    public synchronized void setUserAppointments(Long userId, List<Appointment> serverList) {
+        if (serverList == null) return;
+        List<Appointment> oldList = new ArrayList<>(appointmentList);
+        for (Appointment serverApt : serverList) {
+            if (serverApt == null) continue;
+            for (Appointment localApt : oldList) {
+                if (localApt == null || serverApt.getId() == null || !serverApt.getId().equals(localApt.getId())) continue;
+                if (serverApt.getPetName() == null || serverApt.getPetName().trim().isEmpty()) {
+                    serverApt.setPetName(localApt.getPetName());
+                }
+                if (serverApt.getClinicName() == null || serverApt.getClinicName().trim().isEmpty()) {
+                    serverApt.setClinicName(localApt.getClinicName());
+                }
+                break;
+            }
+        }
+        appointmentList.removeIf(a -> a == null
+                || a.getUserId() == null
+                || (userId != null && userId.equals(a.getUserId())));
+        appointmentList.addAll(0, serverList);
+        saveToPrefs();
+    }
+
+    /**
+     * Kiểm tra trước khi Admin bấm Duyệt (CONFIRMED):
+     * Chặn nếu cùng thú cưng hoặc cùng chi nhánh đã có ca CONFIRMED trong khoảng ±30 phút.
+     */
+    public synchronized String findAdminApprovalConflictMessage(Appointment target) {
+        if (target == null || target.getAppointmentTime() == null) return null;
+        long targetMs = parseAppointmentTimeMillis(target.getAppointmentTime());
+        String targetPrefix = target.getAppointmentTime().trim().length() >= 16
+                ? target.getAppointmentTime().trim().substring(0, 16)
+                : target.getAppointmentTime().trim();
+
+        for (Appointment existing : appointmentList) {
+            if (existing == null) continue;
+            if (target.getId() != null && target.getId().equals(existing.getId())) continue;
+            String st = existing.getStatus() != null ? existing.getStatus().trim().toUpperCase() : "";
+            if (!"CONFIRMED".equals(st)) continue;
+
+            String existingTime = existing.getAppointmentTime();
+            if (existingTime == null) continue;
+            long existingMs = parseAppointmentTimeMillis(existingTime);
+
+            boolean timeOverlap = false;
+            if (targetMs > 0 && existingMs > 0) {
+                timeOverlap = Math.abs(targetMs - existingMs) < 30L * 60L * 1000L;
+            } else {
+                timeOverlap = existingTime.trim().startsWith(targetPrefix);
+            }
+
+            if (timeOverlap) {
+                if (target.getPetId() != null && target.getPetId().equals(existing.getPetId())) {
+                    String pName = target.getPetName() != null ? target.getPetName() : ("#" + target.getPetId());
+                    return "Thú cưng " + pName + " đã có Ca khám #" + existing.getId()
+                            + " ĐÃ DUYỆT vào lúc " + existingTime + " (trong khoảng 30 phút). Không thể duyệt trùng lịch!";
+                }
+                if (target.getClinicId() != null && target.getClinicId().equals(existing.getClinicId())) {
+                    String cName = target.getClinicName() != null ? target.getClinicName() : ("#" + target.getClinicId());
+                    return "Chi nhánh " + cName + " đã có Ca khám #" + existing.getId()
+                            + " ĐÃ DUYỆT vào lúc " + existingTime + " (trùng khung giờ 30 phút). Vui lòng từ chối hoặc đổi lịch!";
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Đồng bộ danh sách lịch hẹn từ Server chuẩn xác 100%,
+     * cập nhật đầy đủ userId, petId, clinicId và giữ petName/clinicName nếu Server chưa gửi kèm.
      */
     public synchronized void setAppointments(List<Appointment> newList) {
-        if (newList == null || newList.isEmpty()) return;
+        if (newList == null) return;
+        List<Appointment> oldList = new ArrayList<>(appointmentList);
         for (Appointment serverApt : newList) {
-            boolean found = false;
-            for (Appointment localApt : appointmentList) {
-                if (serverApt.getId() != null && serverApt.getId().equals(localApt.getId())) {
-                    if (serverApt.getStatus() != null) localApt.setStatus(serverApt.getStatus());
-                    if (serverApt.getServiceType() != null) localApt.setServiceType(serverApt.getServiceType());
-                    if (serverApt.getAppointmentTime() != null) localApt.setAppointmentTime(serverApt.getAppointmentTime());
-                    if (serverApt.getEstimatedCost() != null) localApt.setEstimatedCost(serverApt.getEstimatedCost());
-                    if (serverApt.getNote() != null) localApt.setNote(serverApt.getNote());
-                    if (serverApt.getPetName() != null && !serverApt.getPetName().trim().isEmpty()) {
-                        localApt.setPetName(serverApt.getPetName());
+            if (serverApt == null) continue;
+            for (Appointment localApt : oldList) {
+                if (localApt == null) continue;
+                boolean sameId = serverApt.getId() != null && serverApt.getId().equals(localApt.getId());
+                if (sameId) {
+                    if (serverApt.getPetName() == null || serverApt.getPetName().trim().isEmpty()) {
+                        serverApt.setPetName(localApt.getPetName());
                     }
-                    if (serverApt.getClinicName() != null && !serverApt.getClinicName().trim().isEmpty()) {
-                        localApt.setClinicName(serverApt.getClinicName());
+                    if (serverApt.getClinicName() == null || serverApt.getClinicName().trim().isEmpty()) {
+                        serverApt.setClinicName(localApt.getClinicName());
                     }
-                    found = true;
                     break;
                 }
             }
-            if (!found) {
-                appointmentList.add(serverApt);
-            }
         }
+        appointmentList.clear();
+        appointmentList.addAll(newList);
         saveToPrefs();
     }
 }

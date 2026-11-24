@@ -37,6 +37,7 @@ import com.example.healthy_pet.api.RetrofitClient;
 import com.example.healthy_pet.api.VaccinationApi;
 import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.models.VaccinationRecord;
+import com.example.healthy_pet.utils.InfoHintHelper;
 import com.example.healthy_pet.utils.SessionManager;
 
 import java.io.ByteArrayOutputStream;
@@ -207,6 +208,8 @@ public class VaccineAlertFragment extends Fragment {
         historyOnly = getArguments() != null
                 && getArguments().getBoolean(ARG_HISTORY_ONLY, false);
 
+        sessionManager = new SessionManager(requireContext());
+
         initViews(view);
         if (historyOnly) {
             configureHistoryOnlyScreen(view);
@@ -214,7 +217,12 @@ public class VaccineAlertFragment extends Fragment {
             configureMainVaccineScreen(view);
         }
 
-        sessionManager = new SessionManager(requireContext());
+        View btnInfoVaccine = view.findViewById(R.id.btnInfoVaccine);
+        TextView tvVaccinePageDesc = view.findViewById(R.id.tvVaccinePageDesc);
+        CharSequence vaccineHint = historyOnly
+                ? "Tra cứu toàn bộ lịch sử các mũi tiêm chủng và ảnh dấu mộc xác nhận của thú cưng."
+                : (tvVaccinePageDesc != null ? tvVaccinePageDesc.getText() : "Theo dõi lịch tiêm định kỳ và cảnh báo sức khỏe thú cưng.");
+        InfoHintHelper.attach(btnInfoVaccine, vaccineHint, isAdmin());
 
         petWeightApi = RetrofitClient.getPetWeightApi();
         vaccinationApi = RetrofitClient.getVaccinationApi();
@@ -286,19 +294,32 @@ public class VaccineAlertFragment extends Fragment {
         }
     }
 
+    private boolean isNightTheme() {
+        if (sessionManager != null) {
+            return sessionManager.isDarkMode();
+        }
+        int nightModeFlags = getResources().getConfiguration().uiMode
+                & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        return nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    private int getThemePrimaryTextColor() {
+        return Color.parseColor(isNightTheme() ? "#F8FAFC" : "#0F172A");
+    }
+
+    private int getThemeSecondaryTextColor() {
+        return Color.parseColor(isNightTheme() ? "#CBD5E1" : "#475569");
+    }
+
     /**
-     * Màn hình Sổ tiêm chủng chính chỉ hiển thị bộ chọn thú cưng,
-     * thống kê và thanh thông báo. Danh sách lịch sử chỉ mở từ menu.
+     * Màn hình Sổ tiêm chủng chính hiển thị bộ chọn thú cưng,
+     * thống kê, thanh thông báo và danh sách cảnh báo trực quan.
      */
     private void configureMainVaccineScreen(View root) {
-        // Ẩn toàn bộ khu vực lịch sử ở màn hình chính.
+        // Ẩn khu vực lịch sử ở màn hình cảnh báo chính (Lịch sử mở từ menu trượt).
         hideSectionAtContentLevel(root, layoutVaccinationHistory);
         hideSectionAtContentLevel(root, tvHistoryEmpty);
         hideHistoryHeading(root);
-
-        // Đảm bảo phần cảnh báo cũ dạng danh sách không chiếm chỗ.
-        if (layoutAlerts != null) layoutAlerts.setVisibility(View.GONE);
-        if (tvAlertEmpty != null) tvAlertEmpty.setVisibility(View.GONE);
     }
 
     private void hideHistoryHeading(View view) {
@@ -332,18 +353,14 @@ public class VaccineAlertFragment extends Fragment {
         hideSectionAtContentLevel(root, tvUpcomingVaccinations);
         hideSectionAtContentLevel(root, layoutAlerts);
 
-        // Ẩn tiêu đề trang cũ và đổi thành tiêu đề riêng của màn hình lịch sử.
+        // Ẩn tiêu đề khu vực con và giữ hàng tiêu đề chính kèm nút "!".
         updateHistoryHeading(root);
 
-        View content = findScrollContent(root);
-        if (content instanceof ViewGroup) {
-            TextView heading = new TextView(requireContext());
-            heading.setText("📋 Lịch sử tiêm chủng");
-            heading.setTextColor(Color.parseColor("#1E293B"));
-            heading.setTextSize(22);
-            heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-            heading.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(8));
-            ((ViewGroup) content).addView(heading, 0);
+        TextView tvPageTitle = root.findViewById(R.id.tvVaccinePageTitle);
+        if (tvPageTitle != null) {
+            tvPageTitle.setText("📋 Lịch sử tiêm chủng");
+            tvPageTitle.setTextColor(getThemePrimaryTextColor());
+            tvPageTitle.setVisibility(View.VISIBLE);
         }
     }
 
@@ -378,6 +395,9 @@ public class VaccineAlertFragment extends Fragment {
     }
 
     private void updateHistoryHeading(View view) {
+        if (view != null && view.getId() == R.id.tvVaccinePageTitle) {
+            return;
+        }
         if (view instanceof TextView) {
             TextView textView = (TextView) view;
             CharSequence value = textView.getText();
@@ -421,12 +441,18 @@ public class VaccineAlertFragment extends Fragment {
         LinearLayout header = new LinearLayout(requireContext());
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
-        header.setPadding(dpToPx(2), dpToPx(7), dpToPx(2), dpToPx(7));
+        header.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(12));
+
+        GradientDrawable headerBg = new GradientDrawable();
+        headerBg.setColor(Color.parseColor(isNightTheme() ? "#1E293B" : "#ECFDF5"));
+        headerBg.setCornerRadius(dpToPx(16));
+        headerBg.setStroke(dpToPx(1), Color.parseColor("#10B981"));
+        header.setBackground(headerBg);
 
         TextView title = new TextView(requireContext());
         title.setText("💉 Cảnh báo tiêm phòng");
-        title.setTextColor(Color.parseColor("#334155"));
-        title.setTextSize(18);
+        title.setTextColor(getThemePrimaryTextColor());
+        title.setTextSize(17);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
 
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
@@ -439,12 +465,12 @@ public class VaccineAlertFragment extends Fragment {
         btnVaccinationNotifications.setTextColor(Color.WHITE);
         btnVaccinationNotifications.setTextSize(14);
         btnVaccinationNotifications.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        btnVaccinationNotifications.setPadding(dpToPx(12), 0, dpToPx(12), 0);
-        btnVaccinationNotifications.setMinWidth(dpToPx(64));
-        btnVaccinationNotifications.setMinHeight(dpToPx(42));
+        btnVaccinationNotifications.setPadding(dpToPx(14), 0, dpToPx(14), 0);
+        btnVaccinationNotifications.setMinWidth(dpToPx(68));
+        btnVaccinationNotifications.setMinHeight(dpToPx(40));
         GradientDrawable buttonBackground = new GradientDrawable();
         buttonBackground.setColor(Color.parseColor("#059669"));
-        buttonBackground.setCornerRadius(dpToPx(22));
+        buttonBackground.setCornerRadius(dpToPx(20));
         btnVaccinationNotifications.setBackground(buttonBackground);
         btnVaccinationNotifications.setOnClickListener(v -> showVaccinationNotifications());
         header.addView(btnVaccinationNotifications);
@@ -452,12 +478,8 @@ public class VaccineAlertFragment extends Fragment {
         LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        headerParams.setMargins(dpToPx(16), dpToPx(4), dpToPx(16), dpToPx(10));
+        headerParams.setMargins(0, dpToPx(2), 0, dpToPx(12));
         content.addView(header, 0, headerParams);
-
-        // Ẩn các thẻ cảnh báo dài khỏi màn hình chính.
-        layoutAlerts.setVisibility(View.GONE);
-        if (tvAlertEmpty != null) tvAlertEmpty.setVisibility(View.GONE);
     }
 
     private void hideOldAlertHeading(View view) {
@@ -491,8 +513,8 @@ public class VaccineAlertFragment extends Fragment {
 
         if (currentHealthAlerts.isEmpty()) {
             TextView empty = new TextView(requireContext());
-            empty.setText("Hiện không có mũi tiêm quá hạn hoặc sắp đến hạn.");
-            empty.setTextColor(Color.parseColor("#475569"));
+            empty.setText("✅ Hiện không có mũi tiêm quá hạn hoặc sắp đến hạn.");
+            empty.setTextColor(getThemeSecondaryTextColor());
             empty.setTextSize(15);
             empty.setPadding(dpToPx(8), dpToPx(18), dpToPx(8), dpToPx(18));
             content.addView(empty);
@@ -1127,8 +1149,8 @@ public class VaccineAlertFragment extends Fragment {
                 layoutAlerts.setVisibility(View.GONE);
             }
             if (tvAlertEmpty != null) {
-                tvAlertEmpty.setText("Bạn đã tắt cảnh báo tiêm chủng.");
-                tvAlertEmpty.setVisibility(View.GONE);
+                tvAlertEmpty.setText("🔕 Bạn đã tắt cảnh báo tiêm chủng trước 7 ngày trong Menu trượt.");
+                tvAlertEmpty.setVisibility(View.VISIBLE);
             }
             return;
         }
@@ -1253,10 +1275,27 @@ public class VaccineAlertFragment extends Fragment {
             tvUpcomingVaccinations.setText(String.valueOf(upcomingCount));
         }
 
-        // Danh sách chi tiết chỉ mở trong hộp thoại khi nhấn nút chuông.
-        layoutAlerts.setVisibility(View.GONE);
-        if (tvAlertEmpty != null) {
-            tvAlertEmpty.setVisibility(View.GONE);
+        // Hiển thị trực tiếp danh sách thẻ cảnh báo trên màn hình chính + trong nút chuông.
+        if (currentHealthAlerts.isEmpty()) {
+            layoutAlerts.setVisibility(View.GONE);
+            if (tvAlertEmpty != null) {
+                tvAlertEmpty.setText("✅ Thú cưng hiện không có mũi tiêm quá hạn hoặc sắp đến hạn trong 7 ngày tới.");
+                tvAlertEmpty.setVisibility(View.VISIBLE);
+            }
+        } else {
+            if (tvAlertEmpty != null) {
+                tvAlertEmpty.setVisibility(View.GONE);
+            }
+            layoutAlerts.setVisibility(View.VISIBLE);
+            for (VaccinationRecord record : currentHealthAlerts) {
+                String dueDate = record.getNextDueDate();
+                String information =
+                        "⚠️ Vaccine: " + safeText(record.getVaccineName())
+                                + "\n📅 Ngày tiêm tiếp theo: " + safeText(dueDate)
+                                + "\n🏥 Phòng khám: " + safeText(record.getClinicName())
+                                + "\n📌 Trạng thái: " + getVaccinationStatus(dueDate);
+                addInfoCard(layoutAlerts, information, dueDate);
+            }
         }
     }
 
@@ -1733,54 +1772,54 @@ public class VaccineAlertFragment extends Fragment {
 
         textView.setText(information);
         textView.setTextSize(14);
-        textView.setTextColor(Color.parseColor("#334155"));
-        textView.setLineSpacing(dpToPx(2), 1.0f);
+        textView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        textView.setLineSpacing(dpToPx(4), 1.0f);
 
         textView.setPadding(
+                dpToPx(16),
                 dpToPx(14),
-                dpToPx(12),
-                dpToPx(14),
-                dpToPx(12)
+                dpToPx(16),
+                dpToPx(14)
         );
 
+        boolean dark = isNightTheme();
         int backgroundColor;
         int borderColor;
+        int textColor;
 
         switch (getVaccinationStatus(nextDueDate)) {
 
             case "Đã quá hạn":
-
-                backgroundColor = Color.parseColor("#FEE2E2");
-                borderColor = Color.parseColor("#DC2626");
-
+                backgroundColor = Color.parseColor(dark ? "#3F1219" : "#FEF2F2");
+                borderColor = Color.parseColor(dark ? "#F87171" : "#DC2626");
+                textColor = Color.parseColor(dark ? "#FEE2E2" : "#7F1D1D");
                 break;
 
             case "Sắp đến hạn":
-
-                backgroundColor = Color.parseColor("#FFEDD5");
-                borderColor = Color.parseColor("#EA580C");
-
+                backgroundColor = Color.parseColor(dark ? "#3B2110" : "#FFF7ED");
+                borderColor = Color.parseColor(dark ? "#FB923C" : "#EA580C");
+                textColor = Color.parseColor(dark ? "#FFEDD5" : "#7C2D12");
                 break;
 
             case "Chưa đến hạn":
-
-                backgroundColor = Color.parseColor("#DCFCE7");
-                borderColor = Color.parseColor("#16A34A");
-
+                backgroundColor = Color.parseColor(dark ? "#0A2E1F" : "#ECFDF5");
+                borderColor = Color.parseColor(dark ? "#34D399" : "#16A34A");
+                textColor = Color.parseColor(dark ? "#D1FAE5" : "#064E3B");
                 break;
 
             default:
-
-                backgroundColor = Color.parseColor("#F1F5F9");
-                borderColor = Color.parseColor("#94A3B8");
-
+                backgroundColor = Color.parseColor(dark ? "#1E293B" : "#F8FAFC");
+                borderColor = Color.parseColor(dark ? "#64748B" : "#94A3B8");
+                textColor = getThemePrimaryTextColor();
                 break;
         }
+
+        textView.setTextColor(textColor);
 
         GradientDrawable background = new GradientDrawable();
 
         background.setColor(backgroundColor);
-        background.setCornerRadius(dpToPx(12));
+        background.setCornerRadius(dpToPx(14));
         background.setStroke(dpToPx(2), borderColor);
 
         textView.setBackground(background);

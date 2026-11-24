@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="#E2EAF2"
-    app:cardCornerRadius="14dp"
-    app:cardElevation="3dp"
-    app:strokeColor="#8295A8"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:strokeColor="#3364748B"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Nguyễn Văn Tính"
-                android:textColor="#071421"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -58,9 +58,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="tinh@gmail.com"
-                android:textColor="#1C3042"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/tvItemUserPhone"
@@ -68,9 +67,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="SĐT: 0987654321"
-                android:textColor="#263B50"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12sp" />
 
             <LinearLayout
                 android:layout_width="wrap_content"

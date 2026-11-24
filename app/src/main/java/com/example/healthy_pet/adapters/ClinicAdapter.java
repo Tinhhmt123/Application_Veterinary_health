@@ -39,17 +39,20 @@ public class ClinicAdapter extends RecyclerView.Adapter<ClinicAdapter.ClinicView
     public void onBindViewHolder(@NonNull ClinicViewHolder holder, int position) {
         VetClinic clinic = clinicList.get(position);
 
-        holder.tvName.setText(clinic.getName());
-        holder.tvAddress.setText("Địa chỉ: " + clinic.getAddress());
-        holder.tvPhone.setText("Hotline: " + clinic.getPhoneNumber());
-        holder.tvOpenHours.setText("Giờ mở cửa: " + clinic.getOpenHours());
-        holder.tvLatLng.setText("Tọa độ: " + clinic.getLatitude() + ", " + clinic.getLongitude());
+        holder.tvName.setText(clinic.getName() != null ? clinic.getName() : "Chi nhánh Healthy Pet");
+        holder.tvAddress.setText("📍 " + (clinic.getAddress() != null ? clinic.getAddress() : ""));
+        holder.tvPhone.setText("📞 Hotline: " + (clinic.getPhoneNumber() != null ? clinic.getPhoneNumber() : "Chưa cập nhật"));
+        holder.tvOpenHours.setText("🕒 Giờ mở cửa: " + (clinic.getOpenHours() != null && !clinic.getOpenHours().isEmpty() ? clinic.getOpenHours() : "07:00 - 17:00"));
+        holder.tvLatLng.setText("🌐 Tọa độ: " + clinic.getLatitude() + ", " + clinic.getLongitude());
 
-        if (clinic.getImageUrl() != null && !clinic.getImageUrl().isEmpty()) {
+        if (clinic.getImageUrl() != null && !clinic.getImageUrl().trim().isEmpty()) {
             Glide.with(holder.itemView.getContext())
-                    .load(clinic.getImageUrl())
-                    .placeholder(R.drawable.ic_launcher_background) // Ảnh mặc định nếu đang tải
+                    .load(clinic.getImageUrl().trim())
+                    .placeholder(R.drawable.ic_clinic_building)
+                    .error(R.drawable.ic_clinic_building)
                     .into(holder.imgClinic);
+        } else {
+            holder.imgClinic.setImageResource(R.drawable.ic_clinic_building);
         }
 
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(clinic));

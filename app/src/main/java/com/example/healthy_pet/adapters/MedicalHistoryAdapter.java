@@ -75,16 +75,28 @@ public class MedicalHistoryAdapter extends RecyclerView.Adapter<MedicalHistoryAd
             binding.tvSymptoms.setText("🤒 Triệu chứng: " + item.getSymptoms());
             binding.tvDiagnosis.setText("🩺 Chẩn đoán: " + item.getDiagnosis());
             binding.tvPrescription.setText("💊 Đơn thuốc: " + item.getPrescription());
-            binding.tvCost.setText("💰 Viện phí DECIMAL(18,0): " + CurrencyUtils.formatVND(item.getCost()));
+            binding.tvCost.setText("💰 Viện phí: " + CurrencyUtils.formatVND(item.getCost()));
 
             configurePaymentBadge(binding.tvPaymentBadge, item.getPaymentStatus(), item.getPaymentMethod());
 
-            if (item.getPrescriptionUrl() != null && !item.getPrescriptionUrl().trim().isEmpty()) {
+            String rawUrl = item.getPrescriptionUrl() != null ? item.getPrescriptionUrl().trim() : "";
+            boolean isFakeDemoUrl = rawUrl.contains("res.cloudinary.com/demo/");
+            if (!rawUrl.isEmpty() && !isFakeDemoUrl) {
                 binding.ivPrescription.setVisibility(View.VISIBLE);
                 Glide.with(itemView.getContext())
-                        .load(item.getPrescriptionUrl())
-                        .placeholder(R.drawable.ic_launcher_background)
-                        .error(R.drawable.ic_launcher_background)
+                        .load(rawUrl)
+                        .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                                binding.ivPrescription.setVisibility(View.GONE);
+                                return true;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                                return false;
+                            }
+                        })
                         .into(binding.ivPrescription);
             } else {
                 binding.ivPrescription.setVisibility(View.GONE);

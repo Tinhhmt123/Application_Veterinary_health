@@ -184,6 +184,13 @@ public class MainActivity extends AppCompatActivity {
             switchAlert7Days.setChecked(sessionManager.isAlert7DaysEnabled());
             switchAlert7Days.setOnCheckedChangeListener((button, checked) -> {
                 sessionManager.setAlert7DaysEnabled(checked);
+                Fragment currentRoot = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+                if (currentRoot instanceof Page_User) {
+                    Fragment centerFrag = currentRoot.getChildFragmentManager().findFragmentById(R.id.userContentContainer);
+                    if (centerFrag instanceof VaccineAlertFragment) {
+                        ((VaccineAlertFragment) centerFrag).refreshHealthAlerts();
+                    }
+                }
                 Toast.makeText(this,
                         checked ? "Đã bật cảnh báo tiêm chủng trước 7 ngày."
                                 : "Đã tắt cảnh báo tiêm chủng trước 7 ngày.",
@@ -206,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** Thêm lối tắt lịch sử tiêm chủng vào drawer mà không cần thêm ID mới trong XML. */
+    /** Thêm lối tắt lịch sử tiêm chủng vào drawer với thẻ nổi bật và tương phản ở cả Light/Dark Mode. */
     private void setupDrawerNavigationItems() {
         ScrollView scrollView = findDrawerScrollView(drawerLayout);
         if (scrollView == null || scrollView.getChildCount() == 0) return;
@@ -215,29 +222,50 @@ public class MainActivity extends AppCompatActivity {
         if (!(firstChild instanceof LinearLayout)) return;
 
         LinearLayout drawerContent = (LinearLayout) firstChild;
-        if (drawerContent.findViewWithTag("vaccination_history_drawer_item") != null) return;
+        View existingSection = drawerContent.findViewWithTag("vaccination_history_drawer_section");
+        if (existingSection != null) {
+            drawerContent.removeView(existingSection);
+        }
+
+        boolean isDark = sessionManager != null && sessionManager.isDarkMode();
 
         LinearLayout section = new LinearLayout(this);
+        section.setTag("vaccination_history_drawer_section");
         section.setOrientation(LinearLayout.VERTICAL);
-        section.setPadding(dp(14), dp(10), dp(14), dp(10));
+        section.setPadding(dp(14), dp(14), dp(14), dp(0));
+
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(14), dp(12), dp(14), dp(12));
+        GradientDrawable cardBg = new GradientDrawable();
+        cardBg.setColor(Color.parseColor(isDark ? "#1E293B" : "#FFFFFF"));
+        cardBg.setCornerRadius(dp(16));
+        cardBg.setStroke(dp(1), Color.parseColor("#3310B981"));
+        card.setBackground(cardBg);
 
         TextView heading = new TextView(this);
-        heading.setText("📋 HỒ SƠ TIÊM CHỦNG");
-        heading.setTextColor(Color.rgb(5, 150, 105));
+        heading.setText("📋 SỔ & LỊCH SỬ TIÊM CHỦNG");
+        heading.setTextColor(Color.parseColor("#10B981"));
         heading.setTextSize(12);
         heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        heading.setPadding(dp(2), dp(4), dp(2), dp(6));
-        section.addView(heading);
+        heading.setPadding(dp(2), dp(0), dp(2), dp(8));
+        card.addView(heading);
 
         TextView historyItem = new TextView(this);
         historyItem.setTag("vaccination_history_drawer_item");
-        historyItem.setText("📋  Lịch sử tiêm chủng");
-        historyItem.setTextColor(Color.rgb(30, 41, 59));
+        historyItem.setText("💉  Xem Lịch sử tiêm chủng   →");
+        historyItem.setTextColor(Color.parseColor(isDark ? "#ECFDF5" : "#065F46"));
         historyItem.setTextSize(15);
         historyItem.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         historyItem.setGravity(Gravity.CENTER_VERTICAL);
-        historyItem.setPadding(dp(12), dp(13), dp(12), dp(13));
-        historyItem.setBackground(makeSelectableBackground());
+        historyItem.setPadding(dp(14), dp(12), dp(14), dp(12));
+
+        GradientDrawable itemBg = new GradientDrawable();
+        itemBg.setColor(Color.parseColor(isDark ? "#064E3B" : "#ECFDF5"));
+        itemBg.setCornerRadius(dp(12));
+        itemBg.setStroke(dp(1), Color.parseColor("#10B981"));
+        historyItem.setBackground(itemBg);
+
         historyItem.setOnClickListener(v -> {
             if (!sessionManager.isLoggedIn()) {
                 openLoginPage();
@@ -250,7 +278,8 @@ public class MainActivity extends AppCompatActivity {
                     .addToBackStack("vaccination_history")
                     .commit(), 180);
         });
-        section.addView(historyItem);
+        card.addView(historyItem);
+        section.addView(card);
 
         // Header tài khoản là phần tử đầu tiên trong XML.
         int insertIndex = Math.min(1, drawerContent.getChildCount());

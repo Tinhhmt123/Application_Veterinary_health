@@ -46,7 +46,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="3. Loại dịch vụ (service_type):"
+            android:text="3. Chọn loại dịch vụ:"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -73,7 +73,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="📅 Chọn ngày (DatePicker)"
+            android:text="📅 Chọn ngày khám"
             android:textAllCaps="false"
             app:cornerRadius="12dp" />
 
@@ -82,7 +82,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="5. Chọn giờ khám:"
+            android:text="5. Chọn giờ khám (Mở cửa: 07:00 - 17:00):"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -93,16 +93,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="⏰ Chọn giờ (TimePicker)"
+            android:text="⏰ Chọn giờ khám"
             android:textAllCaps="false"
             app:cornerRadius="12dp" />
 
-        <!-- 6. Estimated Cost -->
+        <!-- 6. Estimated Cost (Read-only, tự động theo dịch vụ) -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="6. Chi phí dự kiến DECIMAL(18,0):"
+            android:text="6. Chi phí dự kiến (Tự động theo dịch vụ):"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -112,16 +112,25 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:hint="200000"
-            android:inputType="number"
-            android:textSize="14sp" />
+            android:background="@drawable/bg_pet_weight_badge"
+            android:clickable="false"
+            android:cursorVisible="false"
+            android:enabled="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:inputType="none"
+            android:padding="12dp"
+            android:text="150.000 đ (Giá cố định)"
+            android:textColor="@color/emerald_700"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <!-- 7. Reason / Note -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="7. Ghi chú triệu chứng (note):"
+            android:text="7. Ghi chú triệu chứng:"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="14sp"
             android:textStyle="bold" />

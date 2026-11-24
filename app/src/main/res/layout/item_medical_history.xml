@@ -80,7 +80,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="💰 Viện phí DECIMAL(18,0): 350.000 đ"
+            android:text="💰 Viện phí: 350.000 đ"
             android:textColor="@color/emerald_700"
             android:textSize="14sp"
             android:textStyle="bold" />

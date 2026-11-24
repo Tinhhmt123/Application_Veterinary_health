@@ -1,6 +1,5 @@
 package com.example.healthy_pet.ui;
 
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +8,6 @@ import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import com.example.healthy_pet.MainActivity;
@@ -18,19 +16,26 @@ import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.ui.admin.AdminDashboardFragment;
 import com.example.healthy_pet.ui.admin.Manage_Pet_Admin;
 import com.example.healthy_pet.ui.auth.AccountFragment;
+import com.example.healthy_pet.ui.component.CurvedBottomNavView;
 import com.example.healthy_pet.ui.pet.Pet_Detail_Admin_User;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Trang chính dành cho ADMIN (gắn với page_admin.xml)
- * Gồm 3 phần: Header (trên) + Content (adminContentContainer ở giữa) + Footer (5 mục menu bên dưới)
+ * Gồm 3 phần: Header (trên) + Content (adminContentContainer ở giữa) + Footer cong (5 mục menu bên dưới)
  */
 public class Page_Admin extends Fragment {
+
+    private static final String KEY_SELECTED_TAB = "selected_admin_tab";
+    private static final String KEY_TAB_SUBTITLE = "current_admin_subtitle";
 
     private TextView tvAdminHeaderSubtitle;
     private View rootView;
     private View btnAdminOpenDrawer;
     private View btnAdminHeaderBack;
-    private View footerAdmin;
+    private CurvedBottomNavView footerAdmin;
+    private int selectedTabIndex = 0;
     private String currentTabSubtitle = "Quản lý Khách hàng";
     private OnBackPressedCallback detailBackCallback;
 
@@ -42,6 +47,11 @@ public class Page_Admin extends Fragment {
         btnAdminOpenDrawer = rootView.findViewById(R.id.btnAdminOpenDrawer);
         btnAdminHeaderBack = rootView.findViewById(R.id.btnAdminHeaderBack);
         footerAdmin = rootView.findViewById(R.id.footerAdmin);
+
+        if (savedInstanceState != null) {
+            selectedTabIndex = savedInstanceState.getInt(KEY_SELECTED_TAB, 0);
+            currentTabSubtitle = savedInstanceState.getString(KEY_TAB_SUBTITLE, currentTabSubtitle);
+        }
 
         // 1. Header: Bấm icon 🛡️ hoặc tiêu đề để mở Menu trượt bên trái; bấm ← khi đang xem trang con
         View.OnClickListener openDrawerListener = v -> {
@@ -70,38 +80,54 @@ public class Page_Admin extends Fragment {
 
         getChildFragmentManager().addOnBackStackChangedListener(this::syncHeaderAndFooterForBackStack);
 
-        // 2. Footer: Chọn các mục bên dưới để thay đổi Content ở giữa (adminContentContainer)
-        rootView.findViewById(R.id.navAdminUser).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminUser);
-            setCenterContent(AdminDashboardFragment.newInstance(6), "Quản lý Khách hàng");
-        });
+        // 2. Footer cong + Vòng tròn nổi (5 mục menu nét viền mảnh của Admin)
+        List<CurvedBottomNavView.NavItem> adminNavItems = Arrays.asList(
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_users_outline, "Khách hàng"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_paw_outline, "Thú cưng"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_stethoscope_outline, "Lịch & Đơn"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_clinic_outline, "Chi nhánh"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_user_outline, "Tài khoản")
+        );
+        footerAdmin.setupTabs(adminNavItems, true, selectedTabIndex);
+        footerAdmin.setOnTabSelectedListener(this::selectAdminTab);
 
-        rootView.findViewById(R.id.navAdminPet).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminPet);
-            setCenterContent(new Manage_Pet_Admin(), "Quản lý Hồ sơ Thú cưng");
-        });
-
-        rootView.findViewById(R.id.navAdminAppointment).setOnClickListener(v -> navigateToAppointment());
-
-        rootView.findViewById(R.id.navAdminClinic).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminClinic);
-            setCenterContent(AdminDashboardFragment.newInstance(8), "Quản lý Hệ thống Chi nhánh Phòng khám");
-        });
-
-        rootView.findViewById(R.id.navAdminAccount).setOnClickListener(v -> {
-            highlightAdminTab(R.id.navAdminAccount);
-            setCenterContent(new AccountFragment(), "Tài khoản Quản trị viên");
-        });
-
-        // Mặc định hiển thị mục Quản lý Khách hàng khi vừa vào Page_Admin
-        highlightAdminTab(R.id.navAdminUser);
         if (savedInstanceState == null) {
-            setCenterContent(AdminDashboardFragment.newInstance(6), "Quản lý Khách hàng");
+            selectAdminTab(0);
         } else {
             syncHeaderAndFooterForBackStack();
         }
 
         return rootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_SELECTED_TAB, selectedTabIndex);
+        outState.putString(KEY_TAB_SUBTITLE, currentTabSubtitle);
+    }
+
+    private void selectAdminTab(int index) {
+        selectedTabIndex = index;
+        switch (index) {
+            case 0:
+                setCenterContent(AdminDashboardFragment.newInstance(6), "Quản lý Khách hàng");
+                break;
+            case 1:
+                setCenterContent(new Manage_Pet_Admin(), "Quản lý Hồ sơ Thú cưng");
+                break;
+            case 2:
+                setCenterContent(AdminDashboardFragment.newInstance(7), "Duyệt lịch hẹn & Kê đơn bệnh án");
+                break;
+            case 3:
+                setCenterContent(AdminDashboardFragment.newInstance(8), "Quản lý Hệ thống Chi nhánh Phòng khám");
+                break;
+            case 4:
+                setCenterContent(new AccountFragment(), "Tài khoản Quản trị viên");
+                break;
+            default:
+                break;
+        }
     }
 
     public void openPetDetailPage(@NonNull Pet pet) {
@@ -125,7 +151,10 @@ public class Page_Admin extends Fragment {
         if (getChildFragmentManager().getBackStackEntryCount() > 0) {
             getChildFragmentManager().popBackStackImmediate();
         }
-        highlightAdminTab(R.id.navAdminAppointment);
+        selectedTabIndex = 2;
+        if (footerAdmin != null) {
+            footerAdmin.setSelectedIndex(2, true);
+        }
         setCenterContent(AdminDashboardFragment.newInstance(7), "Duyệt lịch hẹn & Kê đơn bệnh án");
     }
 
@@ -164,46 +193,5 @@ public class Page_Admin extends Fragment {
                 .beginTransaction()
                 .replace(R.id.adminContentContainer, fragment)
                 .commit();
-    }
-
-    private void highlightAdminTab(int activeTabId) {
-        if (rootView == null || getContext() == null) return;
-
-        int[] tabIds = {
-                R.id.navAdminUser,
-                R.id.navAdminPet,
-                R.id.navAdminAppointment,
-                R.id.navAdminClinic,
-                R.id.navAdminAccount
-        };
-        int[] labelIds = {
-                R.id.tvNavAdminUser,
-                R.id.tvNavAdminPet,
-                R.id.tvNavAdminAppointment,
-                R.id.tvNavAdminClinic,
-                R.id.tvNavAdminAccount
-        };
-
-        int activeColor = ContextCompat.getColor(requireContext(), R.color.emerald_500);
-        int inactiveColor = ContextCompat.getColor(requireContext(), R.color.slate_500);
-
-        for (int i = 0; i < tabIds.length; i++) {
-            View tabView = rootView.findViewById(tabIds[i]);
-            TextView tvLabel = rootView.findViewById(labelIds[i]);
-            boolean isSelected = (tabIds[i] == activeTabId);
-
-            if (tvLabel != null) {
-                tvLabel.setTextColor(isSelected ? activeColor : inactiveColor);
-                tvLabel.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
-            }
-            if (tabView != null) {
-                tabView.animate()
-                        .scaleX(isSelected ? 1.08f : 1.0f)
-                        .scaleY(isSelected ? 1.08f : 1.0f)
-                        .alpha(isSelected ? 1.0f : 0.65f)
-                        .setDuration(160)
-                        .start();
-            }
-        }
     }
 }

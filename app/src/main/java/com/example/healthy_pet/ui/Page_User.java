@@ -1,6 +1,5 @@
 package com.example.healthy_pet.ui;
 
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,30 +8,36 @@ import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import com.example.healthy_pet.MainActivity;
 import com.example.healthy_pet.R;
 import com.example.healthy_pet.models.Pet;
 import com.example.healthy_pet.ui.auth.AccountFragment;
+import com.example.healthy_pet.ui.component.CurvedBottomNavView;
 import com.example.healthy_pet.ui.map.ClinicBookingFragment;
 import com.example.healthy_pet.ui.medical.MedicalHistoryFragment;
 import com.example.healthy_pet.ui.pet.Manage_Pet_User;
 import com.example.healthy_pet.ui.pet.Pet_Detail_Admin_User;
 import com.example.healthy_pet.ui.vaccine.VaccineAlertFragment;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Trang chính dành cho USER (gắn với page_user.xml)
- * Gồm 3 phần: Header (trên) + Content (userContentContainer ở giữa) + Footer (5 mục menu bên dưới)
+ * Gồm 3 phần: Header (trên) + Content (userContentContainer ở giữa) + Footer cong (5 mục menu bên dưới)
  */
 public class Page_User extends Fragment {
+
+    private static final String KEY_SELECTED_TAB = "selected_user_tab";
+    private static final String KEY_TAB_SUBTITLE = "current_user_subtitle";
 
     private TextView tvUserHeaderSubtitle;
     private View rootView;
     private View btnUserOpenDrawer;
     private View btnUserHeaderBack;
-    private View footerUser;
+    private CurvedBottomNavView footerUser;
+    private int selectedTabIndex = 0;
     private String currentTabSubtitle = "Cảnh báo y tế & Sổ tiêm chủng";
     private OnBackPressedCallback detailBackCallback;
 
@@ -44,6 +49,11 @@ public class Page_User extends Fragment {
         btnUserOpenDrawer = rootView.findViewById(R.id.btnUserOpenDrawer);
         btnUserHeaderBack = rootView.findViewById(R.id.btnUserHeaderBack);
         footerUser = rootView.findViewById(R.id.footerUser);
+
+        if (savedInstanceState != null) {
+            selectedTabIndex = savedInstanceState.getInt(KEY_SELECTED_TAB, 0);
+            currentTabSubtitle = savedInstanceState.getString(KEY_TAB_SUBTITLE, currentTabSubtitle);
+        }
 
         // 1. Header: Bấm icon 🐾 hoặc tiêu đề để mở Menu trượt bên trái; bấm ← khi đang xem trang con
         View.OnClickListener openDrawerListener = v -> {
@@ -72,38 +82,54 @@ public class Page_User extends Fragment {
 
         getChildFragmentManager().addOnBackStackChangedListener(this::syncHeaderAndFooterForBackStack);
 
-        // 2. Footer: Chọn các mục bên dưới để thay đổi Content ở giữa (userContentContainer)
-        rootView.findViewById(R.id.navUserAlert).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserAlert);
-            setCenterContent(new VaccineAlertFragment(), "Cảnh báo y tế & Sổ tiêm chủng");
-        });
+        // 2. Footer cong + Vòng tròn nổi (5 mục menu nét viền mảnh của User)
+        List<CurvedBottomNavView.NavItem> userNavItems = Arrays.asList(
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_alert_outline, "Cảnh báo"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_paw_outline, "Thú cưng"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_calendar_outline, "Đặt lịch"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_medical_outline, "Bệnh án"),
+                new CurvedBottomNavView.NavItem(R.drawable.ic_nav_user_outline, "Tài khoản")
+        );
+        footerUser.setupTabs(userNavItems, false, selectedTabIndex);
+        footerUser.setOnTabSelectedListener(this::selectUserTab);
 
-        rootView.findViewById(R.id.navUserPet).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserPet);
-            setCenterContent(new Manage_Pet_User(), "Hồ sơ thú cưng & Cân nặng");
-        });
-
-        rootView.findViewById(R.id.navUserBookingCenter).setOnClickListener(v -> navigateToBooking());
-
-        rootView.findViewById(R.id.navUserMedical).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserMedical);
-            setCenterContent(new MedicalHistoryFragment(), "Lịch sử khám & Thanh toán");
-        });
-
-        rootView.findViewById(R.id.navUserAccount).setOnClickListener(v -> {
-            highlightUserTab(R.id.navUserAccount);
-            setCenterContent(new AccountFragment(), "Hồ sơ cá nhân");
-        });
-
-        // Mặc định hiển thị mục đầu tiên khi vừa vào Page_User
-        highlightUserTab(R.id.navUserAlert);
         if (savedInstanceState == null) {
-            setCenterContent(new VaccineAlertFragment(), "Cảnh báo y tế & Sổ tiêm chủng");
+            selectUserTab(0);
         } else {
             syncHeaderAndFooterForBackStack();
         }
 
         return rootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_SELECTED_TAB, selectedTabIndex);
+        outState.putString(KEY_TAB_SUBTITLE, currentTabSubtitle);
+    }
+
+    private void selectUserTab(int index) {
+        selectedTabIndex = index;
+        switch (index) {
+            case 0:
+                setCenterContent(new VaccineAlertFragment(), "Cảnh báo y tế & Sổ tiêm chủng");
+                break;
+            case 1:
+                setCenterContent(new Manage_Pet_User(), "Hồ sơ thú cưng & Cân nặng");
+                break;
+            case 2:
+                setCenterContent(new ClinicBookingFragment(), "Đặt lịch Khám/Spa & Bản đồ");
+                break;
+            case 3:
+                setCenterContent(new MedicalHistoryFragment(), "Lịch sử khám & Thanh toán");
+                break;
+            case 4:
+                setCenterContent(new AccountFragment(), "Hồ sơ cá nhân");
+                break;
+            default:
+                break;
+        }
     }
 
     public void openPetDetailPage(@NonNull Pet pet) {
@@ -127,7 +153,10 @@ public class Page_User extends Fragment {
         if (getChildFragmentManager().getBackStackEntryCount() > 0) {
             getChildFragmentManager().popBackStackImmediate();
         }
-        highlightUserTab(R.id.navUserBookingCenter);
+        selectedTabIndex = 2;
+        if (footerUser != null) {
+            footerUser.setSelectedIndex(2, true);
+        }
         setCenterContent(new ClinicBookingFragment(), "Đặt lịch Khám/Spa & Bản đồ");
     }
 
@@ -166,46 +195,5 @@ public class Page_User extends Fragment {
                 .beginTransaction()
                 .replace(R.id.userContentContainer, fragment)
                 .commit();
-    }
-
-    private void highlightUserTab(int activeTabId) {
-        if (rootView == null || getContext() == null) return;
-
-        int[] tabIds = {
-                R.id.navUserAlert,
-                R.id.navUserPet,
-                R.id.navUserBookingCenter,
-                R.id.navUserMedical,
-                R.id.navUserAccount
-        };
-        int[] labelIds = {
-                R.id.tvNavUserAlert,
-                R.id.tvNavUserPet,
-                R.id.tvNavUserBooking,
-                R.id.tvNavUserMedical,
-                R.id.tvNavUserAccount
-        };
-
-        int activeColor = ContextCompat.getColor(requireContext(), R.color.emerald_500);
-        int inactiveColor = ContextCompat.getColor(requireContext(), R.color.slate_500);
-
-        for (int i = 0; i < tabIds.length; i++) {
-            View tabView = rootView.findViewById(tabIds[i]);
-            TextView tvLabel = rootView.findViewById(labelIds[i]);
-            boolean isSelected = (tabIds[i] == activeTabId);
-
-            if (tvLabel != null) {
-                tvLabel.setTextColor(isSelected ? activeColor : inactiveColor);
-                tvLabel.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
-            }
-            if (tabView != null) {
-                tabView.animate()
-                        .scaleX(isSelected ? 1.08f : 1.0f)
-                        .scaleY(isSelected ? 1.08f : 1.0f)
-                        .alpha(isSelected ? 1.0f : 0.65f)
-                        .setDuration(160)
-                        .start();
-            }
-        }
     }
 }
